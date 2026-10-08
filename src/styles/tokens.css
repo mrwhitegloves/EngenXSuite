@@ -1,0 +1,62 @@
+/*
+ * Design tokens. The ONLY file that contains colour values.
+ * Components use the token names (through Tailwind classes such as bg-surface, text-brand),
+ * so light mode, dark mode and any future rebrand are changed here and nowhere else.
+ * Source: docs/planning/ui-design.md, Section 2.
+ */
+
+:root {
+  --brand: #ee2140;
+  --brand-hover: #d11a36;
+  --brand-text: #d11a36;
+  --brand-soft: #fef1f3;
+  --on-brand: #ffffff;
+
+  --sidebar: #0a0a0a;
+  --on-sidebar: #fafafa;
+
+  --page: #fafafa;
+  --surface: #ffffff;
+  --text: #171717;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #b91c1c;
+  --info: #1d4ed8;
+
+  /* A form field whose value was changed and not yet saved (lead edit modal). */
+  --edited: #f97316;
+  --edited-soft: #fff7ed;
+
+  color-scheme: light;
+}
+
+/* Dark mode: the same token names with different values. Set by useTheme on <html>. */
+:root[data-theme='dark'] {
+  --brand: #ee2140;
+  --brand-hover: #f4566e;
+  --brand-text: #f4566e;
+  --brand-soft: #3a0f17;
+  --on-brand: #ffffff;
+
+  --sidebar: #000000;
+  --on-sidebar: #fafafa;
+
+  --page: #0a0a0a;
+  --surface: #171717;
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+  --border: #2a2a2a;
+
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #60a5fa;
+
+  --edited: #fb923c;
+  --edited-soft: #431407;
+
+  color-scheme: dark;
+}

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+
+# Local environment overrides. Only VITE_ variables that are safe to be public belong in the client.
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
