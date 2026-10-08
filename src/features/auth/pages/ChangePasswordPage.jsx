@@ -11,6 +11,8 @@ import {
   secondaryButtonClass,
 } from '../../../components/shared/form.jsx';
 
+import { PasswordVisibilityNotice } from '../components/AuthCard.jsx';
+
 const MIN_LENGTH = 10;
 
 // Shown instead of the app while the user still has the password someone else gave them
@@ -54,6 +56,7 @@ export default function ChangePasswordPage() {
         </div>
 
         <FormError message={Object.keys(serverErrors).length ? null : change.error?.message} />
+        <PasswordVisibilityNotice />
 
         <Field label="Current password" hint="The one you were given.">
           {(props) => (

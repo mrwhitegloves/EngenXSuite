@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyRound, Plus, UserCheck, UserX, Users } from 'lucide-react';
+import { Eye, KeyRound, Plus, UserCheck, UserX, Users } from 'lucide-react';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
 import {
@@ -13,6 +13,7 @@ import { useCan } from '../../../hooks/useCan.js';
 import { useUpdateUser, useUsers } from '../api.js';
 import CreateUserDialog from '../components/CreateUserDialog.jsx';
 import ResetPasswordDialog from '../components/ResetPasswordDialog.jsx';
+import ViewPasswordDialog from '../components/ViewPasswordDialog.jsx';
 
 const STATUS_STYLES = {
   active: 'text-success',
@@ -42,6 +43,7 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [resetTarget, setResetTarget] = useState(null);
+  const [viewTarget, setViewTarget] = useState(null);
 
   const users = useUsers({ page, search, status });
   const updateUser = useUpdateUser();
@@ -151,6 +153,14 @@ export default function UsersPage() {
                           <button
                             type="button"
                             className={rowButton}
+                            onClick={() => setViewTarget(row)}
+                          >
+                            <Eye size={14} aria-hidden="true" />
+                            Show password
+                          </button>
+                          <button
+                            type="button"
+                            className={rowButton}
                             onClick={() => setResetTarget(row)}
                           >
                             <KeyRound size={14} aria-hidden="true" />
@@ -210,6 +220,13 @@ export default function UsersPage() {
       )}
 
       <CreateUserDialog open={isCreating} onClose={() => setIsCreating(false)} />
+      {viewTarget && (
+        <ViewPasswordDialog
+          key={viewTarget.id}
+          user={viewTarget}
+          onClose={() => setViewTarget(null)}
+        />
+      )}
       {resetTarget && (
         <ResetPasswordDialog
           key={resetTarget.id}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../../lib/apiClient.js';
 import { CURRENT_USER_KEY } from '../../../hooks/useAuth.js';
@@ -85,6 +86,14 @@ export default function LoginPage({ productName }) {
                 />
               )}
             </Field>
+            <div className="text-right">
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium text-brand-text hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <button
               type="submit"
               disabled={login.isPending || !email || !password}
@@ -106,7 +115,7 @@ export default function LoginPage({ productName }) {
           </a>
 
           <p className="mt-6 text-sm text-text-muted">
-            No account, or forgot your password? Ask your administrator or manager.
+            No account? Ask your administrator or manager to create one for you.
           </p>
         </div>
       </main>
