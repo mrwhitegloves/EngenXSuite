@@ -1,31 +1,47 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../lib/apiClient.js';
+
+export const CURRENT_USER_KEY = ['auth', 'me'];
+
+async function fetchCurrentUser({ signal }) {
+  try {
+    const payload = await apiRequest('/auth/me', { signal });
+    return payload.data;
+  } catch (error) {
+    // 401 simply means "nobody is signed in": that is a normal answer, not a failure.
+    if (error.status === 401) return null;
+    throw error;
+  }
+}
 
 /**
  * Who is signed in.
  * status: 'loading' | 'signedOut' | 'signedIn' | 'error'
- * user:   { id, email, name, avatarUrl, role: { name }, grants: [{ feature, action, scope }] }
+ * user:   { id, email, name, avatarUrl, theme, role: { name }, grants: [{ feature, action, scope }] }
  */
 export function useAuth() {
-  const [state, setState] = useState({ status: 'loading', user: null, error: null });
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: CURRENT_USER_KEY, queryFn: fetchCurrentUser });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    apiRequest('/auth/me', { signal: controller.signal })
-      .then((payload) => setState({ status: 'signedIn', user: payload.data, error: null }))
-      .catch((error) => {
-        if (error.name === 'AbortError') return;
-        // 401 simply means "nobody is signed in"; anything else is a real problem.
-        if (error.status === 401) setState({ status: 'signedOut', user: null, error: null });
-        else setState({ status: 'error', user: null, error: error.message });
-      });
-    return () => controller.abort();
-  }, []);
+  const signOutMutation = useMutation({
+    mutationFn: () => apiRequest('/auth/logout', { method: 'POST' }),
+    // Drop every cached answer: the next person on this browser must not see this user's data.
+    onSuccess: () => {
+      queryClient.clear();
+      queryClient.setQueryData(CURRENT_USER_KEY, null);
+    },
+  });
 
-  const signOut = useCallback(async () => {
-    await apiRequest('/auth/logout', { method: 'POST' });
-    setState({ status: 'signedOut', user: null, error: null });
-  }, []);
+  let status = 'signedIn';
+  if (query.isPending) status = 'loading';
+  else if (query.isError) status = 'error';
+  else if (!query.data) status = 'signedOut';
 
-  return { ...state, signOut };
+  return {
+    status,
+    user: query.data ?? null,
+    error: query.error?.message ?? null,
+    retry: query.refetch,
+    signOut: signOutMutation.mutate,
+  };
 }
