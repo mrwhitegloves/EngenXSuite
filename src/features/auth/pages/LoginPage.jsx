@@ -1,19 +1,43 @@
-// The sign-in page: black brand panel, white panel with the single way in (Google).
-// There are no passwords in this product.
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '../../../lib/apiClient.js';
+import { CURRENT_USER_KEY } from '../../../hooks/useAuth.js';
+import {
+  Field,
+  FormError,
+  inputClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from '../../../components/shared/form.jsx';
 
-const SIGN_IN_MESSAGES = {
+// The sign-in page: black brand panel, white panel with the two ways in:
+// email + password (accounts created inside the CRM), or Google.
+
+const GOOGLE_MESSAGES = {
   not_invited:
-    'This Google account does not have access. Ask your administrator to invite you, then try again.',
-  failed: 'Sign-in did not complete. Please try again.',
+    'This Google account does not have access. Ask your administrator to create an account for you.',
+  failed: 'Google sign-in did not complete. Please try again.',
 };
 
-function readSignInMessage() {
+function readGoogleMessage() {
   const reason = new URLSearchParams(window.location.search).get('signin');
-  return SIGN_IN_MESSAGES[reason] ?? null;
+  return GOOGLE_MESSAGES[reason] ?? null;
 }
 
 export default function LoginPage({ productName }) {
-  const message = readSignInMessage();
+  const queryClient = useQueryClient();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const login = useMutation({
+    mutationFn: () => apiRequest('/auth/login', { method: 'POST', body: { email, password } }),
+    onSuccess: (payload) => queryClient.setQueryData(CURRENT_USER_KEY, payload.data),
+  });
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    login.mutate();
+  }
 
   return (
     <div className="grid min-h-screen md:grid-cols-2">
@@ -31,27 +55,58 @@ export default function LoginPage({ productName }) {
       <main className="flex items-center justify-center bg-surface p-8">
         <div className="w-full max-w-sm">
           <h1 className="text-2xl font-semibold">Sign in</h1>
-          <p className="mt-2 text-text-muted">Use the Google account you were invited with.</p>
+          <p className="mt-2 text-text-muted">Use the login details your administrator gave you.</p>
 
-          {message && (
-            <p
-              role="alert"
-              className="mt-6 rounded-md border border-danger px-3 py-2 text-sm text-danger"
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
+            <FormError message={login.error?.message ?? readGoogleMessage()} />
+            <Field label="Email">
+              {(props) => (
+                <input
+                  {...props}
+                  type="email"
+                  autoComplete="username"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  className={inputClass}
+                />
+              )}
+            </Field>
+            <Field label="Password">
+              {(props) => (
+                <input
+                  {...props}
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className={inputClass}
+                />
+              )}
+            </Field>
+            <button
+              type="submit"
+              disabled={login.isPending || !email || !password}
+              className={`${primaryButtonClass} w-full`}
             >
-              {message}
-            </p>
-          )}
+              {login.isPending ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+
+          <div className="my-6 flex items-center gap-3 text-sm text-text-muted">
+            <span className="h-px flex-1 bg-border" />
+            or
+            <span className="h-px flex-1 bg-border" />
+          </div>
 
           {/* A normal link, not a fetch: the browser has to leave the page to reach Google. */}
-          <a
-            href="/api/auth/google"
-            className="mt-6 flex w-full items-center justify-center rounded-md bg-brand px-4 py-2.5 font-medium text-on-brand transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-          >
+          <a href="/api/auth/google" className={`${secondaryButtonClass} w-full`}>
             Sign in with Google
           </a>
 
           <p className="mt-6 text-sm text-text-muted">
-            No account? Access is by invitation from your administrator.
+            No account, or forgot your password? Ask your administrator or manager.
           </p>
         </div>
       </main>

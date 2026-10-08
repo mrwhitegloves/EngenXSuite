@@ -11,6 +11,7 @@ import {
   MessagesSquare,
   Settings,
   Sparkles,
+  Users,
 } from 'lucide-react';
 
 // The one list of main navigation items (Master Prompt Section 3, plus Website and Chat).
@@ -47,13 +48,15 @@ export const NAV_ITEMS = [
   },
   { to: '/website', label: 'Website', icon: Globe, features: ['website'], phase: 'W1' },
   { to: '/chat', label: 'Chat', icon: MessagesSquare, features: ['chat'], phase: '12' },
+  // Login accounts of the team (decision 0009). Not to be confused with Accounts = customer companies.
+  { to: '/users', label: 'Users', icon: Users, features: ['users'] },
 ];
 
 export const SETTINGS_ITEM = {
   to: '/settings',
   label: 'Settings',
   icon: Settings,
-  features: ['settings', 'users'],
+  features: ['settings'],
 };
 
 // The items shown in the bottom bar on phones; everything else is behind "More".

@@ -25,10 +25,13 @@ export function useAuth() {
 
   const signOutMutation = useMutation({
     mutationFn: () => apiRequest('/auth/logout', { method: 'POST' }),
-    // Drop every cached answer: the next person on this browser must not see this user's data.
     onSuccess: () => {
-      queryClient.clear();
+      // Mark "nobody signed in" on the query the screen is watching, so the sign-in page shows
+      // at once. (Clearing the whole cache instead would detach that query from the screen.)
       queryClient.setQueryData(CURRENT_USER_KEY, null);
+      // Then drop every other cached answer: the next person on this browser must not see
+      // this user's data.
+      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== 'auth' });
     },
   });
 
