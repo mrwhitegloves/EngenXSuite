@@ -1,28 +1,46 @@
-import { useEffect, useState } from 'react';
-import { apiRequest } from './lib/apiClient.js';
+import { useAuth } from './hooks/useAuth.js';
+import { useBranding } from './hooks/useBranding.js';
 import { useTheme } from './hooks/useTheme.js';
+import LoginPage from './features/auth/pages/LoginPage.jsx';
 
-// Temporary start page for the scaffold. It proves three things end to end:
-// the client reaches the API, the design tokens work, and light / dark switching works.
-// It is replaced by the login page and the app shell in the next Phase 01 tasks.
+// Decides what to show from the sign-in state. The signed-in view below is a temporary
+// placeholder; the real app shell (sidebar, top bar, routes) replaces it in the next task.
 export default function App() {
+  const { status, user, error, signOut } = useAuth();
+  const { productName } = useBranding();
   const { theme, setTheme, themes } = useTheme();
-  const [health, setHealth] = useState({ state: 'loading' });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    apiRequest('/health', { signal: controller.signal })
-      .then((payload) => setHealth({ state: 'ready', data: payload.data }))
-      .catch((error) => {
-        if (error.name !== 'AbortError') setHealth({ state: 'error', message: error.message });
-      });
-    return () => controller.abort();
-  }, []);
+  if (status === 'loading') {
+    return (
+      <p className="p-8 text-text-muted" role="status">
+        Loading…
+      </p>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="p-8">
+        <p className="text-danger" role="alert">
+          {error}
+        </p>
+        <button
+          type="button"
+          className="mt-4 rounded-md border border-border bg-surface px-3 py-1.5"
+          onClick={() => window.location.reload()}
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  if (status === 'signedOut') return <LoginPage productName={productName} />;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 p-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Foundation check</h1>
+        <h1 className="text-xl font-semibold">{productName}</h1>
         <label className="flex items-center gap-2 text-text-muted">
           Theme
           <select
@@ -40,31 +58,19 @@ export default function App() {
       </header>
 
       <section className="rounded-lg border border-border bg-surface p-4">
-        <h2 className="mb-2 font-medium">API status</h2>
-        {health.state === 'loading' && <p className="text-text-muted">Checking…</p>}
-        {health.state === 'error' && <p className="text-danger">{health.message}</p>}
-        {health.state === 'ready' && (
-          <ul className="space-y-1">
-            <li>
-              Server: <span className="text-success">up</span>
-            </li>
-            <li>
-              Database:{' '}
-              <span
-                className={health.data.components.mongo === 'up' ? 'text-success' : 'text-danger'}
-              >
-                {health.data.components.mongo}
-              </span>
-            </li>
-          </ul>
-        )}
+        <p className="font-medium">Signed in as {user.name}</p>
+        <p className="text-text-muted">
+          {user.email} · {user.role.name}
+        </p>
+        <p className="mt-2 text-text-muted">{user.grants.length} permissions loaded</p>
       </section>
 
       <button
         type="button"
-        className="self-start rounded-md bg-brand px-4 py-2 font-medium text-on-brand transition-colors hover:bg-brand-hover"
+        className="self-start rounded-md border border-border bg-surface px-4 py-2 font-medium transition-colors hover:border-brand"
+        onClick={signOut}
       >
-        Primary action
+        Sign out
       </button>
     </main>
   );
