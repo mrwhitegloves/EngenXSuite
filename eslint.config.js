@@ -34,7 +34,8 @@ export default [
     },
   },
   {
-    files: ['*.config.js'],
+    // Files that run in Node.js, not in the browser: tool settings and the helper scripts.
+    files: ['*.config.js', 'scripts/**/*.js'],
     languageOptions: { globals: globals.node },
   },
 ];

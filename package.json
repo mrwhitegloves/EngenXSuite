@@ -11,6 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . && prettier --check .",
+    "check:names": "node scripts/checkProductName.js",
+    "prepare": "husky",
     "format": "prettier --write ."
   },
   "dependencies": {
@@ -30,6 +32,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
+    "husky": "^9.1.7",
     "prettier": "^3.9.9",
     "tailwindcss": "^4.3.3",
     "vite": "^8.3.3"
