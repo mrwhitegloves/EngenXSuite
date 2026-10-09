@@ -34,17 +34,35 @@ export function colourIndexOf(name) {
   return (hash % COLOUR_COUNT) + 1;
 }
 
+// How many times a picture is tried before the initials are shown instead.
+const MAX_ATTEMPTS = 3;
+
 export default function Avatar({ name, url, size = 'sm' }) {
-  // If the picture cannot be loaded (expired link, deleted file), fall back to the initials.
-  const [failedUrl, setFailedUrl] = useState(null);
+  // The rule: a user with a picture address always gets the picture; initials are only for a
+  // user without one. Picture hosts (Google in particular) sometimes refuse a single request,
+  // so one failed load is retried instead of giving up straight away. Only when the picture
+  // keeps failing (deleted file, dead link) do the initials stand in for it.
+  const [failures, setFailures] = useState({ url: null, count: 0 });
+  const failedCount = failures.url === url ? failures.count : 0;
   const sizeClass = SIZES[size] ?? SIZES.sm;
 
-  if (url && failedUrl !== url) {
+  if (url && failedCount < MAX_ATTEMPTS) {
     return (
       <img
+        // A new key makes the browser request the picture again after a failure.
+        key={`${url}#${failedCount}`}
         src={url}
         alt=""
-        onError={() => setFailedUrl(url)}
+        // Google's picture host rejects requests more often when they carry the page address,
+        // and the picture host never needs to know which page asked.
+        referrerPolicy="no-referrer"
+        onError={() => {
+          // Wait a little longer before each new try.
+          window.setTimeout(
+            () => setFailures({ url, count: failedCount + 1 }),
+            400 * (failedCount + 1),
+          );
+        }}
         className={`${sizeClass} shrink-0 rounded-full object-cover`}
       />
     );
