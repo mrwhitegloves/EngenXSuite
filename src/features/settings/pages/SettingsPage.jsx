@@ -9,6 +9,7 @@ import {
 import { useCan } from '../../../hooks/useCan.js';
 import { useRoles, useUpdateRole } from '../api.js';
 import AuditLog from '../components/AuditLog.jsx';
+import Backups from '../components/Backups.jsx';
 import BackgroundJobs from '../components/BackgroundJobs.jsx';
 import PermissionMatrix, { grantsToMap, mapToGrants } from '../components/PermissionMatrix.jsx';
 
@@ -95,6 +96,11 @@ const SECTIONS = [
     description: 'Background jobs: slow work the system does on its own, and what failed.',
   },
   {
+    id: 'backups',
+    label: 'Backups',
+    description: 'Backups: nightly copies of the whole database, kept in private storage.',
+  },
+  {
     id: 'audit',
     label: 'Audit log',
     description: 'Audit log: who changed what, and when. It cannot be edited.',
@@ -140,6 +146,7 @@ export default function SettingsPage() {
       </nav>
       {section.id === 'roles' && <RolesSection canEdit={can('settings', 'edit')} />}
       {section.id === 'jobs' && <BackgroundJobs canEdit={can('settings', 'edit')} />}
+      {section.id === 'backups' && <Backups canEdit={can('settings', 'edit')} />}
       {section.id === 'audit' && <AuditLog />}
     </>
   );

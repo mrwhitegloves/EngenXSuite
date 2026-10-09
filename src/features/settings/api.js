@@ -58,6 +58,28 @@ export function useAuditOptions() {
   });
 }
 
+const BACKUPS_KEY = ['backups'];
+
+/** Finished database backups, newest first, and whether storage is set up. */
+export function useBackups() {
+  return useQuery({
+    queryKey: BACKUPS_KEY,
+    queryFn: ({ signal }) => apiRequest('/backups', { signal }),
+    select: (payload) => payload.data,
+    // A backup started by hand finishes in the background: look again every 15 seconds.
+    refetchInterval: 15_000,
+  });
+}
+
+/** Start a backup now. */
+export function useStartBackup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiRequest('/backups', { method: 'POST' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BACKUPS_KEY }),
+  });
+}
+
 const JOBS_KEY = ['jobs'];
 
 /** How many background jobs each queue holds. Reloaded every 10 seconds while the page is open. */
