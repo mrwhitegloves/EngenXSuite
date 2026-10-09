@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import {
   FormError,
@@ -7,6 +8,7 @@ import {
 } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useRoles, useUpdateRole } from '../api.js';
+import BackgroundJobs from '../components/BackgroundJobs.jsx';
 import PermissionMatrix, { grantsToMap, mapToGrants } from '../components/PermissionMatrix.jsx';
 
 // The editor for one account type. Rendered with key={role.id}, so switching to another
@@ -80,10 +82,60 @@ function RoleEditor({ role, catalogue, canEdit }) {
   );
 }
 
-// Settings. The first section is Roles and permissions: what each account type may do.
+const SECTIONS = [
+  {
+    id: 'roles',
+    label: 'Roles and permissions',
+    description: 'Roles and permissions: what each account type can see and do.',
+  },
+  {
+    id: 'jobs',
+    label: 'Background jobs',
+    description: 'Background jobs: slow work the system does on its own, and what failed.',
+  },
+];
+
+// Settings. Sections so far: Roles and permissions, Background jobs.
 // More sections (branding, stages, tags, integrations) are added by later tasks.
 export default function SettingsPage() {
   const can = useCan();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const section = SECTIONS.find((item) => item.id === searchParams.get('section')) ?? SECTIONS[0];
+
+  return (
+    <>
+      <PageHeader title="Settings" description={section.description} />
+      <nav
+        aria-label="Settings sections"
+        className="mb-5 flex flex-wrap gap-1 border-b border-border"
+      >
+        {SECTIONS.map((item) => {
+          const isCurrent = item.id === section.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              aria-current={isCurrent ? 'page' : undefined}
+              onClick={() => setSearchParams({ section: item.id })}
+              className={[
+                '-mb-px border-b-2 px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-brand',
+                isCurrent
+                  ? 'border-brand text-brand-text'
+                  : 'border-transparent text-text-muted hover:text-text',
+              ].join(' ')}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+      {section.id === 'roles' && <RolesSection canEdit={can('settings', 'edit')} />}
+      {section.id === 'jobs' && <BackgroundJobs canEdit={can('settings', 'edit')} />}
+    </>
+  );
+}
+
+function RolesSection({ canEdit }) {
   const roles = useRoles();
   const [selectedId, setSelectedId] = useState(null);
 
@@ -92,10 +144,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Settings"
-        description="Roles and permissions: what each account type can see and do."
-      />
       <FormError message={roles.error?.message} />
       {roles.isPending && (
         <p role="status" className="text-text-muted">
@@ -131,7 +179,7 @@ export default function SettingsPage() {
             key={selected.id}
             role={selected}
             catalogue={roles.data.catalogue}
-            canEdit={can('settings', 'edit')}
+            canEdit={canEdit}
           />
         </>
       )}

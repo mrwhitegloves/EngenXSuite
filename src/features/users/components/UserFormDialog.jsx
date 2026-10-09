@@ -15,7 +15,7 @@ import {
 import { useCreateUser, useUpdateUser, useUserFormOptions } from '../api.js';
 import PasswordField from './PasswordField.jsx';
 
-const MIN_PASSWORD = 10;
+const MIN_PASSWORD = 8;
 
 function initialForm(user) {
   if (!user) {
@@ -199,8 +199,8 @@ export default function UserFormDialog({ user, isSelf, onClose }) {
           label={isEditing ? 'New password' : 'Password'}
           hint={
             isEditing
-              ? 'Leave empty to keep the current password. At least 10 characters.'
-              : 'At least 10 characters.'
+              ? `Leave empty to keep the current password. At least ${MIN_PASSWORD} characters.`
+              : `At least ${MIN_PASSWORD} characters.`
           }
           value={form.password}
           onChange={set('password')}

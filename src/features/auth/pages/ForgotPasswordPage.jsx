@@ -11,7 +11,7 @@ import {
 } from '../../../components/shared/form.jsx';
 import AuthCard, { PasswordVisibilityNotice } from '../components/AuthCard.jsx';
 
-const MIN_LENGTH = 10;
+const MIN_LENGTH = 8;
 
 // "Forgot password" (decision 0011): enter the login email and a new password twice.
 // No email is sent and the old password is not asked. The email must belong to a user.
