@@ -69,6 +69,44 @@ export function useUpdateBranding() {
   });
 }
 
+const statusListKey = (list) => ['status-lists', list];
+
+/** Every status of one managed list: "account-statuses" or "lead-statuses". */
+export function useStatusList(list) {
+  return useQuery({
+    queryKey: statusListKey(list),
+    queryFn: ({ signal }) => apiRequest(`/status-lists/${list}`, { signal }),
+    select: (payload) => payload.data,
+  });
+}
+
+/** The changes a person can make to a status list. Each one reloads the list afterwards. */
+export function useStatusListActions(list) {
+  const queryClient = useQueryClient();
+  const reload = () => {
+    queryClient.invalidateQueries({ queryKey: statusListKey(list) });
+    // Accounts show their status by name: reload them too.
+    queryClient.invalidateQueries({ queryKey: ['accounts'] });
+  };
+  const action = (mutationFn) => ({ mutationFn, onSuccess: reload });
+  return {
+    create: useMutation(
+      action((body) => apiRequest(`/status-lists/${list}`, { method: 'POST', body })),
+    ),
+    update: useMutation(
+      action(({ id, ...body }) =>
+        apiRequest(`/status-lists/${list}/${id}`, { method: 'PATCH', body }),
+      ),
+    ),
+    reorder: useMutation(
+      action((ids) => apiRequest(`/status-lists/${list}/order`, { method: 'PUT', body: { ids } })),
+    ),
+    remove: useMutation(
+      action((id) => apiRequest(`/status-lists/${list}/${id}`, { method: 'DELETE' })),
+    ),
+  };
+}
+
 const BACKUPS_KEY = ['backups'];
 
 /** Finished database backups, newest first, and whether storage is set up. */

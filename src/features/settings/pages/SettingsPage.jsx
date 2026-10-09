@@ -12,6 +12,7 @@ import AuditLog from '../components/AuditLog.jsx';
 import Branding from '../components/Branding.jsx';
 import Backups from '../components/Backups.jsx';
 import BackgroundJobs from '../components/BackgroundJobs.jsx';
+import StatusLists from '../components/StatusLists.jsx';
 import PermissionMatrix, { grantsToMap, mapToGrants } from '../components/PermissionMatrix.jsx';
 
 // The editor for one account type. Rendered with key={role.id}, so switching to another
@@ -97,6 +98,11 @@ const SECTIONS = [
     description: 'Branding: the product name, the company name and the logos.',
   },
   {
+    id: 'statuses',
+    label: 'Statuses',
+    description: 'Statuses: the account and lead statuses your team can choose from.',
+  },
+  {
     id: 'jobs',
     label: 'Background jobs',
     description: 'Background jobs: slow work the system does on its own, and what failed.',
@@ -152,6 +158,7 @@ export default function SettingsPage() {
       </nav>
       {section.id === 'roles' && <RolesSection canEdit={can('settings', 'edit')} />}
       {section.id === 'branding' && <Branding canEdit={can('settings', 'edit')} />}
+      {section.id === 'statuses' && <StatusLists canEdit={can('settings', 'edit')} />}
       {section.id === 'jobs' && <BackgroundJobs canEdit={can('settings', 'edit')} />}
       {section.id === 'backups' && <Backups canEdit={can('settings', 'edit')} />}
       {section.id === 'audit' && <AuditLog />}

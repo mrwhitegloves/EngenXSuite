@@ -10,6 +10,10 @@ export const REALTIME_REFETCH = {
   'users.changed': [['users']],
   // An account type or its permissions changed: my menu and rights may differ now.
   'permissions.changed': [['auth'], ['roles'], ['users']],
+  // An account (customer company) was added, changed or deleted.
+  'accounts.changed': [['accounts']],
+  // A status list in Settings changed: reload the lists, and accounts (they show status names).
+  'status-lists.changed': [['status-lists'], ['accounts']],
   // The product name or company name changed.
   'branding.changed': [['branding']],
 };
