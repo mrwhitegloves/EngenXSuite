@@ -3,12 +3,14 @@ import AppShell from './components/layout/AppShell.jsx';
 import SectionNotBuilt from './components/shared/states/SectionNotBuilt.jsx';
 import { NAV_ITEMS, SETTINGS_ITEM, visibleItems } from './config/navigation.js';
 import DashboardPage from './features/dashboard/pages/DashboardPage.jsx';
+import SettingsPage from './features/settings/pages/SettingsPage.jsx';
 import UsersPage from './features/users/pages/UsersPage.jsx';
 import { useCan } from './hooks/useCan.js';
 
 // Sections that have a real page. Every other visible section shows a "not built yet" notice.
 const PAGES = {
   '/users': UsersPage,
+  '/settings': SettingsPage,
 };
 
 // Every signed-in route, in one file. A route exists only for sections the user may see;

@@ -83,8 +83,8 @@ export default function ViewPasswordDialog({ user, onClose }) {
 
       {reveal.isSuccess && !result.available && (
         <p>
-          This password was set before passwords could be shown. Reset it, or wait until the user
-          changes it; after that it appears here.
+          This user has no password yet (for example an account that only signs in with Google). Set
+          one with Edit.
         </p>
       )}
 

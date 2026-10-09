@@ -49,9 +49,3 @@ export function useUpdateUser() {
     apiRequest(`/users/${id}`, { method: 'PATCH', body }),
   );
 }
-
-export function useResetPassword() {
-  return useUsersMutation(({ id, password }) =>
-    apiRequest(`/users/${id}/reset-password`, { method: 'POST', body: { password } }),
-  );
-}

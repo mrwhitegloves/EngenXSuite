@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, KeyRound, Plus, UserCheck, UserX, Users } from 'lucide-react';
+import { Eye, Pencil, Plus, UserCheck, UserX, Users } from 'lucide-react';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
 import {
@@ -11,8 +11,7 @@ import {
 import { useAuth } from '../../../hooks/useAuth.js';
 import { useCan } from '../../../hooks/useCan.js';
 import { useUpdateUser, useUsers } from '../api.js';
-import CreateUserDialog from '../components/CreateUserDialog.jsx';
-import ResetPasswordDialog from '../components/ResetPasswordDialog.jsx';
+import UserFormDialog from '../components/UserFormDialog.jsx';
 import ViewPasswordDialog from '../components/ViewPasswordDialog.jsx';
 
 const STATUS_STYLES = {
@@ -34,6 +33,21 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+// A small round picture, or the first letter of the name when there is no picture.
+function Avatar({ name, url }) {
+  if (url) {
+    return <img src={url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />;
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-medium text-brand-text"
+    >
+      {name.slice(0, 1).toUpperCase()}
+    </span>
+  );
+}
+
 // User accounts: who can sign in, with which account type. CEO: everyone. Manager: own team.
 export default function UsersPage() {
   const { user: me } = useAuth();
@@ -41,8 +55,8 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
-  const [isCreating, setIsCreating] = useState(false);
-  const [resetTarget, setResetTarget] = useState(null);
+  // null = closed, 'new' = the create form, or the user being edited.
+  const [formTarget, setFormTarget] = useState(null);
   const [viewTarget, setViewTarget] = useState(null);
 
   const users = useUsers({ page, search, status });
@@ -53,11 +67,16 @@ export default function UsersPage() {
   const pageCount = meta ? Math.max(1, Math.ceil(meta.total / meta.pageSize)) : 1;
   const hasFilters = Boolean(search || status);
 
+  // Someone who manages ALL users may also edit their own account; a manager may not.
+  const managesAllUsers = me.grants.some(
+    (grant) => grant.feature === 'users' && grant.action === 'edit' && grant.scope === 'all',
+  );
+
   return (
     <>
       <PageHeader title="Users" description="People who can sign in, and their account type.">
         {can('users', 'create') && (
-          <button type="button" onClick={() => setIsCreating(true)} className={primaryButtonClass}>
+          <button type="button" onClick={() => setFormTarget('new')} className={primaryButtonClass}>
             <Plus size={16} aria-hidden="true" />
             New user
           </button>
@@ -130,26 +149,37 @@ export default function UsersPage() {
               {rows.map((row) => {
                 const isMe = row.id === me.id;
                 const isActive = row.status !== 'deactivated';
+                const canEditRow = can('users', 'edit') && (!isMe || managesAllUsers);
                 return (
                   <tr key={row.id} className="border-b border-border last:border-0">
                     <td className="px-4 py-2">
-                      <p className="font-medium">
-                        {row.name}
-                        {isMe && <span className="ml-2 text-xs text-text-muted">(you)</span>}
-                      </p>
-                      <p className="text-text-muted">{row.email}</p>
+                      <div className="flex items-center gap-3">
+                        <Avatar name={row.name} url={row.avatarUrl} />
+                        <div>
+                          <p className="font-medium">
+                            {row.name}
+                            {isMe && <span className="ml-2 text-xs text-text-muted">(you)</span>}
+                          </p>
+                          <p className="text-text-muted">{row.email}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-2">{row.role.name}</td>
                     <td className={`px-4 py-2 ${STATUS_STYLES[row.status]}`}>
                       {STATUS_LABELS[row.status]}
-                      {row.mustChangePassword && isActive && (
-                        <span className="block text-xs text-text-muted">Password not set yet</span>
-                      )}
                     </td>
                     <td className="px-4 py-2 text-text-muted">{formatDate(row.lastLoginAt)}</td>
                     <td className="px-4 py-2">
-                      {can('users', 'edit') && !isMe && (
+                      {canEditRow && (
                         <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            className={rowButton}
+                            onClick={() => setFormTarget(row)}
+                          >
+                            <Pencil size={14} aria-hidden="true" />
+                            Edit
+                          </button>
                           <button
                             type="button"
                             className={rowButton}
@@ -158,32 +188,26 @@ export default function UsersPage() {
                             <Eye size={14} aria-hidden="true" />
                             Show password
                           </button>
-                          <button
-                            type="button"
-                            className={rowButton}
-                            onClick={() => setResetTarget(row)}
-                          >
-                            <KeyRound size={14} aria-hidden="true" />
-                            Reset password
-                          </button>
-                          <button
-                            type="button"
-                            className={rowButton}
-                            disabled={updateUser.isPending}
-                            onClick={() =>
-                              updateUser.mutate({
-                                id: row.id,
-                                status: isActive ? 'deactivated' : 'active',
-                              })
-                            }
-                          >
-                            {isActive ? (
-                              <UserX size={14} aria-hidden="true" />
-                            ) : (
-                              <UserCheck size={14} aria-hidden="true" />
-                            )}
-                            {isActive ? 'Deactivate' : 'Activate'}
-                          </button>
+                          {!isMe && (
+                            <button
+                              type="button"
+                              className={rowButton}
+                              disabled={updateUser.isPending}
+                              onClick={() =>
+                                updateUser.mutate({
+                                  id: row.id,
+                                  status: isActive ? 'deactivated' : 'active',
+                                })
+                              }
+                            >
+                              {isActive ? (
+                                <UserX size={14} aria-hidden="true" />
+                              ) : (
+                                <UserCheck size={14} aria-hidden="true" />
+                              )}
+                              {isActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>
@@ -219,19 +243,19 @@ export default function UsersPage() {
         </div>
       )}
 
-      <CreateUserDialog open={isCreating} onClose={() => setIsCreating(false)} />
+      {formTarget && (
+        <UserFormDialog
+          key={formTarget === 'new' ? 'new' : formTarget.id}
+          user={formTarget === 'new' ? null : formTarget}
+          isSelf={formTarget !== 'new' && formTarget.id === me.id}
+          onClose={() => setFormTarget(null)}
+        />
+      )}
       {viewTarget && (
         <ViewPasswordDialog
           key={viewTarget.id}
           user={viewTarget}
           onClose={() => setViewTarget(null)}
-        />
-      )}
-      {resetTarget && (
-        <ResetPasswordDialog
-          key={resetTarget.id}
-          user={resetTarget}
-          onClose={() => setResetTarget(null)}
         />
       )}
     </>

@@ -6,10 +6,10 @@ const smallButton =
   'rounded-md border border-border p-2 text-text-muted hover:text-text focus-visible:outline-2 focus-visible:outline-brand';
 
 /**
- * The first password for someone else's account. Shown as plain text on purpose: the person
- * creating the account has to pass it on, and the user must replace it at their first sign-in.
+ * A password an administrator sets for someone else's account. Shown as plain text on purpose:
+ * the person setting it has to pass it on to the user.
  */
-export default function PasswordField({ value, onChange, error }) {
+export default function PasswordField({ label = 'Password', hint, value, onChange, error }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -23,11 +23,7 @@ export default function PasswordField({ value, onChange, error }) {
   }
 
   return (
-    <Field
-      label="First password"
-      hint="At least 10 characters. The user must choose their own at the first sign-in."
-      error={error}
-    >
+    <Field label={label} hint={hint} error={error}>
       {(props) => (
         <div className="flex gap-2">
           <input

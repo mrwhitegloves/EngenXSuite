@@ -5,36 +5,44 @@ import { apiRequest } from '../../../lib/apiClient.js';
 import {
   Field,
   FormError,
+  fieldErrorsFrom,
   inputClass,
   primaryButtonClass,
 } from '../../../components/shared/form.jsx';
-import AuthCard from '../components/AuthCard.jsx';
+import AuthCard, { PasswordVisibilityNotice } from '../components/AuthCard.jsx';
 
-// Step 1 of "forgot password": ask for a link by email.
-// The page says the same thing whether or not the email belongs to a user.
+const MIN_LENGTH = 10;
+
+// "Forgot password" (decision 0011): enter the login email and a new password twice.
+// No email is sent and the old password is not asked. The email must belong to a user.
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
-  const request = useMutation({
-    mutationFn: () => apiRequest('/auth/forgot-password', { method: 'POST', body: { email } }),
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const reset = useMutation({
+    mutationFn: () =>
+      apiRequest('/auth/reset-password', { method: 'POST', body: { email, newPassword } }),
   });
+
+  const serverErrors = fieldErrorsFrom(reset.error);
+  const tooShort = newPassword.length > 0 && newPassword.length < MIN_LENGTH;
+  const mismatch = confirmPassword.length > 0 && confirmPassword !== newPassword;
+  const canSubmit = email && newPassword.length >= MIN_LENGTH && confirmPassword === newPassword;
 
   function handleSubmit(event) {
     event.preventDefault();
-    request.mutate();
+    if (canSubmit) reset.mutate();
   }
 
-  if (request.isSuccess) {
+  if (reset.isSuccess) {
     return (
       <AuthCard
-        title="Check your email"
-        description={`If ${email} belongs to a user account, a link to choose a new password has been sent. It works for 30 minutes.`}
+        title="Password changed"
+        description="You have been signed out on every device. Sign in with your new password."
       >
-        <p className="text-sm text-text-muted">
-          No email? Check the spam folder, or ask your administrator or manager to reset your
-          password.
-        </p>
-        <Link to="/" className="text-sm font-medium text-brand-text hover:underline">
-          Back to sign in
+        <Link to="/" className={`${primaryButtonClass} w-full`}>
+          Go to sign in
         </Link>
       </AuthCard>
     );
@@ -42,12 +50,12 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthCard
-      title="Forgot your password?"
-      description="Enter your login email and we will send you a link to choose a new one."
+      title="Reset your password"
+      description="Enter your login email and choose a new password."
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        <FormError message={request.error?.message} />
-        <Field label="Email">
+        <FormError message={Object.keys(serverErrors).length ? null : reset.error?.message} />
+        <Field label="Email" error={serverErrors.email}>
           {(props) => (
             <input
               {...props}
@@ -59,12 +67,41 @@ export default function ForgotPasswordPage() {
             />
           )}
         </Field>
+        <Field
+          label="New password"
+          hint={`At least ${MIN_LENGTH} characters.`}
+          error={(tooShort && `Use at least ${MIN_LENGTH} characters`) || serverErrors.newPassword}
+        >
+          {(props) => (
+            <input
+              {...props}
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              className={inputClass}
+            />
+          )}
+        </Field>
+        <Field label="Repeat new password" error={mismatch && 'The two passwords do not match'}>
+          {(props) => (
+            <input
+              {...props}
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              className={inputClass}
+            />
+          )}
+        </Field>
+        <PasswordVisibilityNotice />
         <button
           type="submit"
-          disabled={!email || request.isPending}
+          disabled={!canSubmit || reset.isPending}
           className={`${primaryButtonClass} w-full`}
         >
-          {request.isPending ? 'Sending…' : 'Send link'}
+          {reset.isPending ? 'Saving…' : 'Save new password'}
         </button>
       </form>
       <Link to="/" className="block text-sm font-medium text-brand-text hover:underline">
