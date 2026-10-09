@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../lib/apiClient.js';
 
 const ROLES_KEY = ['roles'];
@@ -32,6 +32,30 @@ export function useUpdateRole() {
 
 export function useCreateRole() {
   return useRolesMutation((body) => apiRequest('/roles', { method: 'POST', body }));
+}
+
+const AUDIT_KEY = ['audit'];
+
+/** Audit entries, newest first. `params`: { page, userId, entityType, action, range, from, to } */
+export function useAuditLogs(params) {
+  const search = new URLSearchParams(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== ''),
+  ).toString();
+  return useQuery({
+    queryKey: [...AUDIT_KEY, 'list', params],
+    queryFn: ({ signal }) => apiRequest(`/audit-logs${search ? `?${search}` : ''}`, { signal }),
+    // Keep showing the current page while the next one loads, instead of flashing empty.
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** The users, record types and actions the audit filters offer. */
+export function useAuditOptions() {
+  return useQuery({
+    queryKey: [...AUDIT_KEY, 'options'],
+    queryFn: ({ signal }) => apiRequest('/audit-logs/options', { signal }),
+    select: (payload) => payload.data,
+  });
 }
 
 const JOBS_KEY = ['jobs'];

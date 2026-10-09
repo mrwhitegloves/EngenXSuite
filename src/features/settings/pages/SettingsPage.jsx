@@ -8,6 +8,7 @@ import {
 } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useRoles, useUpdateRole } from '../api.js';
+import AuditLog from '../components/AuditLog.jsx';
 import BackgroundJobs from '../components/BackgroundJobs.jsx';
 import PermissionMatrix, { grantsToMap, mapToGrants } from '../components/PermissionMatrix.jsx';
 
@@ -93,6 +94,13 @@ const SECTIONS = [
     label: 'Background jobs',
     description: 'Background jobs: slow work the system does on its own, and what failed.',
   },
+  {
+    id: 'audit',
+    label: 'Audit log',
+    description: 'Audit log: who changed what, and when. It cannot be edited.',
+    // Shown only to someone who may read the audit log.
+    feature: 'audit',
+  },
 ];
 
 // Settings. Sections so far: Roles and permissions, Background jobs.
@@ -100,7 +108,8 @@ const SECTIONS = [
 export default function SettingsPage() {
   const can = useCan();
   const [searchParams, setSearchParams] = useSearchParams();
-  const section = SECTIONS.find((item) => item.id === searchParams.get('section')) ?? SECTIONS[0];
+  const sections = SECTIONS.filter((item) => !item.feature || can(item.feature, 'view'));
+  const section = sections.find((item) => item.id === searchParams.get('section')) ?? sections[0];
 
   return (
     <>
@@ -109,7 +118,7 @@ export default function SettingsPage() {
         aria-label="Settings sections"
         className="mb-5 flex flex-wrap gap-1 border-b border-border"
       >
-        {SECTIONS.map((item) => {
+        {sections.map((item) => {
           const isCurrent = item.id === section.id;
           return (
             <button
@@ -131,6 +140,7 @@ export default function SettingsPage() {
       </nav>
       {section.id === 'roles' && <RolesSection canEdit={can('settings', 'edit')} />}
       {section.id === 'jobs' && <BackgroundJobs canEdit={can('settings', 'edit')} />}
+      {section.id === 'audit' && <AuditLog />}
     </>
   );
 }
