@@ -3,13 +3,16 @@ import AppRoutes from './routes.jsx';
 import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { useBranding } from './hooks/useBranding.js';
+import { useRealtime } from './hooks/useRealtime.js';
 import { useTheme } from './hooks/useTheme.js';
 import LoginPage from './features/auth/pages/LoginPage.jsx';
 
 // Decides what to show from the sign-in state: loading, an error, the sign-in pages, or the app.
 export default function App() {
-  const { status, error, retry } = useAuth();
+  const { status, user, error, retry } = useAuth();
   const { productName } = useBranding();
+  // Live updates run only while someone is signed in.
+  useRealtime(status === 'signedIn' ? user.id : null);
   // Called here so the theme is applied on every screen, including the sign-in page.
   useTheme();
 
