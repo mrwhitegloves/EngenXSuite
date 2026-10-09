@@ -3,6 +3,7 @@ import { LogOut, Monitor, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useTheme } from '../../hooks/useTheme.js';
 import Avatar from '../shared/Avatar.jsx';
+import Logo from '../shared/Logo.jsx';
 import ProfileDialog from '../../features/auth/components/ProfileDialog.jsx';
 
 const THEME_ICONS = { light: Sun, dark: Moon, system: Monitor };
@@ -44,8 +45,10 @@ export default function TopBar({ productName }) {
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4">
-      {/* On phones there is no sidebar, so the product name sits here. */}
-      <span className="truncate font-semibold md:hidden">{productName}</span>
+      {/* On phones there is no sidebar, so the logo sits here. */}
+      <span className="md:hidden">
+        <Logo productName={productName} className="h-6" />
+      </span>
       <span className="hidden md:block" />
 
       <div className="flex items-center gap-3">

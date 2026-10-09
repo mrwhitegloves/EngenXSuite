@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { BRANDING_KEY } from '../../hooks/useBranding.js';
 import { apiRequest } from '../../lib/apiClient.js';
 
 const ROLES_KEY = ['roles'];
@@ -55,6 +56,16 @@ export function useAuditOptions() {
     queryKey: [...AUDIT_KEY, 'options'],
     queryFn: ({ signal }) => apiRequest('/audit-logs/options', { signal }),
     select: (payload) => payload.data,
+  });
+}
+
+/** Change the product name and/or the company name. */
+export function useUpdateBranding() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => apiRequest('/settings/branding', { method: 'PATCH', body }),
+    // Show the new names at once, in the same shape the branding query caches.
+    onSuccess: (payload) => queryClient.setQueryData(BRANDING_KEY, payload),
   });
 }
 

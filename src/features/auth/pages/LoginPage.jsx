@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../../lib/apiClient.js';
 import { CURRENT_USER_KEY } from '../../../hooks/useAuth.js';
+import Logo from '../../../components/shared/Logo.jsx';
 import {
   Field,
   FormError,
@@ -43,7 +44,10 @@ export default function LoginPage({ productName }) {
   return (
     <div className="grid min-h-screen md:grid-cols-2">
       <aside className="flex flex-col justify-between bg-sidebar p-8 text-on-sidebar md:p-12">
-        <p className="text-lg font-semibold tracking-wide">{productName}</p>
+        <div>
+          <Logo productName={productName} background="dark" className="h-9" />
+          <p className="mt-3 text-sm font-medium tracking-wide opacity-80">{productName}</p>
+        </div>
         <div>
           <div className="mb-4 h-1 w-12 bg-brand" aria-hidden="true" />
           <p className="max-w-sm text-2xl font-semibold leading-snug">

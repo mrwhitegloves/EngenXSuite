@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 @import './tokens.css';
 
+/* "dark:" classes follow the theme chosen in the app (data-theme on <html>, set by useTheme),
+   not the device setting. Used only where a token cannot do the job, e.g. swapping a logo image. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 /* Make the tokens available as Tailwind colours: bg-page, bg-surface, text-brand, border-border … */
 @theme inline {
   --color-brand: var(--brand);

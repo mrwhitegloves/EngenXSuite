@@ -9,6 +9,7 @@ import {
 import { useCan } from '../../../hooks/useCan.js';
 import { useRoles, useUpdateRole } from '../api.js';
 import AuditLog from '../components/AuditLog.jsx';
+import Branding from '../components/Branding.jsx';
 import Backups from '../components/Backups.jsx';
 import BackgroundJobs from '../components/BackgroundJobs.jsx';
 import PermissionMatrix, { grantsToMap, mapToGrants } from '../components/PermissionMatrix.jsx';
@@ -91,6 +92,11 @@ const SECTIONS = [
     description: 'Roles and permissions: what each account type can see and do.',
   },
   {
+    id: 'branding',
+    label: 'Branding',
+    description: 'Branding: the product name, the company name and the logos.',
+  },
+  {
     id: 'jobs',
     label: 'Background jobs',
     description: 'Background jobs: slow work the system does on its own, and what failed.',
@@ -145,6 +151,7 @@ export default function SettingsPage() {
         })}
       </nav>
       {section.id === 'roles' && <RolesSection canEdit={can('settings', 'edit')} />}
+      {section.id === 'branding' && <Branding canEdit={can('settings', 'edit')} />}
       {section.id === 'jobs' && <BackgroundJobs canEdit={can('settings', 'edit')} />}
       {section.id === 'backups' && <Backups canEdit={can('settings', 'edit')} />}
       {section.id === 'audit' && <AuditLog />}

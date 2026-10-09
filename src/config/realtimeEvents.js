@@ -10,4 +10,6 @@ export const REALTIME_REFETCH = {
   'users.changed': [['users']],
   // An account type or its permissions changed: my menu and rights may differ now.
   'permissions.changed': [['auth'], ['roles'], ['users']],
+  // The product name or company name changed.
+  'branding.changed': [['branding']],
 };
