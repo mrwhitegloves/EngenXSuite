@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '../../../lib/apiClient.js';
+import AvatarUploader from '../../../components/shared/AvatarUploader.jsx';
 import Dialog from '../../../components/shared/Dialog.jsx';
 import {
   Field,
@@ -20,7 +23,6 @@ function initialForm(user) {
       name: '',
       email: '',
       phone: '',
-      avatarUrl: '',
       roleId: '',
       managerId: '',
       status: 'active',
@@ -31,7 +33,6 @@ function initialForm(user) {
     name: user.name,
     email: user.email,
     phone: user.phone ?? '',
-    avatarUrl: user.avatarUrl ?? '',
     roleId: user.role.id,
     managerId: user.managerId ?? '',
     status: user.status === 'deactivated' ? 'deactivated' : 'active',
@@ -48,7 +49,7 @@ function changedFields(form, user) {
     if (form[field] !== before[field]) changes[field] = form[field];
   }
   // Optional fields: an emptied field is sent as null, which clears it.
-  for (const field of ['phone', 'avatarUrl', 'managerId']) {
+  for (const field of ['phone', 'managerId']) {
     if (form[field] !== before[field]) changes[field] = form[field] || null;
   }
   if (form.password) changes.password = form.password;
@@ -68,6 +69,25 @@ export default function UserFormDialog({ user, isSelf, onClose }) {
   const updateUser = useUpdateUser();
   const mutation = isEditing ? updateUser : createUser;
   const errors = fieldErrorsFrom(mutation.error);
+
+  // Profile picture: uploaded from this computer to storage; the list reloads to show it.
+  const queryClient = useQueryClient();
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? null);
+  async function uploadAvatar(file) {
+    const body = new FormData();
+    body.append('file', file);
+    const payload = await apiRequest(`/users/${user.id}/avatar`, { method: 'POST', body });
+    setAvatarUrl(payload.data.avatarUrl);
+    queryClient.invalidateQueries({ queryKey: ['users'] });
+    // If the administrator is editing their own account, their top-bar picture changes too.
+    if (isSelf) queryClient.invalidateQueries({ queryKey: ['auth'] });
+  }
+  async function removeAvatar() {
+    await apiRequest(`/users/${user.id}/avatar`, { method: 'DELETE' });
+    setAvatarUrl(null);
+    queryClient.invalidateQueries({ queryKey: ['users'] });
+    if (isSelf) queryClient.invalidateQueries({ queryKey: ['auth'] });
+  }
 
   const set = (field) => (eventOrValue) =>
     setForm((current) => ({
@@ -101,7 +121,6 @@ export default function UserFormDialog({ user, isSelf, onClose }) {
         roleId: form.roleId,
         // Empty optional values are left out instead of being sent as empty text.
         ...(form.phone ? { phone: form.phone } : {}),
-        ...(form.avatarUrl ? { avatarUrl: form.avatarUrl } : {}),
         ...(form.managerId ? { managerId: form.managerId } : {}),
       },
       { onSuccess: onClose },
@@ -137,6 +156,22 @@ export default function UserFormDialog({ user, isSelf, onClose }) {
         </>
       }
     >
+      {/* The picture is saved the moment it is chosen, apart from the rest of the form. */}
+      {isEditing ? (
+        <div className="mb-5 border-b border-border pb-5">
+          <AvatarUploader
+            name={user.name}
+            url={avatarUrl}
+            onUpload={uploadAvatar}
+            onRemove={removeAvatar}
+          />
+        </div>
+      ) : (
+        <p className="mb-4 text-sm text-text-muted">
+          A profile picture can be added after the user is created (Edit), or by the user from their
+          own profile.
+        </p>
+      )}
       <form id="user-form" onSubmit={handleSubmit} noValidate className="space-y-4">
         <FormError
           message={
@@ -238,21 +273,6 @@ export default function UserFormDialog({ user, isSelf, onClose }) {
               type="tel"
               value={form.phone}
               onChange={set('phone')}
-              className={inputClass}
-            />
-          )}
-        </Field>
-        <Field
-          label="Picture address (optional)"
-          hint="A web address starting with https://"
-          error={errors.avatarUrl}
-        >
-          {(props) => (
-            <input
-              {...props}
-              type="url"
-              value={form.avatarUrl}
-              onChange={set('avatarUrl')}
               className={inputClass}
             />
           )}

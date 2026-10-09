@@ -30,6 +30,17 @@
   --edited: #f97316;
   --edited-soft: #fff7ed;
 
+  /* Background colours for initials avatars. Each is dark enough for white letters.
+     A user's colour is picked from this list by their name, so it is always the same. */
+  --avatar-1: #2563eb;
+  --avatar-2: #7c3aed;
+  --avatar-3: #be185d;
+  --avatar-4: #c2410c;
+  --avatar-5: #047857;
+  --avatar-6: #0e7490;
+  --avatar-7: #4f46e5;
+  --avatar-8: #a16207;
+
   color-scheme: light;
 }
 

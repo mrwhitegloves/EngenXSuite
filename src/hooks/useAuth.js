@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { apiRequest } from '../lib/apiClient.js';
+import { setTrackedUser } from '../lib/errorTracking.js';
 
 export const CURRENT_USER_KEY = ['auth', 'me'];
 
@@ -34,6 +36,12 @@ export function useAuth() {
       queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== 'auth' });
     },
   });
+
+  // Errors are reported with the user's id only (never name or email).
+  const userId = query.data?.id ?? null;
+  useEffect(() => {
+    setTrackedUser(userId);
+  }, [userId]);
 
   let status = 'signedIn';
   if (query.isPending) status = 'loading';

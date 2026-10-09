@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, Pencil, Plus, UserCheck, UserX, Users } from 'lucide-react';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
+import Avatar from '../../../components/shared/Avatar.jsx';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
 import {
   FormError,
@@ -31,21 +32,6 @@ function formatDate(value) {
     timeStyle: 'short',
     timeZone: 'Asia/Kolkata',
   }).format(new Date(value));
-}
-
-// A small round picture, or the first letter of the name when there is no picture.
-function Avatar({ name, url }) {
-  if (url) {
-    return <img src={url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />;
-  }
-  return (
-    <span
-      aria-hidden="true"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-medium text-brand-text"
-    >
-      {name.slice(0, 1).toUpperCase()}
-    </span>
-  );
 }
 
 // User accounts: who can sign in, with which account type. CEO: everyone. Manager: own team.

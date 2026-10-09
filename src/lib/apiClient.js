@@ -7,14 +7,16 @@
  * @returns {Promise<{ data: unknown, meta?: unknown }>}
  */
 export async function apiRequest(path, { method = 'GET', body, signal } = {}) {
+  // A FormData body is a file upload: the browser sets its own multipart header.
+  const isUpload = typeof FormData !== 'undefined' && body instanceof FormData;
   let response;
   try {
     response = await fetch(`/api${path}`, {
       method,
       signal,
       credentials: 'same-origin',
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: body === undefined || isUpload ? undefined : { 'Content-Type': 'application/json' },
+      body: body === undefined || isUpload ? body : JSON.stringify(body),
     });
   } catch {
     // fetch only rejects when the network or the server is unreachable.
