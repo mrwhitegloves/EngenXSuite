@@ -12,7 +12,7 @@ function toQueryString(params) {
   return text ? `?${text}` : '';
 }
 
-/** The users the signed-in person may see. `params`: { page, search, status } */
+/** The users the signed-in person may see. `params`: { page, sort, search, status } */
 export function useUsers(params) {
   return useQuery({
     queryKey: [...USERS_KEY, 'list', params],

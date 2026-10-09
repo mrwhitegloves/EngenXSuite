@@ -1,12 +1,17 @@
 import { ScrollText } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
-import DateRangeFilter, { dateRangeParams } from '../../../components/shared/DateRangeFilter.jsx';
+import DataTable from '../../../components/shared/DataTable.jsx';
+import DateRangeFilter, {
+  DATE_PRESET_LABELS,
+  dateRangeParams,
+} from '../../../components/shared/DateRangeFilter.jsx';
+import FilterBar from '../../../components/shared/FilterBar.jsx';
+import Pagination from '../../../components/shared/Pagination.jsx';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
-import { FormError, inputClass, secondaryButtonClass } from '../../../components/shared/form.jsx';
+import { FormError, inputClass } from '../../../components/shared/form.jsx';
+import { useListParams } from '../../../hooks/useListParams.js';
 import { useAuditLogs, useAuditOptions } from '../api.js';
 
 const FILTER_KEYS = ['userId', 'entityType', 'action', 'range', 'from', 'to'];
-
 function formatDate(value) {
   return new Intl.DateTimeFormat('en-IN', {
     dateStyle: 'medium',
@@ -54,46 +59,97 @@ function Changes({ oldValue, newValue }) {
   );
 }
 
+const COLUMNS = [
+  {
+    key: 'at',
+    header: 'When',
+    className: 'whitespace-nowrap text-text-muted',
+    render: (row) => formatDate(row.at),
+  },
+  {
+    key: 'user',
+    header: 'Who',
+    className: 'whitespace-nowrap',
+    render: (row) => (row.user ? (row.user.name ?? 'Deleted user') : 'The system'),
+  },
+  { key: 'action', header: 'What', render: (row) => readable(row.action) },
+  {
+    key: 'record',
+    header: 'Record',
+    render: (row) => (
+      <>
+        <div>{row.entityName ?? 'No longer exists'}</div>
+        <div className="text-text-muted">{readable(row.entityType)}</div>
+      </>
+    ),
+  },
+  {
+    key: 'changes',
+    header: 'Changes',
+    className: 'max-w-md',
+    render: (row) => <Changes oldValue={row.oldValue} newValue={row.newValue} />,
+  },
+];
+
 // Settings → Audit log: who changed what and when. Read-only. Filters and page are kept in the
 // address, so a filtered view can be bookmarked or shared.
 export default function AuditLog() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const filters = Object.fromEntries(FILTER_KEYS.map((key) => [key, searchParams.get(key) ?? '']));
-  const page = Math.max(1, Number(searchParams.get('page')) || 1);
-  const dates = { range: filters.range, from: filters.from, to: filters.to };
+  const list = useListParams(FILTER_KEYS);
+  const { userId, entityType, action, range, from, to } = list.values;
+  const dates = { range, from, to };
 
   const options = useAuditOptions();
   const logs = useAuditLogs({
-    page,
-    userId: filters.userId,
-    entityType: filters.entityType,
-    action: filters.action,
+    page: list.page,
+    userId,
+    entityType,
+    action,
     ...dateRangeParams(dates),
   });
 
-  // Change some address values, keep the others. An empty value is removed from the address.
-  function update(changes) {
-    const next = new URLSearchParams(searchParams);
-    for (const [key, value] of Object.entries(changes)) {
-      if (value) next.set(key, value);
-      else next.delete(key);
-    }
-    setSearchParams(next);
-  }
-  const setFilter = (changes) => update({ ...changes, page: '' });
-
   const rows = logs.data?.data ?? [];
-  const meta = logs.data?.meta;
-  const pageCount = meta ? Math.max(1, Math.ceil(meta.total / meta.pageSize)) : 1;
-  const hasFilters = FILTER_KEYS.some((key) => filters[key]);
+  const userName =
+    userId === 'system'
+      ? 'The system'
+      : (options.data?.users.find((user) => user.id === userId)?.name ?? 'One user');
+
+  const chips = [
+    userId && {
+      key: 'userId',
+      label: `Who: ${userName}`,
+      onRemove: () => list.setFilters({ userId: '' }),
+    },
+    entityType && {
+      key: 'entityType',
+      label: `Record type: ${readable(entityType)}`,
+      onRemove: () => list.setFilters({ entityType: '' }),
+    },
+    action && {
+      key: 'action',
+      label: `Action: ${readable(action)}`,
+      onRemove: () => list.setFilters({ action: '' }),
+    },
+    range && {
+      key: 'range',
+      label:
+        range === 'custom' && from && to
+          ? `Date of change: ${from} to ${to}`
+          : `Date of change: ${DATE_PRESET_LABELS[range] ?? range}`,
+      onRemove: () => list.setFilters({ range: '', from: '', to: '' }),
+    },
+  ].filter(Boolean);
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-start gap-2">
+    <div>
+      <FilterBar
+        chips={chips}
+        onClearAll={list.clearFilters}
+        savedViews={{ screen: 'audit-log', currentQuery: list.viewQuery, onApply: list.applyView }}
+      >
         <select
           aria-label="Filter by user"
-          value={filters.userId}
-          onChange={(event) => setFilter({ userId: event.target.value })}
+          value={userId}
+          onChange={(event) => list.setFilters({ userId: event.target.value })}
           className={`${inputClass} w-auto`}
         >
           <option value="">Anyone</option>
@@ -106,8 +162,8 @@ export default function AuditLog() {
         </select>
         <select
           aria-label="Filter by record type"
-          value={filters.entityType}
-          onChange={(event) => setFilter({ entityType: event.target.value })}
+          value={entityType}
+          onChange={(event) => list.setFilters({ entityType: event.target.value })}
           className={`${inputClass} w-auto`}
         >
           <option value="">All record types</option>
@@ -119,28 +175,19 @@ export default function AuditLog() {
         </select>
         <select
           aria-label="Filter by action"
-          value={filters.action}
-          onChange={(event) => setFilter({ action: event.target.value })}
+          value={action}
+          onChange={(event) => list.setFilters({ action: event.target.value })}
           className={`${inputClass} w-auto`}
         >
           <option value="">All actions</option>
-          {(options.data?.actions ?? []).map((action) => (
-            <option key={action} value={action}>
-              {readable(action)}
+          {(options.data?.actions ?? []).map((item) => (
+            <option key={item} value={item}>
+              {readable(item)}
             </option>
           ))}
         </select>
-        <DateRangeFilter label="Date of change" value={dates} onChange={setFilter} />
-        {hasFilters && (
-          <button
-            type="button"
-            className={secondaryButtonClass}
-            onClick={() => setFilter(Object.fromEntries(FILTER_KEYS.map((key) => [key, ''])))}
-          >
-            Clear all
-          </button>
-        )}
-      </div>
+        <DateRangeFilter label="Date of change" value={dates} onChange={list.setFilters} />
+      </FilterBar>
 
       <FormError message={logs.error?.message ?? options.error?.message} />
 
@@ -153,9 +200,9 @@ export default function AuditLog() {
       {logs.isSuccess && rows.length === 0 && (
         <EmptyState
           icon={ScrollText}
-          title={hasFilters ? 'Nothing matches these filters' : 'Nothing recorded yet'}
+          title={list.hasFilters ? 'Nothing matches these filters' : 'Nothing recorded yet'}
           description={
-            hasFilters
+            list.hasFilters
               ? 'Change or clear the filters.'
               : 'Changes to users, permissions and records will appear here.'
           }
@@ -163,64 +210,15 @@ export default function AuditLog() {
       )}
 
       {rows.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-border bg-surface">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border text-xs uppercase text-text-muted">
-              <tr>
-                <th className="px-4 py-2 font-medium">When</th>
-                <th className="px-4 py-2 font-medium">Who</th>
-                <th className="px-4 py-2 font-medium">What</th>
-                <th className="px-4 py-2 font-medium">Record</th>
-                <th className="px-4 py-2 font-medium">Changes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id} className="border-b border-border align-top last:border-0">
-                  <td className="px-4 py-2 whitespace-nowrap text-text-muted">
-                    {formatDate(row.at)}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap">
-                    {row.user ? (row.user.name ?? 'Deleted user') : 'The system'}
-                  </td>
-                  <td className="px-4 py-2">{readable(row.action)}</td>
-                  <td className="px-4 py-2">
-                    <div>{row.entityName ?? 'No longer exists'}</div>
-                    <div className="text-text-muted">{readable(row.entityType)}</div>
-                  </td>
-                  <td className="max-w-md px-4 py-2">
-                    <Changes oldValue={row.oldValue} newValue={row.newValue} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          caption="Audit log"
+          columns={COLUMNS}
+          rows={rows}
+          isRefreshing={logs.isPlaceholderData}
+        />
       )}
 
-      {meta && meta.total > 0 && (
-        <div className="flex items-center justify-end gap-2 text-sm">
-          <span className="text-text-muted">
-            Page {meta.page} of {pageCount} · {meta.total} {meta.total === 1 ? 'entry' : 'entries'}
-          </span>
-          <button
-            type="button"
-            className={secondaryButtonClass}
-            disabled={page <= 1}
-            onClick={() => update({ page: page > 2 ? String(page - 1) : '' })}
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            className={secondaryButtonClass}
-            disabled={page >= pageCount}
-            onClick={() => update({ page: String(page + 1) })}
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <Pagination meta={logs.data?.meta} noun={['entry', 'entries']} onPageChange={list.setPage} />
     </div>
   );
 }
