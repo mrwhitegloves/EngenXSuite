@@ -12,7 +12,7 @@ import AuditLog from '../components/AuditLog.jsx';
 import Branding from '../components/Branding.jsx';
 import Backups from '../components/Backups.jsx';
 import BackgroundJobs from '../components/BackgroundJobs.jsx';
-import StatusLists, { SolutionCategories } from '../components/StatusLists.jsx';
+import StatusLists, { PipelineStages, SolutionCategories } from '../components/StatusLists.jsx';
 import Tags from '../components/Tags.jsx';
 import PermissionMatrix, { grantsToMap, mapToGrants } from '../components/PermissionMatrix.jsx';
 
@@ -104,6 +104,12 @@ const SECTIONS = [
     description: 'Statuses: the account and lead statuses your team can choose from.',
   },
   {
+    id: 'stages',
+    label: 'Pipeline stages',
+    description:
+      'Pipeline stages: the steps a lead moves through, from first contact to won or lost.',
+  },
+  {
     id: 'categories',
     label: 'Solution categories',
     description: 'Solution categories: what you sell, as your team picks it on a lead.',
@@ -170,6 +176,7 @@ export default function SettingsPage() {
       {section.id === 'roles' && <RolesSection canEdit={can('settings', 'edit')} />}
       {section.id === 'branding' && <Branding canEdit={can('settings', 'edit')} />}
       {section.id === 'statuses' && <StatusLists canEdit={can('settings', 'edit')} />}
+      {section.id === 'stages' && <PipelineStages canEdit={can('settings', 'edit')} />}
       {section.id === 'categories' && <SolutionCategories canEdit={can('settings', 'edit')} />}
       {section.id === 'tags' && <Tags canEdit={can('settings', 'edit')} />}
       {section.id === 'jobs' && <BackgroundJobs canEdit={can('settings', 'edit')} />}

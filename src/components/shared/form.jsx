@@ -2,10 +2,15 @@ import { useId } from 'react';
 
 // Small form building blocks so every form looks and behaves the same.
 
-export const inputClass =
-  'w-full rounded-md border border-border bg-surface px-3 py-2 text-text placeholder:text-text-muted ' +
+// How every input and select looks, without a width: for a control that is as wide as its
+// content (a filter above a list, a select inside a table row).
+export const compactInputClass =
+  'rounded-md border border-border bg-surface px-3 py-2 text-text placeholder:text-text-muted ' +
   'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand ' +
   'disabled:opacity-60 aria-[invalid=true]:border-danger';
+
+// The same, filling the width of its place: for the fields of a form.
+export const inputClass = `w-full ${compactInputClass}`;
 
 export const primaryButtonClass =
   'inline-flex items-center justify-center gap-2 rounded-md bg-brand px-4 py-2 font-medium text-on-brand ' +

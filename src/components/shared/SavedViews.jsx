@@ -2,7 +2,14 @@ import { useState } from 'react';
 import { Bookmark, Trash2 } from 'lucide-react';
 import { useDeleteView, useSaveView, useSavedViews } from '../../hooks/useSavedViews.js';
 import Dialog from './Dialog.jsx';
-import { Field, FormError, inputClass, primaryButtonClass, secondaryButtonClass } from './form.jsx';
+import {
+  Field,
+  FormError,
+  inputClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+  compactInputClass,
+} from './form.jsx';
 
 const sameQuery = (a, b) => {
   const keys = [...new Set([...Object.keys(a), ...Object.keys(b)])];
@@ -52,7 +59,7 @@ export default function SavedViews({ screen, currentQuery, onApply }) {
               const view = list.find((item) => item.id === event.target.value);
               if (view) onApply(view.query);
             }}
-            className={`${inputClass} w-auto`}
+            className={`${compactInputClass}`}
           >
             <option value="">Saved views</option>
             {list.map((view) => (

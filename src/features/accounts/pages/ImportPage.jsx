@@ -10,6 +10,7 @@ import {
   inputClass,
   primaryButtonClass,
   secondaryButtonClass,
+  compactInputClass,
 } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import {
@@ -191,7 +192,7 @@ function MappingStep({ item, options, canRun }) {
                 aria-label="Use a saved mapping"
                 value=""
                 onChange={(event) => applyTemplate(event.target.value)}
-                className={`${inputClass} w-auto`}
+                className={`${compactInputClass}`}
               >
                 <option value="">Use a saved mapping…</option>
                 {options.templates.map((template) => (

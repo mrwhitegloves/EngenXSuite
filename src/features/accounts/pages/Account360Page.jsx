@@ -7,6 +7,7 @@ import { useCan } from '../../../hooks/useCan.js';
 import { HEALTH_LABELS, POTENTIAL_LABELS } from '../accountForm.js';
 import { useAccount } from '../api.js';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
+import LeadsTab from '../components/LeadsTab.jsx';
 import PeopleTab from '../components/PeopleTab.jsx';
 import PlantsTab from '../components/PlantsTab.jsx';
 
@@ -137,10 +138,11 @@ const TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'people', label: 'People', feature: 'contacts' },
   { id: 'plants', label: 'Plants', feature: 'plants' },
+  { id: 'leads', label: 'Leads', feature: 'opportunities' },
 ];
 
 // Account 360: everything known about one company, in one place.
-// Leads, the timeline and documents join as tabs when those parts are built.
+// The timeline and documents join as tabs when those parts are built.
 export default function Account360Page() {
   const { accountId } = useParams();
   const can = useCan();
@@ -246,6 +248,7 @@ export default function Account360Page() {
       {tab.id === 'overview' && <Overview account={data} />}
       {tab.id === 'people' && <PeopleTab accountId={data.id} />}
       {tab.id === 'plants' && <PlantsTab accountId={data.id} />}
+      {tab.id === 'leads' && <LeadsTab account={data} />}
 
       {isEditing && <AccountFormDialog accountId={data.id} onClose={() => setIsEditing(false)} />}
     </>

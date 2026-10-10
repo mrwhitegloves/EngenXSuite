@@ -7,7 +7,7 @@ import DateRangeFilter, {
 import FilterBar from '../../../components/shared/FilterBar.jsx';
 import Pagination from '../../../components/shared/Pagination.jsx';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
-import { FormError, inputClass } from '../../../components/shared/form.jsx';
+import { FormError, compactInputClass } from '../../../components/shared/form.jsx';
 import { useListParams } from '../../../hooks/useListParams.js';
 import { useAuditLogs, useAuditOptions } from '../api.js';
 
@@ -150,7 +150,7 @@ export default function AuditLog() {
           aria-label="Filter by user"
           value={userId}
           onChange={(event) => list.setFilters({ userId: event.target.value })}
-          className={`${inputClass} w-auto`}
+          className={`${compactInputClass}`}
         >
           <option value="">Anyone</option>
           <option value="system">The system</option>
@@ -164,7 +164,7 @@ export default function AuditLog() {
           aria-label="Filter by record type"
           value={entityType}
           onChange={(event) => list.setFilters({ entityType: event.target.value })}
-          className={`${inputClass} w-auto`}
+          className={`${compactInputClass}`}
         >
           <option value="">All record types</option>
           {(options.data?.entityTypes ?? []).map((type) => (
@@ -177,7 +177,7 @@ export default function AuditLog() {
           aria-label="Filter by action"
           value={action}
           onChange={(event) => list.setFilters({ action: event.target.value })}
-          className={`${inputClass} w-auto`}
+          className={`${compactInputClass}`}
         >
           <option value="">All actions</option>
           {(options.data?.actions ?? []).map((item) => (

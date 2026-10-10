@@ -1,4 +1,4 @@
-import { inputClass } from './form.jsx';
+import { compactInputClass } from './form.jsx';
 
 // The ONE date filter used by every list, dashboard and report (Master Prompt Section 74).
 // It only chooses; the server works out the actual moments (India-time days, end day included),
@@ -55,7 +55,7 @@ export default function DateRangeFilter({ label, value, onChange }) {
         aria-label={label}
         value={range}
         onChange={(event) => onChange({ range: event.target.value, from: '', to: '' })}
-        className={`${inputClass} w-auto`}
+        className={`${compactInputClass}`}
       >
         <option value="">{label}: any time</option>
         {Object.entries(DATE_PRESET_LABELS).map(([id, text]) => (
@@ -74,7 +74,7 @@ export default function DateRangeFilter({ label, value, onChange }) {
               value={value.from ?? ''}
               max={value.to || undefined}
               onChange={(event) => onChange({ ...value, range, from: event.target.value })}
-              className={`${inputClass} w-auto`}
+              className={`${compactInputClass}`}
             />
             <span className="text-text-muted">to</span>
             <input
@@ -83,7 +83,7 @@ export default function DateRangeFilter({ label, value, onChange }) {
               value={value.to ?? ''}
               min={value.from || undefined}
               onChange={(event) => onChange({ ...value, range, to: event.target.value })}
-              className={`${inputClass} w-auto`}
+              className={`${compactInputClass}`}
             />
           </div>
           {problem && (

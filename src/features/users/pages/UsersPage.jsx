@@ -7,7 +7,11 @@ import DataTable from '../../../components/shared/DataTable.jsx';
 import FilterBar from '../../../components/shared/FilterBar.jsx';
 import Pagination from '../../../components/shared/Pagination.jsx';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
-import { FormError, inputClass, primaryButtonClass } from '../../../components/shared/form.jsx';
+import {
+  FormError,
+  primaryButtonClass,
+  compactInputClass,
+} from '../../../components/shared/form.jsx';
 import { useAuth } from '../../../hooks/useAuth.js';
 import { useCan } from '../../../hooks/useCan.js';
 import { useListParams } from '../../../hooks/useListParams.js';
@@ -170,7 +174,7 @@ export default function UsersPage() {
           aria-label="Filter by status"
           value={status}
           onChange={(event) => list.setFilters({ status: event.target.value })}
-          className={`${inputClass} w-auto`}
+          className={`${compactInputClass}`}
         >
           <option value="">All statuses</option>
           <option value="active">Active</option>

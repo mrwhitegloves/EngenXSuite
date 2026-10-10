@@ -9,6 +9,7 @@ import {
   inputClass,
   primaryButtonClass,
   secondaryButtonClass,
+  compactInputClass,
 } from '../../../components/shared/form.jsx';
 import { useStatusList, useStatusListActions } from '../api.js';
 
@@ -27,6 +28,17 @@ const LISTS = [
   },
 ];
 
+// The steps a lead moves through. No default (a new lead starts in the first open stage);
+// each stage has a type and a suggested chance of winning.
+const PIPELINE_STAGES = {
+  key: 'pipeline-stages',
+  label: 'Pipeline stages',
+  help: 'The steps a lead moves through, in this order. A new lead starts in the first open stage. When a lead enters a stage, its chance of winning is set to the stage’s chance.',
+  noun: 'stage',
+  isStages: true,
+};
+const STAGE_TYPE_LABELS = { open: 'Open', won: 'Won', lost: 'Lost' };
+
 // A plain list: its entries have no default and no colour (the server refuses both).
 const SOLUTION_CATEGORIES = {
   key: 'solution-categories',
@@ -42,16 +54,30 @@ const iconButton =
   'rounded-md border border-border p-1 text-text-muted hover:border-text-muted hover:text-text disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand';
 
 // One name field in a small dialog: used to rename an entry.
-function RenameDialog({ status, noun, onClose, onSave, isBusy, error }) {
+function RenameDialog({ status, noun, isStages, onClose, onSave, isBusy, error }) {
   const [name, setName] = useState(status.name);
+  // Pipeline stages only: the suggested chance of winning, as text.
+  const [chance, setChance] = useState(
+    status.defaultProbability === null || status.defaultProbability === undefined
+      ? ''
+      : String(status.defaultProbability),
+  );
+  const chanceNumber = chance.trim() === '' ? null : Number(chance);
+  const chanceChanged = isStages && chanceNumber !== (status.defaultProbability ?? null);
+  const chanceIsValid =
+    chanceNumber === null ||
+    (Number.isInteger(chanceNumber) && chanceNumber >= 0 && chanceNumber <= 100);
   const fieldError = fieldErrorsFrom(error).name ?? error?.message;
   return (
-    <Dialog open title={`Rename ${noun}`} onClose={onClose}>
+    <Dialog open title={isStages ? `Edit ${noun}` : `Rename ${noun}`} onClose={onClose}>
       <form
         className="space-y-4"
         onSubmit={(event) => {
           event.preventDefault();
-          onSave(name.trim());
+          onSave({
+            ...(name.trim() !== status.name ? { name: name.trim() } : {}),
+            ...(chanceChanged ? { defaultProbability: chanceNumber } : {}),
+          });
         }}
       >
         <Field
@@ -70,6 +96,24 @@ function RenameDialog({ status, noun, onClose, onSave, isBusy, error }) {
             />
           )}
         </Field>
+        {isStages && (
+          <Field
+            label="Chance of winning (%)"
+            hint="From 0 to 100. Leave empty to keep a lead’s own chance when it enters this stage."
+            error={chanceIsValid ? fieldErrorsFrom(error).defaultProbability : 'From 0 to 100'}
+          >
+            {(props) => (
+              <input
+                {...props}
+                value={chance}
+                inputMode="numeric"
+                maxLength={3}
+                onChange={(event) => setChance(event.target.value)}
+                className={inputClass}
+              />
+            )}
+          </Field>
+        )}
         <div className="flex justify-end gap-2">
           <button type="button" className={secondaryButtonClass} onClick={onClose}>
             Cancel
@@ -77,7 +121,12 @@ function RenameDialog({ status, noun, onClose, onSave, isBusy, error }) {
           <button
             type="submit"
             className={primaryButtonClass}
-            disabled={!name.trim() || name.trim() === status.name || isBusy}
+            disabled={
+              !name.trim() ||
+              !chanceIsValid ||
+              (name.trim() === status.name && !chanceChanged) ||
+              isBusy
+            }
           >
             {isBusy ? 'Saving…' : 'Save'}
           </button>
@@ -89,7 +138,9 @@ function RenameDialog({ status, noun, onClose, onSave, isBusy, error }) {
 
 // One managed list: its entries in order, with the actions on each.
 function StatusList({ list, canEdit }) {
-  const { noun, isPlain = false } = list;
+  const { noun, isPlain = false, isStages = false } = list;
+  // Pipeline stages only: the type of the stage being added.
+  const [newType, setNewType] = useState('open');
   const statuses = useStatusList(list.key);
   const actions = useStatusListActions(list.key);
   const [newName, setNewName] = useState('');
@@ -109,7 +160,10 @@ function StatusList({ list, canEdit }) {
 
   function add(event) {
     event.preventDefault();
-    actions.create.mutate({ name: newName.trim() }, { onSuccess: () => setNewName('') });
+    actions.create.mutate(
+      { name: newName.trim(), ...(isStages ? { type: newType } : {}) },
+      { onSuccess: () => setNewName('') },
+    );
   }
 
   return (
@@ -120,7 +174,7 @@ function StatusList({ list, canEdit }) {
         <form onSubmit={add} className="flex flex-wrap items-start gap-2">
           <div>
             <input
-              aria-label={`New ${isPlain ? noun : list.label.toLowerCase().replace(/es$/, '')}`}
+              aria-label={`New ${isPlain || isStages ? noun : list.label.toLowerCase().replace(/es$/, '')}`}
               placeholder={`New ${noun} name`}
               value={newName}
               maxLength={60}
@@ -133,6 +187,20 @@ function StatusList({ list, canEdit }) {
               </p>
             )}
           </div>
+          {isStages && (
+            <select
+              aria-label="Type of the new stage"
+              value={newType}
+              onChange={(event) => setNewType(event.target.value)}
+              className={`${compactInputClass}`}
+            >
+              {Object.entries(STAGE_TYPE_LABELS).map(([type, label]) => (
+                <option key={type} value={type}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             type="submit"
             className={primaryButtonClass}
@@ -152,7 +220,8 @@ function StatusList({ list, canEdit }) {
       )}
       {statuses.isSuccess && rows.length === 0 && (
         <p className="rounded-md border border-dashed border-border bg-surface p-4 text-text-muted">
-          Nothing here yet. Add the first one above{isPlain ? '' : '; it becomes the default'}.
+          Nothing here yet. Add the first one above
+          {isPlain || isStages ? '' : '; it becomes the default'}.
         </p>
       )}
 
@@ -191,6 +260,12 @@ function StatusList({ list, canEdit }) {
               >
                 {status.name}
               </span>
+              {isStages && (
+                <span className="rounded-full border border-border px-2 py-0.5 text-xs text-text-muted">
+                  {STAGE_TYPE_LABELS[status.type]}
+                  {status.defaultProbability !== null && <> · {status.defaultProbability}%</>}
+                </span>
+              )}
               {status.isDefault && (
                 <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-text">
                   Default
@@ -214,9 +289,9 @@ function StatusList({ list, canEdit }) {
                     }}
                   >
                     <Pencil size={13} aria-hidden="true" />
-                    Rename
+                    {isStages ? 'Edit' : 'Rename'}
                   </button>
-                  {!isPlain && !status.isDefault && status.isActive && (
+                  {!isPlain && !isStages && !status.isDefault && status.isActive && (
                     <button
                       type="button"
                       className={rowButton}
@@ -261,9 +336,11 @@ function StatusList({ list, canEdit }) {
       )}
 
       <p className="text-sm text-text-muted">
-        {isPlain
-          ? 'Switch a category off to take it out of the pickers; it stays on the records that already have it.'
-          : 'A status that records already use cannot be deleted. Switch it off instead: it leaves the pickers and stays on those records. New records get the default status.'}
+        {isStages
+          ? 'A stage that leads are in cannot be deleted. Switch it off instead: it leaves the pickers and stays on those leads. The pipeline always keeps one open, one won and one lost stage.'
+          : isPlain
+            ? 'Switch a category off to take it out of the pickers; it stays on the records that already have it.'
+            : 'A status that records already use cannot be deleted. Switch it off instead: it leaves the pickers and stays on those records. New records get the default status.'}
       </p>
 
       {renameTarget && (
@@ -271,12 +348,13 @@ function StatusList({ list, canEdit }) {
           key={renameTarget.id}
           status={renameTarget}
           noun={noun}
+          isStages={isStages}
           isBusy={actions.update.isPending}
           error={actions.update.error}
           onClose={() => setRenameTarget(null)}
-          onSave={(name) =>
+          onSave={(changes) =>
             actions.update.mutate(
-              { id: renameTarget.id, name },
+              { id: renameTarget.id, ...changes },
               { onSuccess: () => setRenameTarget(null) },
             )
           }
@@ -339,4 +417,9 @@ export default function StatusLists({ canEdit }) {
 // Settings → Solution categories: one plain list, managed the same way.
 export function SolutionCategories({ canEdit }) {
   return <StatusList list={SOLUTION_CATEGORIES} canEdit={canEdit} />;
+}
+
+// Settings → Pipeline stages.
+export function PipelineStages({ canEdit }) {
+  return <StatusList list={PIPELINE_STAGES} canEdit={canEdit} />;
 }

@@ -14,9 +14,9 @@ import EmptyState from '../../../components/shared/states/EmptyState.jsx';
 import { TagChips } from '../../../components/shared/Tags.jsx';
 import {
   FormError,
-  inputClass,
   primaryButtonClass,
   secondaryButtonClass,
+  compactInputClass,
 } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useListParams } from '../../../hooks/useListParams.js';
@@ -189,7 +189,7 @@ export default function AccountsPage() {
       aria-label={label}
       value={list.values[key]}
       onChange={(event) => list.setFilters({ [key]: event.target.value })}
-      className={`${inputClass} w-auto`}
+      className={`${compactInputClass}`}
     >
       <option value="">{emptyLabel}</option>
       {choices.map(([value, text]) => (

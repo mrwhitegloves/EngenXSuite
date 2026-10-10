@@ -16,12 +16,15 @@ export const REALTIME_REFETCH = {
   'contacts.changed': [['contacts']],
   // A plant or one of its machines was added, changed or deleted.
   'plants.changed': [['plants']],
+  // A lead was added, changed, moved to another stage, reassigned or deleted.
+  'opportunities.changed': [['opportunities']],
   // A tag was added, renamed, merged or deleted: reload the tags and the records that show them.
-  'tags.changed': [['tags'], ['accounts'], ['contacts']],
+  'tags.changed': [['tags'], ['accounts'], ['contacts'], ['opportunities']],
   // An import of mine moved on (progress, finished, undone).
   'imports.changed': [['imports']],
-  // A status list in Settings changed: reload the lists, and accounts (they show status names).
-  'status-lists.changed': [['status-lists'], ['accounts']],
+  // A list in Settings changed (statuses, stages, categories): reload the lists and the records
+  // that show their names.
+  'status-lists.changed': [['status-lists'], ['accounts'], ['opportunities']],
   // The product name or company name changed.
   'branding.changed': [['branding']],
 };

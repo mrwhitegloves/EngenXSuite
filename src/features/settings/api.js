@@ -85,8 +85,9 @@ export function useStatusListActions(list) {
   const queryClient = useQueryClient();
   const reload = () => {
     queryClient.invalidateQueries({ queryKey: statusListKey(list) });
-    // Accounts show their status by name: reload them too.
+    // Accounts and leads show these names: reload them too.
     queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    queryClient.invalidateQueries({ queryKey: ['opportunities'] });
   };
   const action = (mutationFn) => ({ mutationFn, onSuccess: reload });
   return {
