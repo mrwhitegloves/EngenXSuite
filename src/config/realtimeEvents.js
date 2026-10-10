@@ -18,6 +18,10 @@ export const REALTIME_REFETCH = {
   'plants.changed': [['plants']],
   // A lead was added, changed, moved to another stage, reassigned or deleted.
   'opportunities.changed': [['opportunities']],
+  // Something was added to a timeline, or a note was changed or removed.
+  'activities.changed': [['timeline']],
+  // A task was added, changed, completed or deleted.
+  'tasks.changed': [['tasks']],
   // A tag was added, renamed, merged or deleted: reload the tags and the records that show them.
   'tags.changed': [['tags'], ['accounts'], ['contacts'], ['opportunities']],
   // An import of mine moved on (progress, finished, undone).

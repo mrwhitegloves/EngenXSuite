@@ -3,6 +3,7 @@ import AppShell from './components/layout/AppShell.jsx';
 import SectionNotBuilt from './components/shared/states/SectionNotBuilt.jsx';
 import { NAV_ITEMS, SETTINGS_ITEM, visibleItems } from './config/navigation.js';
 import AccountsRoutes from './features/accounts/AccountsRoutes.jsx';
+import ActivitiesPage from './features/activities/pages/ActivitiesPage.jsx';
 import DashboardPage from './features/dashboard/pages/DashboardPage.jsx';
 import PipelineRoutes from './features/pipeline/PipelineRoutes.jsx';
 import SettingsPage from './features/settings/pages/SettingsPage.jsx';
@@ -13,6 +14,7 @@ import { useCan } from './hooks/useCan.js';
 const PAGES = {
   '/accounts': AccountsRoutes,
   '/pipeline': PipelineRoutes,
+  '/activities': ActivitiesPage,
   '/users': UsersPage,
   '/settings': SettingsPage,
 };
