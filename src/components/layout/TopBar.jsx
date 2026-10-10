@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { LogOut, Monitor, Moon, Sun } from 'lucide-react';
+import { LogOut, Monitor, Moon, Plus, Sun } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useTheme } from '../../hooks/useTheme.js';
 import Avatar from '../shared/Avatar.jsx';
 import Logo from '../shared/Logo.jsx';
 import ProfileDialog from '../../features/auth/components/ProfileDialog.jsx';
+import QuickAddDialog from '../../features/accounts/components/QuickAddDialog.jsx';
+import { useCan } from '../../hooks/useCan.js';
+import { primaryButtonClass } from '../shared/form.jsx';
 
 const THEME_ICONS = { light: Sun, dark: Moon, system: Monitor };
 const THEME_LABELS = { light: 'Light', dark: 'Dark', system: 'System' };
@@ -41,17 +44,32 @@ function ThemeSwitch() {
 // The top bar. Global search, "+ New", voice note and notifications join it in later tasks.
 export default function TopBar({ productName }) {
   const { user, signOut } = useAuth();
+  const can = useCan();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4">
       {/* On phones there is no sidebar, so the logo sits here. */}
-      <span className="md:hidden">
+      <span className="shrink-0 md:hidden">
         <Logo productName={productName} className="h-6" />
       </span>
       <span className="hidden md:block" />
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 max-sm:gap-2">
+        {/* One form for a new company together with its people. */}
+        {can('accounts', 'create') && (
+          <button
+            type="button"
+            onClick={() => setIsQuickAddOpen(true)}
+            title="New company and people"
+            className={`${primaryButtonClass} max-sm:px-2.5`}
+          >
+            <Plus size={16} aria-hidden="true" />
+            {/* On phones only the plus sign shows; the word stays for screen readers. */}
+            <span className="max-sm:sr-only">New</span>
+          </button>
+        )}
         <ThemeSwitch />
         {/* The user's picture (or initials) and name open "My profile". */}
         <button
@@ -79,6 +97,7 @@ export default function TopBar({ productName }) {
       </div>
 
       {isProfileOpen && <ProfileDialog onClose={() => setIsProfileOpen(false)} />}
+      {isQuickAddOpen && <QuickAddDialog onClose={() => setIsQuickAddOpen(false)} />}
     </header>
   );
 }

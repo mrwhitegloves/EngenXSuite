@@ -12,6 +12,8 @@ export const REALTIME_REFETCH = {
   'permissions.changed': [['auth'], ['roles'], ['users']],
   // An account (customer company) was added, changed or deleted.
   'accounts.changed': [['accounts']],
+  // A contact (a person at a customer company) was added, changed or deleted.
+  'contacts.changed': [['contacts']],
   // A status list in Settings changed: reload the lists, and accounts (they show status names).
   'status-lists.changed': [['status-lists'], ['accounts']],
   // The product name or company name changed.

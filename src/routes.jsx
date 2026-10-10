@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AppShell from './components/layout/AppShell.jsx';
 import SectionNotBuilt from './components/shared/states/SectionNotBuilt.jsx';
 import { NAV_ITEMS, SETTINGS_ITEM, visibleItems } from './config/navigation.js';
+import AccountsPage from './features/accounts/pages/AccountsPage.jsx';
 import DashboardPage from './features/dashboard/pages/DashboardPage.jsx';
 import SettingsPage from './features/settings/pages/SettingsPage.jsx';
 import UsersPage from './features/users/pages/UsersPage.jsx';
@@ -9,6 +10,7 @@ import { useCan } from './hooks/useCan.js';
 
 // Sections that have a real page. Every other visible section shows a "not built yet" notice.
 const PAGES = {
+  '/accounts': AccountsPage,
   '/users': UsersPage,
   '/settings': SettingsPage,
 };
