@@ -5,6 +5,7 @@ import { NAV_ITEMS, SETTINGS_ITEM, visibleItems } from './config/navigation.js';
 import AccountsRoutes from './features/accounts/AccountsRoutes.jsx';
 import ActivitiesPage from './features/activities/pages/ActivitiesPage.jsx';
 import DashboardPage from './features/dashboard/pages/DashboardPage.jsx';
+import NotificationsPage from './features/notifications/pages/NotificationsPage.jsx';
 import PipelineRoutes from './features/pipeline/PipelineRoutes.jsx';
 import SettingsPage from './features/settings/pages/SettingsPage.jsx';
 import UsersPage from './features/users/pages/UsersPage.jsx';
@@ -31,6 +32,8 @@ export default function AppRoutes({ productName }) {
     <Routes>
       <Route element={<AppShell productName={productName} />}>
         <Route index element={<DashboardPage />} />
+        {/* Every signed-in person has notifications; it is opened from the bell, not the menu. */}
+        <Route path="/notifications" element={<NotificationsPage />} />
         {sections.map((item) => {
           const Page = PAGES[item.to];
           return (

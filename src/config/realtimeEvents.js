@@ -20,6 +20,8 @@ export const REALTIME_REFETCH = {
   'opportunities.changed': [['opportunities']],
   // Something was added to a timeline, or a note was changed or removed.
   'activities.changed': [['timeline']],
+  // My notifications changed: a new one, or some were read.
+  'notifications.changed': [['notifications']],
   // A task was added, changed, completed or deleted.
   'tasks.changed': [['tasks']],
   // A tag was added, renamed, merged or deleted: reload the tags and the records that show them.
