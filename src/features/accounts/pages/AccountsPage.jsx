@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Building2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog.jsx';
 import DataTable from '../../../components/shared/DataTable.jsx';
@@ -92,7 +93,13 @@ export default function AccountsPage() {
       sortKey: 'name',
       render: (row) => (
         <>
-          <p className="font-medium">{row.name}</p>
+          {/* The name opens the account's own page. */}
+          <Link
+            to={`/accounts/${row.id}`}
+            className="font-medium hover:text-brand-text hover:underline focus-visible:outline-2 focus-visible:outline-brand"
+          >
+            {row.name}
+          </Link>
           <p className="text-text-muted">
             {[row.industry, row.city].filter(Boolean).join(' · ') || '—'}
           </p>

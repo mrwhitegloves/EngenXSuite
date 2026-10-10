@@ -69,6 +69,80 @@ export function useQuickAdd() {
   return useAccountsMutation((body) => apiRequest('/accounts/quick-add', { method: 'POST', body }));
 }
 
+// ── The records under an account: people, plants, machines ─────────────────────────────────
+// Their cached answers are kept under their own first key ('contacts', 'plants'), which is what
+// the live "contacts.changed" / "plants.changed" events make stale.
+
+function useListOf(queryKey, path, enabled = true) {
+  return useQuery({
+    queryKey,
+    queryFn: ({ signal }) => apiRequest(path, { signal }),
+    select: (payload) => payload.data,
+    enabled,
+  });
+}
+
+/** create / update / remove for one kind of record; each reloads the given keys afterwards. */
+function useRecordActions({ createPath, itemPath, reloadKeys }) {
+  const queryClient = useQueryClient();
+  const onSuccess = () =>
+    reloadKeys.forEach((queryKey) => queryClient.invalidateQueries({ queryKey }));
+  return {
+    create: useMutation({
+      mutationFn: (body) => apiRequest(createPath, { method: 'POST', body }),
+      onSuccess,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, ...body }) => apiRequest(`${itemPath}/${id}`, { method: 'PATCH', body }),
+      onSuccess,
+    }),
+    remove: useMutation({
+      mutationFn: (id) => apiRequest(`${itemPath}/${id}`, { method: 'DELETE' }),
+      onSuccess,
+    }),
+  };
+}
+
+/** The people of one account. */
+export function useAccountContacts(accountId) {
+  return useListOf(['contacts', accountId], `/accounts/${accountId}/contacts`);
+}
+
+export function useContactActions(accountId) {
+  return useRecordActions({
+    createPath: `/accounts/${accountId}/contacts`,
+    itemPath: '/contacts',
+    // Plants show their people by name: reload them too.
+    reloadKeys: [['contacts'], ['plants']],
+  });
+}
+
+/** The plants of one account. */
+export function useAccountPlants(accountId) {
+  return useListOf(['plants', accountId], `/accounts/${accountId}/plants`);
+}
+
+export function usePlantActions(accountId) {
+  return useRecordActions({
+    createPath: `/accounts/${accountId}/plants`,
+    itemPath: '/plants',
+    reloadKeys: [['plants']],
+  });
+}
+
+/** The machines of one plant; asked for only while that plant is opened. */
+export function usePlantMachines(plantId, enabled) {
+  return useListOf(['plants', 'machines', plantId], `/plants/${plantId}/machines`, enabled);
+}
+
+export function useMachineActions(plantId) {
+  return useRecordActions({
+    createPath: `/plants/${plantId}/machines`,
+    itemPath: '/machines',
+    reloadKeys: [['plants']],
+  });
+}
+
 /** True when the server refused because a company with a similar name exists already. */
 export function isDuplicateName(error) {
   return Boolean(error?.details?.some?.((detail) => detail.code === 'DUPLICATE_NAME'));
