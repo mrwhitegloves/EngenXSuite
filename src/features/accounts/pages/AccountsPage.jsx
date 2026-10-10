@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Building2, Download, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog.jsx';
@@ -11,13 +11,30 @@ import DateRangeFilter, {
 import FilterBar from '../../../components/shared/FilterBar.jsx';
 import Pagination from '../../../components/shared/Pagination.jsx';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
-import { FormError, inputClass, primaryButtonClass } from '../../../components/shared/form.jsx';
+import { TagChips } from '../../../components/shared/Tags.jsx';
+import {
+  FormError,
+  inputClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useListParams } from '../../../hooks/useListParams.js';
-import { useAccountOptions, useAccounts, useDeleteAccount } from '../api.js';
+import { useTagsFor } from '../../../hooks/useTags.js';
+import { useAccountOptions, useAccounts, useDeleteAccount, useExportAccounts } from '../api.js';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
 
-const FILTER_KEYS = ['search', 'statusId', 'industry', 'region', 'ownerId', 'range', 'from', 'to'];
+const FILTER_KEYS = [
+  'search',
+  'statusId',
+  'industry',
+  'region',
+  'ownerId',
+  'tagId',
+  'range',
+  'from',
+  'to',
+];
 
 const rowButton =
   'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand';
@@ -38,20 +55,24 @@ export default function AccountsPage() {
   const [formTarget, setFormTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const { search, statusId, industry, region, ownerId, range, from, to } = list.values;
+  const { search, statusId, industry, region, ownerId, tagId, range, from, to } = list.values;
   const dates = { range, from, to };
   const options = useAccountOptions();
-  const accounts = useAccounts({
-    page: list.page,
+  // What the list shows; the export sends the same, so the file matches the screen.
+  const filters = {
     sort: list.sort,
     search,
     statusId,
     industry,
     region,
     ownerId,
+    tagId,
     ...dateRangeParams(dates),
-  });
+  };
+  const accounts = useAccounts({ page: list.page, ...filters });
   const deleteAccount = useDeleteAccount();
+  const exportAccounts = useExportAccounts();
+  const tags = useTagsFor('account');
 
   const rows = accounts.data?.data ?? [];
   const statuses = options.data?.statuses ?? [];
@@ -69,6 +90,7 @@ export default function AccountsPage() {
     industry && chip('industry', `Industry: ${industry}`),
     region && chip('region', `Region: ${region}`),
     ownerId && chip('ownerId', `Owner: ${nameOf(users, ownerId)}`),
+    tagId && chip('tagId', `Tag: ${nameOf(tags, tagId)}`),
     range &&
       chip(
         'range',
@@ -103,6 +125,7 @@ export default function AccountsPage() {
           <p className="text-text-muted">
             {[row.industry, row.city].filter(Boolean).join(' · ') || '—'}
           </p>
+          <TagChips tags={row.tags} className="mt-1" />
         </>
       ),
     },
@@ -180,6 +203,18 @@ export default function AccountsPage() {
   return (
     <>
       <PageHeader title="Accounts" description="The companies you sell to.">
+        {can('accounts', 'export') && (
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            disabled={exportAccounts.isPending}
+            title="Download the accounts these filters show, as a CSV file"
+            onClick={() => exportAccounts.mutate(filters)}
+          >
+            <Download size={16} aria-hidden="true" />
+            {exportAccounts.isPending ? 'Preparing…' : 'Export'}
+          </button>
+        )}
         {can('accounts', 'create') && (
           <button type="button" onClick={() => setFormTarget('new')} className={primaryButtonClass}>
             <Plus size={16} aria-hidden="true" />
@@ -226,10 +261,19 @@ export default function AccountsPage() {
             'All owners',
             users.map((user) => [user.id, user.name]),
           )}
+        {tags.length > 0 &&
+          filterSelect(
+            'tagId',
+            'Filter by tag',
+            'All tags',
+            tags.map((tag) => [tag.id, tag.name]),
+          )}
         <DateRangeFilter label="Created" value={dates} onChange={list.setFilters} />
       </FilterBar>
 
-      <FormError message={accounts.error?.message ?? options.error?.message} />
+      <FormError
+        message={accounts.error?.message ?? options.error?.message ?? exportAccounts.error?.message}
+      />
 
       {accounts.isPending && (
         <p role="status" className="p-4 text-text-muted">

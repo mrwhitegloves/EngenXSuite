@@ -37,6 +37,40 @@ export async function apiRequest(path, { method = 'GET', body, signal } = {}) {
   return payload;
 }
 
+/**
+ * Ask the API for a file (an export) and save it through the browser's own download.
+ * A refusal comes back in the standard error shape and is thrown like any other.
+ * @param {string} path  Path under /api, e.g. "/accounts/export?industry=Steel"
+ * @param {string} fallbackName  Used when the server names no file
+ */
+export async function apiDownload(path, fallbackName) {
+  let response;
+  try {
+    response = await fetch(`/api${path}`, { credentials: 'same-origin' });
+  } catch {
+    throw toClientError('NETWORK_ERROR', 'Cannot reach the server. Check your connection.', 0);
+  }
+  if (!response.ok) {
+    const error = (await response.json().catch(() => null))?.error;
+    throw toClientError(
+      error?.code ?? 'UNKNOWN_ERROR',
+      error?.message ?? 'Something went wrong. Please try again.',
+      response.status,
+      error?.details,
+      error?.requestId,
+    );
+  }
+  const named = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '');
+  const url = URL.createObjectURL(await response.blob());
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = named?.[1] ?? fallbackName;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 function toClientError(code, message, status, details, requestId) {
   const error = new Error(message);
   error.code = code;

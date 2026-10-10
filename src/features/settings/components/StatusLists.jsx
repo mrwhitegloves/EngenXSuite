@@ -17,25 +17,36 @@ const LISTS = [
     key: 'account-statuses',
     label: 'Account statuses',
     help: 'Where a company stands, for example Prospect or Customer.',
+    noun: 'status',
   },
   {
     key: 'lead-statuses',
     label: 'Lead statuses',
     help: 'Where a lead stands in day-to-day follow-up, for example DNP or Follow-up. A lead also has a pipeline stage; the two are separate.',
+    noun: 'status',
   },
 ];
+
+// A plain list: its entries have no default and no colour (the server refuses both).
+const SOLUTION_CATEGORIES = {
+  key: 'solution-categories',
+  label: 'Solution categories',
+  help: 'What you sell, for example Digital Twin or Predictive Maintenance. A lead is marked with the categories it is about.',
+  noun: 'category',
+  isPlain: true,
+};
 
 const rowButton =
   'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-brand';
 const iconButton =
   'rounded-md border border-border p-1 text-text-muted hover:border-text-muted hover:text-text disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand';
 
-// One name field in a small dialog: used to rename a status.
-function RenameDialog({ status, onClose, onSave, isBusy, error }) {
+// One name field in a small dialog: used to rename an entry.
+function RenameDialog({ status, noun, onClose, onSave, isBusy, error }) {
   const [name, setName] = useState(status.name);
   const fieldError = fieldErrorsFrom(error).name ?? error?.message;
   return (
-    <Dialog open title="Rename status" onClose={onClose}>
+    <Dialog open title={`Rename ${noun}`} onClose={onClose}>
       <form
         className="space-y-4"
         onSubmit={(event) => {
@@ -45,7 +56,7 @@ function RenameDialog({ status, onClose, onSave, isBusy, error }) {
       >
         <Field
           label="Name"
-          hint="The new name shows on every record that has this status."
+          hint={`The new name shows on every record that has this ${noun}.`}
           error={fieldError}
         >
           {(props) => (
@@ -76,8 +87,9 @@ function RenameDialog({ status, onClose, onSave, isBusy, error }) {
   );
 }
 
-// One managed list: its statuses in order, with the actions on each.
+// One managed list: its entries in order, with the actions on each.
 function StatusList({ list, canEdit }) {
+  const { noun, isPlain = false } = list;
   const statuses = useStatusList(list.key);
   const actions = useStatusListActions(list.key);
   const [newName, setNewName] = useState('');
@@ -108,8 +120,8 @@ function StatusList({ list, canEdit }) {
         <form onSubmit={add} className="flex flex-wrap items-start gap-2">
           <div>
             <input
-              aria-label={`New ${list.label.toLowerCase().replace(/es$/, '')}`}
-              placeholder="New status name"
+              aria-label={`New ${isPlain ? noun : list.label.toLowerCase().replace(/es$/, '')}`}
+              placeholder={`New ${noun} name`}
               value={newName}
               maxLength={60}
               onChange={(event) => setNewName(event.target.value)}
@@ -140,7 +152,7 @@ function StatusList({ list, canEdit }) {
       )}
       {statuses.isSuccess && rows.length === 0 && (
         <p className="rounded-md border border-dashed border-border bg-surface p-4 text-text-muted">
-          No statuses yet. Add the first one above; it becomes the default.
+          Nothing here yet. Add the first one above{isPlain ? '' : '; it becomes the default'}.
         </p>
       )}
 
@@ -204,7 +216,7 @@ function StatusList({ list, canEdit }) {
                     <Pencil size={13} aria-hidden="true" />
                     Rename
                   </button>
-                  {!status.isDefault && status.isActive && (
+                  {!isPlain && !status.isDefault && status.isActive && (
                     <button
                       type="button"
                       className={rowButton}
@@ -249,14 +261,16 @@ function StatusList({ list, canEdit }) {
       )}
 
       <p className="text-sm text-text-muted">
-        A status that records already use cannot be deleted. Switch it off instead: it leaves the
-        pickers and stays on those records. New records get the default status.
+        {isPlain
+          ? 'Switch a category off to take it out of the pickers; it stays on the records that already have it.'
+          : 'A status that records already use cannot be deleted. Switch it off instead: it leaves the pickers and stays on those records. New records get the default status.'}
       </p>
 
       {renameTarget && (
         <RenameDialog
           key={renameTarget.id}
           status={renameTarget}
+          noun={noun}
           isBusy={actions.update.isPending}
           error={actions.update.error}
           onClose={() => setRenameTarget(null)}
@@ -270,7 +284,7 @@ function StatusList({ list, canEdit }) {
       )}
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title="Delete this status?"
+        title={`Delete this ${noun}?`}
         confirmLabel="Delete"
         isBusy={actions.remove.isPending}
         error={actions.remove.error?.message}
@@ -281,7 +295,7 @@ function StatusList({ list, canEdit }) {
       >
         <p>
           <strong>{deleteTarget?.name}</strong> will be removed from the list. This works only while
-          no record has this status.
+          no record has this {noun}.
         </p>
       </ConfirmDialog>
     </section>
@@ -320,4 +334,9 @@ export default function StatusLists({ canEdit }) {
       <StatusList key={list.key} list={list} canEdit={canEdit} />
     </div>
   );
+}
+
+// Settings → Solution categories: one plain list, managed the same way.
+export function SolutionCategories({ canEdit }) {
+  return <StatusList list={SOLUTION_CATEGORIES} canEdit={canEdit} />;
 }

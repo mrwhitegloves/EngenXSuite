@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Dialog from '../../../components/shared/Dialog.jsx';
+import { TagPicker } from '../../../components/shared/Tags.jsx';
 import {
   Field,
   FormError,
@@ -14,9 +15,11 @@ import {
  * It is told its fields; it keeps their text, shows the server's message at the field that
  * caused it, and on save sends only what changed (or, for a new record, only what was filled).
  *
- * A field: { name, label, type?: 'text'|'number'|'select'|'checkbox'|'textarea'|'email'|'tel',
+ * A field: { name, label, type?: 'text'|'number'|'select'|'checkbox'|'textarea'|'email'|'tel'|'tags',
  *            choices?: [value, label][], emptyLabel?, hint?, wide?: boolean, required?: boolean,
- *            serverName?: string }   serverName: where the server reports this field's error
+ *            serverName?: string, tags?: object[] }
+ *   serverName: where the server reports this field's error
+ *   tags: for type 'tags', the tags offered; the field's value is the list of chosen tag ids
  *
  * @param {{ title: string, fields: object[], initial: object, isNew: boolean,
  *           toBody: (values: object) => object, save: object, saveLabel: string,
@@ -128,6 +131,21 @@ export default function RecordFormDialog({
                   )}
                 </span>
               </label>
+            ) : field.type === 'tags' ? (
+              <div key={field.name} className="sm:col-span-2">
+                <p className="mb-1 font-medium">{field.label}</p>
+                <TagPicker
+                  label={field.label}
+                  tags={field.tags}
+                  value={values[field.name]}
+                  onChange={(ids) => set(field.name, ids)}
+                />
+                {errors[field.name] && (
+                  <p role="alert" className="mt-1 text-sm text-danger">
+                    {errors[field.name]}
+                  </p>
+                )}
+              </div>
             ) : (
               <div key={field.name} className={field.wide ? 'sm:col-span-2' : ''}>
                 <Field

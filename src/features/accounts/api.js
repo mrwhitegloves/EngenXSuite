@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '../../lib/apiClient.js';
+import { apiDownload, apiRequest } from '../../lib/apiClient.js';
 
 // Accounts = customer companies. (People who sign in are "users".)
 const ACCOUNTS_KEY = ['accounts'];
@@ -62,6 +62,16 @@ export function useUpdateAccount() {
 
 export function useDeleteAccount() {
   return useAccountsMutation((id) => apiRequest(`/accounts/${id}`, { method: 'DELETE' }));
+}
+
+/**
+ * Download the accounts the current filters show, as a CSV file.
+ * `params`: the list's filters and sort (no page: the file holds every matching account).
+ */
+export function useExportAccounts() {
+  return useMutation({
+    mutationFn: (params) => apiDownload(`/accounts/export${toQueryString(params)}`, 'accounts.csv'),
+  });
 }
 
 /** A company and its people from the one "New" form in the top bar. */
@@ -139,6 +149,19 @@ export function useMachineActions(plantId) {
   return useRecordActions({
     createPath: `/plants/${plantId}/machines`,
     itemPath: '/machines',
+    reloadKeys: [['plants']],
+  });
+}
+
+/** The departments and production lines of one plant; asked for only while it is opened. */
+export function usePlantUnits(plantId) {
+  return useListOf(['plants', 'units', plantId], `/plants/${plantId}/units`);
+}
+
+export function useUnitActions(plantId) {
+  return useRecordActions({
+    createPath: `/plants/${plantId}/units`,
+    itemPath: '/plant-units',
     reloadKeys: [['plants']],
   });
 }

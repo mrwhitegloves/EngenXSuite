@@ -16,6 +16,8 @@ export const REALTIME_REFETCH = {
   'contacts.changed': [['contacts']],
   // A plant or one of its machines was added, changed or deleted.
   'plants.changed': [['plants']],
+  // A tag was added, renamed, merged or deleted: reload the tags and the records that show them.
+  'tags.changed': [['tags'], ['accounts'], ['contacts']],
   // A status list in Settings changed: reload the lists, and accounts (they show status names).
   'status-lists.changed': [['status-lists'], ['accounts']],
   // The product name or company name changed.

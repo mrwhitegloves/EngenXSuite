@@ -3,8 +3,10 @@ import { Mail, Pencil, Phone, Plus, Trash2, Users } from 'lucide-react';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog.jsx';
 import DataTable from '../../../components/shared/DataTable.jsx';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
+import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError, primaryButtonClass } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
+import { useTagsFor } from '../../../hooks/useTags.js';
 import { STAKEHOLDER_ROLE_LABELS } from '../accountForm.js';
 import { useAccountContacts, useContactActions } from '../api.js';
 import RecordFormDialog, { numberOrNull, onlyFilled, textOrNull } from './RecordFormDialog.jsx';
@@ -69,6 +71,7 @@ function toForm(contact) {
   const form = Object.fromEntries(FIELDS.map((field) => [field.name, text(contact?.[field.name])]));
   return {
     ...form,
+    tagIds: (contact?.tags ?? []).map((tag) => tag.id),
     whatsappOptIn: contact?.consent?.whatsappOptIn ?? false,
     doNotCall: contact?.consent?.doNotCall ?? false,
   };
@@ -89,6 +92,7 @@ function toBody(values) {
     technicalInfluence: numberOrNull(values.technicalInfluence),
     commercialInfluence: numberOrNull(values.commercialInfluence),
     relationshipStrength: numberOrNull(values.relationshipStrength),
+    tagIds: values.tagIds,
     consent: { whatsappOptIn: values.whatsappOptIn, doNotCall: values.doNotCall },
   };
 }
@@ -98,6 +102,7 @@ export default function PeopleTab({ accountId }) {
   const can = useCan();
   const contacts = useAccountContacts(accountId);
   const actions = useContactActions(accountId);
+  const tagField = { name: 'tagIds', label: 'Tags', type: 'tags', tags: useTagsFor('contact') };
   // null = closed, 'new' = the add form, or the contact being edited.
   const [formTarget, setFormTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -116,6 +121,7 @@ export default function PeopleTab({ accountId }) {
           <p className="text-text-muted">
             {[row.designation, row.department].filter(Boolean).join(' · ') || '—'}
           </p>
+          <TagChips tags={row.tags} className="mt-1" />
         </>
       ),
     },
@@ -241,7 +247,7 @@ export default function PeopleTab({ accountId }) {
           key={isNew ? 'new' : formTarget.id}
           wide
           title={isNew ? 'Add person' : `Edit ${formTarget.name}`}
-          fields={isNew ? FIELDS : [...FIELDS, ...CONSENT_FIELDS]}
+          fields={isNew ? [...FIELDS, tagField] : [...FIELDS, tagField, ...CONSENT_FIELDS]}
           initial={toForm(isNew ? null : formTarget)}
           isNew={isNew}
           toBody={toBody}

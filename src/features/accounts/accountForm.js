@@ -24,6 +24,7 @@ export const EMPTY_ACCOUNT_FORM = {
   pan: '',
   ownerId: '',
   assignedUserIds: [],
+  tagIds: [],
   accountPotential: '',
   relationshipHealth: '',
   strategicImportance: '',
@@ -63,6 +64,7 @@ export function accountToForm(account) {
     pan: text(account.pan),
     ownerId: text(account.owner?.id),
     assignedUserIds: (account.assignedUsers ?? []).map((user) => user.id),
+    tagIds: (account.tags ?? []).map((tag) => tag.id),
     accountPotential: text(account.commercial?.accountPotential),
     relationshipHealth: text(account.commercial?.relationshipHealth),
     strategicImportance: text(account.commercial?.strategicImportance),
@@ -101,6 +103,7 @@ export function formToAccountBody(form) {
     gstin: form.gstin,
     pan: form.pan,
     assignedUserIds: form.assignedUserIds,
+    tagIds: form.tagIds,
     commercial: {
       accountPotential: orNull(form.accountPotential),
       relationshipHealth: orNull(form.relationshipHealth),

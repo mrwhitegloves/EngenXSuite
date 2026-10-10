@@ -15,6 +15,8 @@ import {
   useMachineActions,
   usePlantActions,
   usePlantMachines,
+  usePlantUnits,
+  useUnitActions,
 } from '../api.js';
 import RecordFormDialog, { numberOrNull, onlyFilled, textOrNull } from './RecordFormDialog.jsx';
 
@@ -155,9 +157,29 @@ const MACHINE_FIELDS = [
   },
 ];
 
+// "Machining › Line 1" for a line inside a department; just the name otherwise.
+function unitLabel(unit, units) {
+  const parent = unit.parentId && units.find((item) => item.id === unit.parentId);
+  return parent ? `${parent.name} › ${unit.name}` : unit.name;
+}
+
+// The machine form's fields; the place in the plant is offered once the plant has units.
+function machineFields(units) {
+  if (units.length === 0) return MACHINE_FIELDS;
+  const place = {
+    name: 'unitId',
+    label: 'Where in the plant',
+    type: 'select',
+    choices: units.map((unit) => [unit.id, unitLabel(unit, units)]),
+    emptyLabel: 'Not placed',
+  };
+  return [...MACHINE_FIELDS.slice(0, 2), place, ...MACHINE_FIELDS.slice(2)];
+}
+
 function machineToForm(machine) {
   return {
     ...Object.fromEntries(MACHINE_FIELDS.map((field) => [field.name, text(machine?.[field.name])])),
+    unitId: text(machine?.unitId),
     quantity: text(machine?.quantity ?? 1),
     existingSensors: (machine?.existingSensors ?? []).join(', '),
   };
@@ -170,6 +192,7 @@ function machineToBody(values) {
   return {
     ...body,
     name: values.name.trim(),
+    unitId: textOrNull(values.unitId),
     quantity: numberOrNull(values.quantity),
     yearInstalled: numberOrNull(values.yearInstalled),
     existingSensors: values.existingSensors
@@ -179,10 +202,191 @@ function machineToBody(values) {
   };
 }
 
+// The departments and production lines of one plant, shown when the plant is opened.
+// A line sits inside a department or directly in the plant.
+function Units({ plant }) {
+  const can = useCan();
+  const units = usePlantUnits(plant.id);
+  const actions = useUnitActions(plant.id);
+  // null = closed, { type } = the add form for that kind, or the unit being edited.
+  const [formTarget, setFormTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const all = units.data ?? [];
+  const departments = all.filter((unit) => unit.type === 'department');
+  const linesOf = (departmentId) =>
+    all.filter((unit) => unit.type === 'line' && unit.parentId === departmentId);
+  const isNew = Boolean(formTarget) && !formTarget.id;
+  const save = isNew ? actions.create : actions.update;
+  const isLine = formTarget?.type === 'line';
+
+  const fields = [
+    { name: 'name', label: isLine ? 'Line name' : 'Department name', required: true },
+    ...(isLine
+      ? [
+          {
+            name: 'parentId',
+            label: 'Department',
+            type: 'select',
+            choices: departments.map((unit) => [unit.id, unit.name]),
+            emptyLabel: 'Directly in the plant',
+          },
+        ]
+      : []),
+  ];
+  const toBody = (values) => ({
+    name: values.name.trim(),
+    ...(isLine ? { parentId: textOrNull(values.parentId) } : {}),
+  });
+
+  const addButton = (type, label) => (
+    <button
+      type="button"
+      className={secondaryButtonClass}
+      onClick={() => {
+        actions.create.reset();
+        setFormTarget({ type });
+      }}
+    >
+      <Plus size={16} aria-hidden="true" />
+      {label}
+    </button>
+  );
+
+  const row = (unit, isNested = false) => (
+    <li
+      key={unit.id}
+      className={`flex flex-wrap items-center justify-between gap-2 py-1.5 ${isNested ? 'pl-6' : ''}`}
+    >
+      <span>
+        <span className={unit.type === 'department' ? 'font-medium' : ''}>{unit.name}</span>
+        <span className="ml-2 text-xs text-text-muted">
+          {unit.type === 'department' ? 'Department' : 'Line'}
+        </span>
+      </span>
+      <span className="flex gap-2">
+        {can('plants', 'edit') && (
+          <button
+            type="button"
+            className={rowButton}
+            aria-label={`Edit ${unit.name}`}
+            onClick={() => {
+              actions.update.reset();
+              setFormTarget(unit);
+            }}
+          >
+            <Pencil size={14} aria-hidden="true" />
+            Edit
+          </button>
+        )}
+        {can('plants', 'delete') && (
+          <button
+            type="button"
+            className={rowButton}
+            aria-label={`Delete ${unit.name}`}
+            onClick={() => {
+              actions.remove.reset();
+              setDeleteTarget(unit);
+            }}
+          >
+            <Trash2 size={14} aria-hidden="true" />
+            Delete
+          </button>
+        )}
+      </span>
+    </li>
+  );
+
+  return (
+    <div className="space-y-2 border-t border-border p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h4 className="text-sm font-semibold">Departments and lines</h4>
+        {can('plants', 'create') && (
+          <div className="flex flex-wrap gap-2">
+            {addButton('department', 'Add department')}
+            {addButton('line', 'Add line')}
+          </div>
+        )}
+      </div>
+      <FormError message={units.error?.message} />
+      {units.isPending && (
+        <p role="status" className="text-sm text-text-muted">
+          Loading departments and lines…
+        </p>
+      )}
+      {units.isSuccess && all.length === 0 && (
+        <p className="text-sm text-text-muted">
+          No departments or lines yet. Add them to say where each machine stands.
+        </p>
+      )}
+      {all.length > 0 && (
+        <ul
+          aria-label={`Departments and lines of ${plant.name}`}
+          className="divide-y divide-border text-sm"
+        >
+          {departments.flatMap((department) => [
+            row(department),
+            ...linesOf(department.id).map((line) => row(line, true)),
+          ])}
+          {linesOf(null).map((line) => row(line))}
+        </ul>
+      )}
+
+      {formTarget && (
+        <RecordFormDialog
+          key={isNew ? `new-${formTarget.type}` : formTarget.id}
+          title={
+            isNew
+              ? `Add ${isLine ? 'line' : 'department'} to ${plant.name}`
+              : `Edit ${formTarget.name}`
+          }
+          fields={fields}
+          initial={{ name: text(formTarget.name), parentId: text(formTarget.parentId) }}
+          isNew={isNew}
+          toBody={toBody}
+          save={save}
+          saveLabel={isNew ? 'Add' : 'Save changes'}
+          onClose={() => setFormTarget(null)}
+          onSave={(body) =>
+            save.mutate(
+              isNew
+                ? { type: formTarget.type, ...onlyFilled(body) }
+                : { id: formTarget.id, ...body },
+              { onSuccess: () => setFormTarget(null) },
+            )
+          }
+        />
+      )}
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title={`Delete this ${deleteTarget?.type === 'line' ? 'line' : 'department'}?`}
+        confirmLabel="Delete"
+        isBusy={actions.remove.isPending}
+        error={actions.remove.error?.message}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() =>
+          actions.remove.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) })
+        }
+      >
+        <p>
+          <strong>{deleteTarget?.name}</strong> will be removed from {plant.name}. Its machines
+          {deleteTarget?.type === 'department' && ' and lines'} stay in the plant; they only stop
+          being grouped here.
+        </p>
+      </ConfirmDialog>
+    </div>
+  );
+}
+
 // The machines of one plant, shown when the plant is opened.
 function Machines({ plant }) {
   const can = useCan();
   const machines = usePlantMachines(plant.id, true);
+  const units = usePlantUnits(plant.id).data ?? [];
+  const placeOf = (unitId) => {
+    const unit = units.find((item) => item.id === unitId);
+    return unit ? unitLabel(unit, units) : null;
+  };
   const actions = useMachineActions(plant.id);
   const [formTarget, setFormTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -206,6 +410,7 @@ function Machines({ plant }) {
         </>
       ),
     },
+    { key: 'place', header: 'Where', render: (row) => placeOf(row.unitId) ?? '—' },
     {
       key: 'control',
       header: 'Controls',
@@ -298,7 +503,7 @@ function Machines({ plant }) {
           key={isNew ? 'new' : formTarget.id}
           wide
           title={isNew ? `Add machine to ${plant.name}` : `Edit ${formTarget.name}`}
-          fields={MACHINE_FIELDS}
+          fields={machineFields(units)}
           initial={machineToForm(isNew ? null : formTarget)}
           isNew={isNew}
           toBody={machineToBody}
@@ -374,7 +579,7 @@ export default function PlantsTab({ accountId }) {
         <EmptyState
           icon={Factory}
           title="No plants yet"
-          description="Add this company’s sites. Each plant has its own people and machines."
+          description="Add this company’s sites. Each plant has its own people, departments, lines and machines."
         />
       )}
 
@@ -473,6 +678,7 @@ export default function PlantsTab({ accountId }) {
                         </div>
                       ))}
                   </dl>
+                  <Units plant={plant} />
                   <Machines plant={plant} />
                 </>
               )}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError, secondaryButtonClass } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { HEALTH_LABELS, POTENTIAL_LABELS } from '../accountForm.js';
@@ -205,6 +206,7 @@ export default function Account360Page() {
             {data.hq?.city && <> · {data.hq.city}</>}
             {data.owner?.name && <> · Owner: {data.owner.name}</>}
           </p>
+          <TagChips tags={data.tags} className="mt-2" />
         </div>
         {data.permissions.canEdit && (
           <button type="button" className={secondaryButtonClass} onClick={() => setIsEditing(true)}>
