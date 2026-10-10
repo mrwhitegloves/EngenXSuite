@@ -71,8 +71,8 @@ function SidebarLogo({ productName, isCollapsed }) {
   }
   if (darkShortMissing) {
     return (
-      <span className="flex size-9 items-center justify-center rounded-md bg-white">
-        <img src={LOGOS.short.onLight} alt={productName} className="size-7" />
+      <span className="flex size-9 items-center justify-center rounded-md">
+        <img src={LOGOS.short.onLight} alt={productName} className="size-10" />
       </span>
     );
   }
