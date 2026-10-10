@@ -24,6 +24,8 @@ export const REALTIME_REFETCH = {
   'notifications.changed': [['notifications']],
   // A task was added, changed, completed or deleted.
   'tasks.changed': [['tasks'], ['dashboard'], ['search']],
+  // An inbound lead arrived or was processed, or a lead form or the assignment rule changed.
+  'inbound-leads.changed': [['inbound-leads']],
   // A tag was added, renamed, merged or deleted: reload the tags and the records that show them.
   'tags.changed': [['tags'], ['accounts'], ['contacts'], ['opportunities']],
   // An import of mine moved on (progress, finished, undone).

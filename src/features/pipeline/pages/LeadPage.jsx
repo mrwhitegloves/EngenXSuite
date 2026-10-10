@@ -12,7 +12,16 @@ import LeadEditModal from '../components/LeadEditModal.jsx';
 import { daysInStage, formatDay, formatDuration, formatMoment } from '../leadDisplay.js';
 import { BUDGET_LABELS, FEASIBILITY_LABELS, RISK_LABELS, rupees } from '../leadForm.js';
 
+const SOURCE_LABELS = {
+  manual: 'Typed in',
+  meta_ads: 'Meta ads',
+  website: 'Website',
+  import: 'File import',
+  email: 'Email',
+  referral: 'Referral',
+};
 const VIA_LABELS = {
+  automation: 'by the system',
   pipeline: 'on the pipeline',
   opportunity_page: 'on the lead page',
   account_page: 'on the company page',
@@ -321,7 +330,10 @@ export default function LeadPage() {
             ['Also assigned', data.assignedUsers.map((user) => user.name).join(', ')],
             ['Added by', data.formFilledBy?.name],
             ['Added on', formatDay(data.createdAt)],
-            ['Source', data.source === 'manual' ? 'Typed in' : data.source],
+            ['Source', SOURCE_LABELS[data.source] ?? data.source],
+            ['Campaign', data.sourceDetail?.campaign],
+            ['Ad', data.sourceDetail?.ad],
+            ['Form', data.sourceDetail?.form],
           ]}
         />
         <StageHistory leadId={data.id} />

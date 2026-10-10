@@ -10,6 +10,8 @@ import { useCan } from '../../../hooks/useCan.js';
 import { useRoles, useUpdateRole } from '../api.js';
 import AuditLog from '../components/AuditLog.jsx';
 import Branding from '../components/Branding.jsx';
+import LeadAssignment from '../components/LeadAssignment.jsx';
+import LeadForms from '../components/LeadForms.jsx';
 import Backups from '../components/Backups.jsx';
 import BackgroundJobs from '../components/BackgroundJobs.jsx';
 import StatusLists, { PipelineStages, SolutionCategories } from '../components/StatusLists.jsx';
@@ -110,6 +112,16 @@ const SECTIONS = [
       'Pipeline stages: the steps a lead moves through, from first contact to won or lost.',
   },
   {
+    id: 'lead-assignment',
+    label: 'Lead assignment',
+    description: 'Lead assignment: who gets a lead that comes in by itself.',
+  },
+  {
+    id: 'lead-forms',
+    label: 'Lead forms',
+    description: 'Lead forms: the Meta lead ad forms, their answers, and the leads that came in.',
+  },
+  {
     id: 'categories',
     label: 'Solution categories',
     description: 'Solution categories: what you sell, as your team picks it on a lead.',
@@ -177,6 +189,8 @@ export default function SettingsPage() {
       {section.id === 'branding' && <Branding canEdit={can('settings', 'edit')} />}
       {section.id === 'statuses' && <StatusLists canEdit={can('settings', 'edit')} />}
       {section.id === 'stages' && <PipelineStages canEdit={can('settings', 'edit')} />}
+      {section.id === 'lead-assignment' && <LeadAssignment canEdit={can('settings', 'edit')} />}
+      {section.id === 'lead-forms' && <LeadForms canEdit={can('settings', 'edit')} />}
       {section.id === 'categories' && <SolutionCategories canEdit={can('settings', 'edit')} />}
       {section.id === 'tags' && <Tags canEdit={can('settings', 'edit')} />}
       {section.id === 'jobs' && <BackgroundJobs canEdit={can('settings', 'edit')} />}
