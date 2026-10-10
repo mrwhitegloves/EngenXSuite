@@ -8,7 +8,7 @@ import { secondaryButtonClass } from '../../../components/shared/form.jsx';
 // "My profile": the signed-in user's own details and profile picture.
 export default function ProfileDialog({ onClose }) {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   // Both requests answer with the updated user, which replaces the cached one, so the new
   // picture appears everywhere at once. The users list is reloaded for the same reason.
@@ -33,9 +33,19 @@ export default function ProfileDialog({ onClose }) {
       title="My profile"
       onClose={onClose}
       footer={
-        <button type="button" onClick={onClose} className={secondaryButtonClass}>
-          Close
-        </button>
+        <>
+          {/* On a phone the top bar has no room for its own sign-out button; it is here. */}
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className={`${secondaryButtonClass} mr-auto`}
+          >
+            Sign out
+          </button>
+          <button type="button" onClick={onClose} className={secondaryButtonClass}>
+            Close
+          </button>
+        </>
       }
     >
       <AvatarUploader name={user.name} url={user.avatarUrl} onUpload={upload} onRemove={remove} />

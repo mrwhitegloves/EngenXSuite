@@ -7,6 +7,7 @@ import Logo from '../shared/Logo.jsx';
 import ProfileDialog from '../../features/auth/components/ProfileDialog.jsx';
 import QuickAddDialog from '../../features/accounts/components/QuickAddDialog.jsx';
 import NotificationBell from '../../features/notifications/components/NotificationBell.jsx';
+import GlobalSearch from '../../features/search/components/GlobalSearch.jsx';
 import { useCan } from '../../hooks/useCan.js';
 import { primaryButtonClass } from '../shared/form.jsx';
 
@@ -60,7 +61,7 @@ function ThemeSwitch() {
   );
 }
 
-// The top bar. Global search and the voice note join it in later tasks.
+// The top bar. The voice note joins it in a later task.
 export default function TopBar({ productName }) {
   const { user, signOut } = useAuth();
   const can = useCan();
@@ -73,7 +74,8 @@ export default function TopBar({ productName }) {
       <span className="shrink-0 md:hidden">
         <Logo productName={productName} className="h-6" />
       </span>
-      <span className="hidden md:block" />
+      {/* Search everything: companies, people, leads, tasks. */}
+      <GlobalSearch />
 
       <div className="flex items-center gap-3 max-sm:gap-2">
         {/* One form for a new company together with its people. */}
@@ -110,7 +112,8 @@ export default function TopBar({ productName }) {
           onClick={() => signOut()}
           title="Sign out"
           aria-label="Sign out"
-          className="rounded-md border border-border p-2 text-text-muted transition-colors hover:border-brand hover:text-text focus-visible:outline-2 focus-visible:outline-brand"
+          // On a phone there is no room for it: "Sign out" is in My profile there.
+          className="rounded-md border border-border p-2 text-text-muted transition-colors hover:border-brand hover:text-text focus-visible:outline-2 focus-visible:outline-brand max-sm:hidden"
         >
           <LogOut size={16} aria-hidden="true" />
         </button>
