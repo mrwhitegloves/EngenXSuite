@@ -3,113 +3,25 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog.jsx';
 import DataTable from '../../../components/shared/DataTable.jsx';
-import Dialog from '../../../components/shared/Dialog.jsx';
 import { TagChips } from '../../../components/shared/Tags.jsx';
-import {
-  Field,
-  FormError,
-  inputClass,
-  primaryButtonClass,
-  secondaryButtonClass,
-  compactInputClass,
-} from '../../../components/shared/form.jsx';
+import { FormError, compactInputClass } from '../../../components/shared/form.jsx';
 import { useChangeStage, useDeleteLead } from '../api.js';
+import { daysInStage, formatDay } from '../leadDisplay.js';
 import { rupees } from '../leadForm.js';
+import CloseDialog from './CloseDialog.jsx';
 import LeadEditModal from './LeadEditModal.jsx';
 
 const rowButton =
   'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand';
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-const formatDay = (value) =>
-  value
-    ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(
-        new Date(value),
-      )
-    : '—';
-
-/** "today", "1 day", "12 days": how long the lead has been in its stage. */
-function daysInStage(enteredAt, now) {
-  const days = Math.floor((now - new Date(enteredAt)) / DAY_MS);
-  if (days <= 0) return 'today';
-  return `${days} ${days === 1 ? 'day' : 'days'}`;
-}
-
-// Won and lost need a reason before the stage is changed.
-function CloseDialog({ lead, stage, move, onClose }) {
-  const [closeReason, setCloseReason] = useState('');
-  const [lostToCompetitor, setLostToCompetitor] = useState('');
-  const isWon = stage.type === 'won';
-  return (
-    <Dialog open title={`Mark “${lead.name}” as ${stage.name}`} onClose={onClose}>
-      <form
-        className="space-y-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          move.mutate(
-            {
-              id: lead.id,
-              stageId: stage.id,
-              closeReason: closeReason.trim(),
-              ...(lostToCompetitor.trim() ? { lostToCompetitor: lostToCompetitor.trim() } : {}),
-              via: 'pipeline',
-            },
-            { onSuccess: onClose },
-          );
-        }}
-      >
-        <Field label={isWon ? 'Why was it won?' : 'Why was it lost?'}>
-          {(props) => (
-            <textarea
-              {...props}
-              rows={3}
-              maxLength={500}
-              autoFocus
-              value={closeReason}
-              onChange={(event) => setCloseReason(event.target.value)}
-              className={inputClass}
-            />
-          )}
-        </Field>
-        {!isWon && (
-          <Field label="Lost to (competitor)" hint="Leave empty when not known.">
-            {(props) => (
-              <input
-                {...props}
-                value={lostToCompetitor}
-                maxLength={200}
-                onChange={(event) => setLostToCompetitor(event.target.value)}
-                className={inputClass}
-              />
-            )}
-          </Field>
-        )}
-        <FormError message={move.error?.message} />
-        <div className="flex justify-end gap-2">
-          <button type="button" className={secondaryButtonClass} onClick={onClose}>
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className={primaryButtonClass}
-            disabled={!closeReason.trim() || move.isPending}
-          >
-            {move.isPending ? 'Saving…' : `Mark as ${stage.name}`}
-          </button>
-        </div>
-      </form>
-    </Dialog>
-  );
-}
-
 /**
  * Leads as a table: used by the Pipeline page and by the Leads tab of a company.
  * The stage is changed right in the row; everything else through the one lead form.
  *
  * @param {{ rows: object[], stages: object[], caption: string, sort?: string,
  *           onSortChange?: (sort: string) => void, isRefreshing?: boolean,
- *           showAccount?: boolean }} props
+ *           showAccount?: boolean, via?: string }} props
  *        stages: from the lead form options (id, name, type, isActive)
+ *        via: where a stage change is made from here, for the stage history
  */
 export default function LeadsTable({
   rows,
@@ -119,6 +31,7 @@ export default function LeadsTable({
   onSortChange,
   isRefreshing,
   showAccount = true,
+  via = 'pipeline',
 }) {
   const move = useChangeStage();
   const deleteLead = useDeleteLead();
@@ -132,7 +45,7 @@ export default function LeadsTable({
     const stage = stages.find((item) => item.id === stageId);
     if (!stage || stageId === lead.stage?.id) return;
     move.reset();
-    if (stage.type === 'open') move.mutate({ id: lead.id, stageId, via: 'pipeline' });
+    if (stage.type === 'open') move.mutate({ id: lead.id, stageId, via });
     else setCloseTarget({ lead, stage });
   }
 
@@ -150,11 +63,17 @@ export default function LeadsTable({
       sortKey: 'name',
       render: (row) => (
         <>
-          <p className="font-medium">{row.name}</p>
+          {/* The name opens the lead's own page. */}
+          <Link
+            to={`/pipeline/${row.id}`}
+            className="font-medium hover:text-brand-text hover:underline focus-visible:outline-2 focus-visible:outline-brand"
+          >
+            {row.name}
+          </Link>
           {showAccount && row.account && (
             <Link
               to={`/accounts/${row.account.id}`}
-              className="text-text-muted hover:text-brand-text hover:underline"
+              className="block text-text-muted hover:text-brand-text hover:underline"
             >
               {row.account.name}
             </Link>
@@ -296,6 +215,7 @@ export default function LeadsTable({
           lead={closeTarget.lead}
           stage={closeTarget.stage}
           move={move}
+          via={via}
           onClose={() => setCloseTarget(null)}
         />
       )}

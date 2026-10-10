@@ -47,6 +47,7 @@ export default function LeadsTab({ account }) {
           rows={rows}
           stages={options.data?.stages ?? []}
           showAccount={false}
+          via="account_page"
         />
       )}
 

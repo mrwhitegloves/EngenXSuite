@@ -25,6 +25,27 @@ export function useLeads(params, { enabled = true } = {}) {
   });
 }
 
+/** The leads grouped by stage, for the board. `params`: the same filters as the list. */
+export function useBoard(params, { enabled = true } = {}) {
+  return useQuery({
+    queryKey: [...LEADS_KEY, 'board', params],
+    queryFn: ({ signal }) => apiRequest(`/opportunities/board${toQueryString(params)}`, { signal }),
+    select: (payload) => payload.data,
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+}
+
+/** The stages one lead has been through, newest first. */
+export function useStageHistory(id) {
+  return useQuery({
+    queryKey: [...LEADS_KEY, 'stage-history', id],
+    queryFn: ({ signal }) => apiRequest(`/opportunities/${id}/stage-history`, { signal }),
+    select: (payload) => payload.data,
+    enabled: Boolean(id),
+  });
+}
+
 /** Stages, lead statuses, solution categories, and the people a lead can be given to. */
 export function useLeadOptions() {
   return useQuery({

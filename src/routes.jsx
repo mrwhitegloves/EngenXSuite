@@ -4,7 +4,7 @@ import SectionNotBuilt from './components/shared/states/SectionNotBuilt.jsx';
 import { NAV_ITEMS, SETTINGS_ITEM, visibleItems } from './config/navigation.js';
 import AccountsRoutes from './features/accounts/AccountsRoutes.jsx';
 import DashboardPage from './features/dashboard/pages/DashboardPage.jsx';
-import PipelinePage from './features/pipeline/pages/PipelinePage.jsx';
+import PipelineRoutes from './features/pipeline/PipelineRoutes.jsx';
 import SettingsPage from './features/settings/pages/SettingsPage.jsx';
 import UsersPage from './features/users/pages/UsersPage.jsx';
 import { useCan } from './hooks/useCan.js';
@@ -12,7 +12,7 @@ import { useCan } from './hooks/useCan.js';
 // Sections that have a real page. Every other visible section shows a "not built yet" notice.
 const PAGES = {
   '/accounts': AccountsRoutes,
-  '/pipeline': PipelinePage,
+  '/pipeline': PipelineRoutes,
   '/users': UsersPage,
   '/settings': SettingsPage,
 };
