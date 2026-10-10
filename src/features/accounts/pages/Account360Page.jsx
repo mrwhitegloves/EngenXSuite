@@ -5,6 +5,8 @@ import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError, secondaryButtonClass } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { HEALTH_LABELS, POTENTIAL_LABELS } from '../accountForm.js';
+import { RecordTasks } from '../../activities/components/Tasks.jsx';
+import Timeline from '../../activities/components/Timeline.jsx';
 import { useAccount } from '../api.js';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
 import LeadsTab from '../components/LeadsTab.jsx';
@@ -139,10 +141,11 @@ const TABS = [
   { id: 'people', label: 'People', feature: 'contacts' },
   { id: 'plants', label: 'Plants', feature: 'plants' },
   { id: 'leads', label: 'Leads', feature: 'opportunities' },
+  { id: 'timeline', label: 'Timeline' },
 ];
 
 // Account 360: everything known about one company, in one place.
-// The timeline and documents join as tabs when those parts are built.
+// Documents join as a tab when that part is built.
 export default function Account360Page() {
   const { accountId } = useParams();
   const can = useCan();
@@ -249,6 +252,19 @@ export default function Account360Page() {
       {tab.id === 'people' && <PeopleTab accountId={data.id} />}
       {tab.id === 'plants' && <PlantsTab accountId={data.id} />}
       {tab.id === 'leads' && <LeadsTab account={data} />}
+      {tab.id === 'timeline' && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-2">
+            <h2 className="font-semibold">What happened</h2>
+            <Timeline
+              target={{ accountId: data.id }}
+              canWrite={data.permissions.canEdit}
+              showLead
+            />
+          </div>
+          {can('tasks', 'view') && <RecordTasks target={{ accountId: data.id }} />}
+        </div>
+      )}
 
       {isEditing && <AccountFormDialog accountId={data.id} onClose={() => setIsEditing(false)} />}
     </>

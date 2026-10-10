@@ -3,6 +3,9 @@ import { ArrowLeft, Check, Pencil, Sparkles } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError, secondaryButtonClass } from '../../../components/shared/form.jsx';
+import { useCan } from '../../../hooks/useCan.js';
+import { RecordTasks } from '../../activities/components/Tasks.jsx';
+import Timeline from '../../activities/components/Timeline.jsx';
 import { useChangeStage, useLead, useLeadOptions, useStageHistory } from '../api.js';
 import CloseDialog from '../components/CloseDialog.jsx';
 import LeadEditModal from '../components/LeadEditModal.jsx';
@@ -123,10 +126,11 @@ function StageHistory({ leadId }) {
   );
 }
 
-// One lead: everything about it on one page. The timeline, tasks and AI areas are filled by
-// the parts that are built next.
+// One lead: everything about it on one page, with its tasks and its timeline. The AI area is
+// filled when the AI part is built.
 export default function LeadPage() {
   const { leadId } = useParams();
+  const can = useCan();
   const lead = useLead(leadId);
   const options = useLeadOptions();
   const move = useChangeStage();
@@ -321,14 +325,14 @@ export default function LeadPage() {
           ]}
         />
         <StageHistory leadId={data.id} />
-        <section className="rounded-lg border border-dashed border-border bg-surface p-4">
-          <h2 className="mb-2 text-sm font-semibold text-text-muted uppercase">
-            Timeline and tasks
-          </h2>
-          <p className="text-text-muted">
-            Notes, calls, messages and tasks of this lead will show here once the timeline is built.
-          </p>
-        </section>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        {can('tasks', 'view') && <RecordTasks target={{ opportunityId: data.id }} />}
+        <div className="space-y-2">
+          <h2 className="font-semibold">Timeline</h2>
+          <Timeline target={{ opportunityId: data.id }} canWrite={data.permissions.canEdit} />
+        </div>
       </div>
 
       {isEditing && <LeadEditModal leadId={data.id} onClose={() => setIsEditing(false)} />}
