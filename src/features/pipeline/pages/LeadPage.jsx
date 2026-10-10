@@ -6,6 +6,8 @@ import { FormError, secondaryButtonClass } from '../../../components/shared/form
 import { useCan } from '../../../hooks/useCan.js';
 import { RecordTasks } from '../../activities/components/Tasks.jsx';
 import Timeline from '../../activities/components/Timeline.jsx';
+import CallButton from '../../calls/components/CallButton.jsx';
+import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import { useChangeStage, useLead, useLeadOptions, useStageHistory } from '../api.js';
 import CloseDialog from '../components/CloseDialog.jsx';
 import LeadEditModal from '../components/LeadEditModal.jsx';
@@ -312,7 +314,15 @@ export default function LeadPage() {
               'Main contact',
               contact && [contact.name, contact.designation].filter(Boolean).join(', '),
             ],
-            ['Phone', contact?.phone_number],
+            [
+              'Phone',
+              contact?.phone_number && (
+                <span className="flex flex-wrap items-center gap-2">
+                  {contact.phone_number}
+                  <CallButton contact={contact} opportunityId={data.id} />
+                </span>
+              ),
+            ],
             ['Email', contact?.email],
             [
               'Also involved',
@@ -340,7 +350,10 @@ export default function LeadPage() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        {can('tasks', 'view') && <RecordTasks target={{ opportunityId: data.id }} />}
+        <div className="space-y-6">
+          {can('tasks', 'view') && <RecordTasks target={{ opportunityId: data.id }} />}
+          {can('calls', 'view') && <RecordCalls target={{ opportunityId: data.id }} />}
+        </div>
         <div className="space-y-2">
           <h2 className="font-semibold">Timeline</h2>
           <Timeline target={{ opportunityId: data.id }} canWrite={data.permissions.canEdit} />

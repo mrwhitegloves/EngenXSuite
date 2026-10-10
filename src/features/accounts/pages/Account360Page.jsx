@@ -7,6 +7,7 @@ import { useCan } from '../../../hooks/useCan.js';
 import { HEALTH_LABELS, POTENTIAL_LABELS } from '../accountForm.js';
 import { RecordTasks } from '../../activities/components/Tasks.jsx';
 import Timeline from '../../activities/components/Timeline.jsx';
+import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import { useAccount } from '../api.js';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
 import LeadsTab from '../components/LeadsTab.jsx';
@@ -262,7 +263,10 @@ export default function Account360Page() {
               showLead
             />
           </div>
-          {can('tasks', 'view') && <RecordTasks target={{ accountId: data.id }} />}
+          <div className="space-y-6">
+            {can('tasks', 'view') && <RecordTasks target={{ accountId: data.id }} />}
+            {can('calls', 'view') && <RecordCalls target={{ accountId: data.id }} />}
+          </div>
         </div>
       )}
 
