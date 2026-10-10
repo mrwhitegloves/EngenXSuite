@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, Download, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Building2, Download, FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog.jsx';
@@ -214,6 +214,12 @@ export default function AccountsPage() {
             <Download size={16} aria-hidden="true" />
             {exportAccounts.isPending ? 'Preparing…' : 'Export'}
           </button>
+        )}
+        {can('imports', 'view') && (
+          <Link to="/accounts/import" className={secondaryButtonClass}>
+            <FileUp size={16} aria-hidden="true" />
+            Import
+          </Link>
         )}
         {can('accounts', 'create') && (
           <button type="button" onClick={() => setFormTarget('new')} className={primaryButtonClass}>
