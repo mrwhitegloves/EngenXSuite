@@ -19,6 +19,7 @@ import {
   useNotifications,
   useUnreadCount,
 } from '../api.js';
+import DevicePush from '../components/DevicePush.jsx';
 import { NotificationRow, useOpenNotification } from '../components/NotificationBell.jsx';
 
 // The switches: all notifications on or off, and each kind on its own.
@@ -178,7 +179,10 @@ export default function NotificationsPage() {
             onPageChange={list.setPage}
           />
         </div>
-        <Preferences />
+        <div className="space-y-4">
+          <Preferences />
+          <DevicePush />
+        </div>
       </div>
     </>
   );

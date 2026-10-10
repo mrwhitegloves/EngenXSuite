@@ -74,9 +74,16 @@ export function useExportAccounts() {
   });
 }
 
-/** A company and its people from the one "New" form in the top bar. */
+/** A company, its people and (when filled in) its first lead from the "New" form in the top bar. */
 export function useQuickAdd() {
-  return useAccountsMutation((body) => apiRequest('/accounts/quick-add', { method: 'POST', body }));
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => apiRequest('/accounts/quick-add', { method: 'POST', body }),
+    onSuccess: () =>
+      [ACCOUNTS_KEY, ['contacts'], ['opportunities']].forEach((queryKey) =>
+        queryClient.invalidateQueries({ queryKey }),
+      ),
+  });
 }
 
 // ── The records under an account: people, plants, machines ─────────────────────────────────

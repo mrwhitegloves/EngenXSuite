@@ -78,12 +78,12 @@ export default function TopBar({ productName }) {
       <GlobalSearch />
 
       <div className="flex items-center gap-3 max-sm:gap-2">
-        {/* One form for a new company together with its people. */}
+        {/* One form for a new company together with its people and its first lead. */}
         {can('accounts', 'create') && (
           <button
             type="button"
             onClick={() => setIsQuickAddOpen(true)}
-            title="New company and people"
+            title="New company, people and lead"
             className={`${primaryButtonClass} max-sm:px-2.5`}
           >
             <Plus size={16} aria-hidden="true" />

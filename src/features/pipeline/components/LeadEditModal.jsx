@@ -14,7 +14,9 @@ import { useTagsFor } from '../../../hooks/useTags.js';
 import { apiRequest } from '../../../lib/apiClient.js';
 import { isStaleData, useCreateLead, useLead, useLeadOptions, useUpdateLead } from '../api.js';
 import {
+  ACCOUNT_FIELDS,
   BUDGET_LABELS,
+  CONTACT_FIELDS,
   EMPTY_LEAD_FORM,
   FEASIBILITY_LABELS,
   RISK_LABELS,
@@ -31,6 +33,16 @@ const SERVER_FIELD_TO_FORM = {
   'nextAction.dueAt': 'nextActionDueAt',
   'risk.level': 'riskLevel',
   'risk.note': 'riskNote',
+  'contact.name': 'contactName',
+  'contact.designation': 'contactDesignation',
+  'contact.phone_number': 'contactPhone',
+  'contact.email': 'contactEmail',
+  'account.name': 'accountName',
+  'account.industry': 'accountIndustry',
+  'account.phone_number': 'accountPhone',
+  'account.email': 'accountEmail',
+  'account.website': 'accountWebsite',
+  'account.hq.city': 'accountCity',
 };
 // A field the person has changed stays orange until it is saved or reset.
 const CHANGED_CLASS = 'border-edited bg-edited-soft';
@@ -83,7 +95,19 @@ function LeadForm({ lead: latestLead, presetAccount, options, onClose, onReload 
   const people = useAccountPeople(form.accountId);
   const tags = useTagsFor('opportunity');
 
-  const changed = isNew ? [] : changedFields(form, initial);
+  // The main contact's own details can be changed here while it is still the same person
+  // (choosing another main contact above is a different change), and only by someone who may
+  // edit contacts; the company's details only by someone who may edit that company.
+  const showContact =
+    !isNew && lead.canEditContact && form.primaryContactId === initial.primaryContactId;
+  const showAccount = !isNew && lead.canEditAccount;
+  const changed = isNew
+    ? []
+    : changedFields(form, initial).filter(
+        (field) =>
+          (showContact || !CONTACT_FIELDS.includes(field)) &&
+          (showAccount || !ACCOUNT_FIELDS.includes(field)),
+      );
   const isStale = isStaleData(save.error);
   const serverErrors = Object.fromEntries(
     Object.entries(fieldErrorsFrom(save.error)).map(([field, message]) => [
@@ -302,6 +326,26 @@ function LeadForm({ lead: latestLead, presetAccount, options, onClose, onReload 
       </Section>
 
       {tags.length > 0 && picker('tagIds', 'Tags', tags)}
+
+      {showContact && (
+        <Section title="Main contact">
+          {input('contactName', 'Name')}
+          {input('contactDesignation', 'Designation')}
+          {input('contactPhone', 'Phone', { inputMode: 'tel' })}
+          {input('contactEmail', 'Email', { type: 'email' })}
+        </Section>
+      )}
+
+      {showAccount && (
+        <Section title="Company">
+          {input('accountName', 'Company name')}
+          {input('accountIndustry', 'Industry')}
+          {input('accountPhone', 'Company phone', { inputMode: 'tel' })}
+          {input('accountEmail', 'Company email', { type: 'email' })}
+          {input('accountWebsite', 'Website')}
+          {input('accountCity', 'City')}
+        </Section>
+      )}
 
       {options.canAssign && (
         <Section title="Who works on it">

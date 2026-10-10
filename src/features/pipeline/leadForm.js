@@ -29,7 +29,29 @@ export const EMPTY_LEAD_FORM = {
   riskNote: '',
   ownerId: '',
   assignedUserIds: [],
+  // The lead's main contact and its company, changed in the same form (edit only).
+  contactName: '',
+  contactDesignation: '',
+  contactPhone: '',
+  contactEmail: '',
+  accountName: '',
+  accountIndustry: '',
+  accountPhone: '',
+  accountEmail: '',
+  accountWebsite: '',
+  accountCity: '',
 };
+
+// The form fields that belong to the main contact and to the company.
+export const CONTACT_FIELDS = ['contactName', 'contactDesignation', 'contactPhone', 'contactEmail'];
+export const ACCOUNT_FIELDS = [
+  'accountName',
+  'accountIndustry',
+  'accountPhone',
+  'accountEmail',
+  'accountWebsite',
+  'accountCity',
+];
 
 const text = (value) => (value === null || value === undefined ? '' : String(value));
 const pad = (number) => String(number).padStart(2, '0');
@@ -80,6 +102,16 @@ export function leadToForm(lead) {
     riskNote: text(lead.risk?.note),
     ownerId: text(lead.owner?.id),
     assignedUserIds: (lead.assignedUsers ?? []).map((user) => user.id),
+    contactName: text(lead.primaryContact?.name),
+    contactDesignation: text(lead.primaryContact?.designation),
+    contactPhone: text(lead.primaryContact?.phone_number),
+    contactEmail: text(lead.primaryContact?.email),
+    accountName: text(lead.account?.name),
+    accountIndustry: text(lead.accountDetails?.industry),
+    accountPhone: text(lead.accountDetails?.phone_number),
+    accountEmail: text(lead.accountDetails?.email),
+    accountWebsite: text(lead.accountDetails?.website),
+    accountCity: text(lead.accountDetails?.city),
   };
 }
 
@@ -124,6 +156,17 @@ const TO_BODY = {
   riskNote: (form) => ({ risk: { note: orNull(form.riskNote) } }),
   ownerId: (form) => ({ ownerId: orNull(form.ownerId) }),
   assignedUserIds: (form) => ({ assignedUserIds: form.assignedUserIds }),
+  // Saved by the server through the contact and the account services.
+  contactName: (form) => ({ contact: { name: form.contactName.trim() } }),
+  contactDesignation: (form) => ({ contact: { designation: orNull(form.contactDesignation) } }),
+  contactPhone: (form) => ({ contact: { phone_number: orNull(form.contactPhone) } }),
+  contactEmail: (form) => ({ contact: { email: orNull(form.contactEmail) } }),
+  accountName: (form) => ({ account: { name: form.accountName.trim() } }),
+  accountIndustry: (form) => ({ account: { industry: orNull(form.accountIndustry) } }),
+  accountPhone: (form) => ({ account: { phone_number: orNull(form.accountPhone) } }),
+  accountEmail: (form) => ({ account: { email: orNull(form.accountEmail) } }),
+  accountWebsite: (form) => ({ account: { website: orNull(form.accountWebsite) } }),
+  accountCity: (form) => ({ account: { hq: { city: orNull(form.accountCity) } } }),
 };
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);

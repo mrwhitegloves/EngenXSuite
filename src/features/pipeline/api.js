@@ -69,7 +69,11 @@ function useLeadsMutation(mutationFn) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: LEADS_KEY }),
+    // The lead form can also change the lead's contact and company: reload those as well.
+    onSuccess: () =>
+      [LEADS_KEY, ['accounts'], ['contacts']].forEach((queryKey) =>
+        queryClient.invalidateQueries({ queryKey }),
+      ),
   });
 }
 
