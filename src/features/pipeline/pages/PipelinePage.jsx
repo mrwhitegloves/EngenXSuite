@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KanbanSquare, List, Plus } from 'lucide-react';
+import { Download, KanbanSquare, List, Plus } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import DateRangeFilter, {
@@ -12,12 +12,13 @@ import EmptyState from '../../../components/shared/states/EmptyState.jsx';
 import {
   FormError,
   primaryButtonClass,
+  secondaryButtonClass,
   compactInputClass,
 } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useListParams } from '../../../hooks/useListParams.js';
 import { useTagsFor } from '../../../hooks/useTags.js';
-import { useBoard, useLeadOptions, useLeads } from '../api.js';
+import { useBoard, useExportLeads, useLeadOptions, useLeads } from '../api.js';
 import LeadEditModal from '../components/LeadEditModal.jsx';
 import LeadsTable from '../components/LeadsTable.jsx';
 import PipelineBoard from '../components/PipelineBoard.jsx';
@@ -81,6 +82,7 @@ export default function PipelinePage() {
   );
   const board = useBoard(filters, { enabled: !isTable });
   const current = isTable ? leads : board;
+  const exportLeads = useExportLeads();
 
   const rows = leads.data?.data ?? [];
   const columns = board.data ?? [];
@@ -157,6 +159,25 @@ export default function PipelinePage() {
             );
           })}
         </div>
+        {can('opportunities', 'export') && (
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            disabled={exportLeads.isPending}
+            title="Download the leads these filters show, as a CSV file"
+            // The file holds what the filters show; the stage filter and the sort count in the
+            // table view only.
+            onClick={() =>
+              exportLeads.mutate({
+                ...filters,
+                ...(isTable ? { stageId, sort: list.sort } : {}),
+              })
+            }
+          >
+            <Download size={16} aria-hidden="true" />
+            {exportLeads.isPending ? 'Preparing…' : 'Export'}
+          </button>
+        )}
         {can('opportunities', 'create') && (
           <button type="button" onClick={() => setIsCreating(true)} className={primaryButtonClass}>
             <Plus size={16} aria-hidden="true" />
@@ -216,7 +237,9 @@ export default function PipelinePage() {
         <DateRangeFilter label="Created" value={dates} onChange={list.setFilters} />
       </FilterBar>
 
-      <FormError message={current.error?.message ?? options.error?.message} />
+      <FormError
+        message={current.error?.message ?? options.error?.message ?? exportLeads.error?.message}
+      />
 
       {current.isPending && (
         <p role="status" className="p-4 text-text-muted">

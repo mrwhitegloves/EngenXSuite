@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Building2, KanbanSquare, ListChecks, Search, User } from 'lucide-react';
+import { Building2, Factory, KanbanSquare, ListChecks, Search, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Dialog from '../../../components/shared/Dialog.jsx';
 import { FormError, inputClass } from '../../../components/shared/form.jsx';
@@ -17,6 +17,12 @@ const GROUPS = [
     label: 'People',
     icon: User,
     to: (item) => `/accounts/${item.accountId}?tab=people`,
+  },
+  {
+    key: 'plants',
+    label: 'Plants',
+    icon: Factory,
+    to: (item) => `/accounts/${item.accountId}?tab=plants`,
   },
   { key: 'leads', label: 'Leads', icon: KanbanSquare, to: (item) => `/pipeline/${item.id}` },
   {
@@ -64,7 +70,7 @@ function SearchPanel({ onClose }) {
         type="search"
         autoFocus
         aria-label="Search everything"
-        placeholder="Company, person, phone number, lead, task…"
+        placeholder="Company, person, phone number, plant, lead, task…"
         value={typed}
         onChange={(event) => setTyped(event.target.value)}
         className={inputClass}

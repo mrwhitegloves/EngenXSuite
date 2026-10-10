@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '../../lib/apiClient.js';
+import { apiDownload, apiRequest } from '../../lib/apiClient.js';
 
 // Leads. The server decides which leads a person sees (decision 0008); these hooks only ask.
 // Cached answers live under 'opportunities', which the live "opportunities.changed" event
@@ -96,6 +96,17 @@ export function useChangeStage() {
 
 export function useDeleteLead() {
   return useLeadsMutation((id) => apiRequest(`/opportunities/${id}`, { method: 'DELETE' }));
+}
+
+/**
+ * Download the leads the current filters show, as a CSV file.
+ * `params`: the filters and the sort (no page: the file holds every matching lead).
+ */
+export function useExportLeads() {
+  return useMutation({
+    mutationFn: (params) =>
+      apiDownload(`/opportunities/export${toQueryString(params)}`, 'leads.csv'),
+  });
 }
 
 /** True when the server refused a save because someone else saved the lead in between. */
