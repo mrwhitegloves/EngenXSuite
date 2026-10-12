@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Monitor, Moon, Plus, Sun } from 'lucide-react';
+import { LogOut, Monitor, Moon, Plus, Sparkles, Sun } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useTheme } from '../../hooks/useTheme.js';
 import Avatar from '../shared/Avatar.jsx';
@@ -8,6 +8,7 @@ import ProfileDialog from '../../features/auth/components/ProfileDialog.jsx';
 import QuickAddDialog from '../../features/accounts/components/QuickAddDialog.jsx';
 import NotificationBell from '../../features/notifications/components/NotificationBell.jsx';
 import GlobalSearch from '../../features/search/components/GlobalSearch.jsx';
+import { useAssistant } from '../../features/assistant/assistantContext.js';
 import { useCan } from '../../hooks/useCan.js';
 import { primaryButtonClass } from '../shared/form.jsx';
 
@@ -65,11 +66,12 @@ function ThemeSwitch() {
 export default function TopBar({ productName }) {
   const { user, signOut } = useAuth();
   const can = useCan();
+  const assistant = useAssistant();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4">
+    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4 max-sm:gap-2 max-sm:px-3">
       {/* On phones there is no sidebar, so the logo sits here. */}
       <span className="shrink-0 md:hidden">
         <Logo productName={productName} className="h-6" />
@@ -89,6 +91,20 @@ export default function TopBar({ productName }) {
             <Plus size={16} aria-hidden="true" />
             {/* On phones only the plus sign shows; the word stays for screen readers. */}
             <span className="max-sm:sr-only">New</span>
+          </button>
+        )}
+        {/* The AI assistant: a panel on the right, on every screen. */}
+        {can('ai_insights', 'view') && (
+          <button
+            type="button"
+            onClick={() => (assistant.isOpen ? assistant.close() : assistant.open())}
+            aria-pressed={assistant.isOpen}
+            aria-label="AI assistant"
+            title="AI assistant"
+            className="inline-flex items-center gap-1.5 rounded-md border border-brand px-2.5 py-2 text-sm font-medium text-brand-text max-sm:px-2 transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-brand"
+          >
+            <Sparkles size={16} aria-hidden="true" />
+            <span className="max-lg:sr-only">Ask AI</span>
           </button>
         )}
         <NotificationBell />

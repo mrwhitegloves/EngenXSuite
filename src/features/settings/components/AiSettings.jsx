@@ -83,6 +83,7 @@ function SettingsForm({ settings, canEdit, save }) {
   const [daily, setDaily] = useState(String(settings.dailyRunsPerUser));
   const [alert, setAlert] = useState(String(settings.alertPercent));
   const [autoRefresh, setAutoRefresh] = useState(settings.autoRefresh);
+  const [transcribeModel, setTranscribeModel] = useState(settings.transcribeModel);
   const startModels = Object.fromEntries(
     settings.classes.map((item) => [
       item.key,
@@ -95,6 +96,7 @@ function SettingsForm({ settings, canEdit, save }) {
     daily !== String(settings.dailyRunsPerUser) ||
     alert !== String(settings.alertPercent) ||
     autoRefresh !== settings.autoRefresh ||
+    transcribeModel !== settings.transcribeModel ||
     JSON.stringify(models) !== JSON.stringify(startModels);
   const errors = fieldErrorsFrom(save.error);
   const providers = [...new Set(settings.choices.map((choice) => choice.provider))];
@@ -123,6 +125,7 @@ function SettingsForm({ settings, canEdit, save }) {
           dailyRunsPerUser: Number(daily),
           alertPercent: Number(alert),
           autoRefresh,
+          transcribeModel,
           models: Object.fromEntries(
             Object.entries(models).map(([key, value]) => [
               key,
@@ -224,6 +227,29 @@ function SettingsForm({ settings, canEdit, save }) {
         ))}
       </fieldset>
 
+      <fieldset disabled={!canEdit} className="space-y-2">
+        <legend className="mb-1 font-semibold">Audio to text</legend>
+        <p className="text-sm text-text-muted">
+          Used when someone asks for the text of a recorded call, or adds an audio file to the AI
+          assistant. It never runs by itself. Try two or three of your own calls with each model to
+          hear which understands your customers best.
+        </p>
+        <label className="block max-w-sm">
+          <span className="mb-1 block text-sm font-medium">Model</span>
+          <select
+            value={transcribeModel}
+            onChange={(event) => setTranscribeModel(event.target.value)}
+            className={inputClass}
+          >
+            {settings.transcribeChoices.map((choice) => (
+              <option key={choice.id} value={choice.id}>
+                {choice.label} ({choice.provider})
+              </option>
+            ))}
+          </select>
+        </label>
+      </fieldset>
+
       <FormError message={save.error?.message} />
       {canEdit && (
         <div className="flex items-center gap-3">
@@ -243,6 +269,7 @@ function SettingsForm({ settings, canEdit, save }) {
                 setDaily(String(settings.dailyRunsPerUser));
                 setAlert(String(settings.alertPercent));
                 setAutoRefresh(settings.autoRefresh);
+                setTranscribeModel(settings.transcribeModel);
                 setModels(startModels);
                 save.reset();
               }}

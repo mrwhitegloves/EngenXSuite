@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link2, PhoneIncoming, PhoneOutgoing, Play } from 'lucide-react';
+import { FileText, Link2, PhoneIncoming, PhoneOutgoing, Play } from 'lucide-react';
 import Pagination from '../../../components/shared/Pagination.jsx';
 import { FormError, compactInputClass } from '../../../components/shared/form.jsx';
 import { useCalls, useRecordingLink, useSetOutcome } from '../api.js';
+import CallTranscript from './CallTranscript.jsx';
 import LinkCallDialog from './LinkCallDialog.jsx';
 
 const PAGE_SIZE = 5;
@@ -39,6 +40,7 @@ const formatLength = (seconds) =>
 // One call: who, when, how it went; what came of it; and its recording.
 function CallRow({ call }) {
   const [isLinking, setIsLinking] = useState(false);
+  const [showText, setShowText] = useState(false);
   const outcome = useSetOutcome();
   const recording = useRecordingLink();
   const Icon = call.direction === 'inbound' ? PhoneIncoming : PhoneOutgoing;
@@ -95,6 +97,17 @@ function CallRow({ call }) {
               {call.contact ? 'Change the person' : 'Say who it was'}
             </button>
           )}
+          {call.permissions.canPlayRecording && (
+            <button
+              type="button"
+              className={smallButton}
+              aria-expanded={showText}
+              onClick={() => setShowText(!showText)}
+            >
+              <FileText size={12} aria-hidden="true" />
+              {call.hasTranscript ? 'Text of the call' : 'Text and AI summary'}
+            </button>
+          )}
           {call.permissions.canPlayRecording && !recording.data && (
             <button
               type="button"
@@ -116,6 +129,7 @@ function CallRow({ call }) {
             className="w-full max-w-sm"
           />
         )}
+        {showText && <CallTranscript call={call} who={who} />}
         <FormError message={outcome.error?.message ?? recording.error?.message} />
         {isLinking && <LinkCallDialog call={call} onClose={() => setIsLinking(false)} />}
       </div>

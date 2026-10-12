@@ -7,6 +7,7 @@ import { useCan } from '../../../hooks/useCan.js';
 import { HEALTH_LABELS, POTENTIAL_LABELS } from '../accountForm.js';
 import { RecordTasks } from '../../activities/components/Tasks.jsx';
 import Timeline from '../../activities/components/Timeline.jsx';
+import AskAiButton from '../../assistant/components/AskAiButton.jsx';
 import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import AccountAiSummary from '../../insights/components/AccountAiSummary.jsx';
 import { useAccount } from '../api.js';
@@ -215,12 +216,19 @@ export default function Account360Page() {
           </p>
           <TagChips tags={data.tags} className="mt-2" />
         </div>
-        {data.permissions.canEdit && (
-          <button type="button" className={secondaryButtonClass} onClick={() => setIsEditing(true)}>
-            <Pencil size={16} aria-hidden="true" />
-            Edit
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <AskAiButton record={{ type: 'account', id: data.id, title: data.name }} />
+          {data.permissions.canEdit && (
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              onClick={() => setIsEditing(true)}
+            >
+              <Pencil size={16} aria-hidden="true" />
+              Edit
+            </button>
+          )}
+        </div>
       </header>
 
       <div

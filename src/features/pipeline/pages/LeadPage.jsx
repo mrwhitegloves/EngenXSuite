@@ -6,6 +6,7 @@ import { FormError, secondaryButtonClass } from '../../../components/shared/form
 import { useCan } from '../../../hooks/useCan.js';
 import { RecordTasks } from '../../activities/components/Tasks.jsx';
 import Timeline from '../../activities/components/Timeline.jsx';
+import AskAiButton from '../../assistant/components/AskAiButton.jsx';
 import CallButton from '../../calls/components/CallButton.jsx';
 import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import LeadAiAssessment from '../../insights/components/LeadAiAssessment.jsx';
@@ -234,12 +235,19 @@ export default function LeadPage() {
           </p>
           <TagChips tags={data.tags} className="mt-2" />
         </div>
-        {data.permissions.canEdit && (
-          <button type="button" className={secondaryButtonClass} onClick={() => setIsEditing(true)}>
-            <Pencil size={16} aria-hidden="true" />
-            Edit
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <AskAiButton record={{ type: 'lead', id: data.id, title: data.name }} />
+          {data.permissions.canEdit && (
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              onClick={() => setIsEditing(true)}
+            >
+              <Pencil size={16} aria-hidden="true" />
+              Edit
+            </button>
+          )}
+        </div>
       </header>
 
       {options.data && (

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { apiRequest } from '../lib/apiClient.js';
+import { clearAssistant } from '../lib/assistantStore.js';
 import { setTrackedUser } from '../lib/errorTracking.js';
 import { disablePush } from '../lib/push.js';
 
@@ -33,6 +34,8 @@ export function useAuth() {
       return apiRequest('/auth/logout', { method: 'POST' });
     },
     onSuccess: () => {
+      // The AI assistant's conversations live only in this browser: they go with the sign-out.
+      clearAssistant();
       // Mark "nobody signed in" on the query the screen is watching, so the sign-in page shows
       // at once. (Clearing the whole cache instead would detach that query from the screen.)
       queryClient.setQueryData(CURRENT_USER_KEY, null);

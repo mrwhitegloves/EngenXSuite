@@ -72,6 +72,27 @@ export function useRecordingLink() {
   });
 }
 
+/** The saved text of a call (made from its recording). Asked for when its block is opened. */
+export function useCallTranscript(id) {
+  return useQuery({
+    queryKey: [...CALLS_KEY, 'transcript', id],
+    queryFn: ({ signal }) => apiRequest(`/calls/${id}/transcript`, { signal }),
+    select: (payload) => payload.data,
+  });
+}
+
+/** Make the text of a call from its recording (again). Takes up to a minute. */
+export function useMakeTranscript(id) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiRequest(`/calls/${id}/transcript`, { method: 'POST' }),
+    onSuccess: (payload) => {
+      queryClient.setQueryData([...CALLS_KEY, 'transcript', id], payload);
+      queryClient.invalidateQueries({ queryKey: [...CALLS_KEY, 'list'] });
+    },
+  });
+}
+
 /** Settings → Calls. */
 export function useCallSettings() {
   return useQuery({
