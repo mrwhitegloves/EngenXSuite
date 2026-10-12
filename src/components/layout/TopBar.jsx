@@ -73,8 +73,9 @@ export default function TopBar({ productName }) {
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4 max-sm:gap-2 max-sm:px-3">
       {/* On phones there is no sidebar, so the logo sits here. */}
-      <span className="shrink-0 md:hidden">
-        <Logo productName={productName} className="h-6" />
+      {/* It may shrink: the dark logo is a little wider, and the buttons must all stay in view. */}
+      <span className="min-w-0 shrink md:hidden">
+        <Logo productName={productName} className="h-6 max-w-full object-contain object-left" />
       </span>
       {/* Search everything: companies, people, leads, tasks. */}
       <GlobalSearch />
