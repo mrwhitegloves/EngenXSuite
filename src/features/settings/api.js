@@ -130,6 +130,15 @@ export function useStartBackup() {
   });
 }
 
+/** Change when old backups are deleted, and how long before that I am told. */
+export function useSaveBackupCleanup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => apiRequest('/backups/cleanup', { method: 'PATCH', body }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BACKUPS_KEY }),
+  });
+}
+
 const JOBS_KEY = ['jobs'];
 
 /** How many background jobs each queue holds. Reloaded every 10 seconds while the page is open. */

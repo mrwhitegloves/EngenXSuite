@@ -64,6 +64,7 @@ function CallRow({ call }) {
         <p className="text-xs text-text-muted">
           {formatMoment(call.startedAt)}
           {call.user && <> · {call.user.name}</>}
+          {call.answeredBy && <> · picked up by {call.answeredBy.name}</>}
           {call.contact && <> · {call.number}</>}
           {call.cost > 0 && <> · Plivo charge {call.cost.toFixed(2)}</>}
         </p>

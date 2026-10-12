@@ -132,8 +132,15 @@ function SettingsForm({ settings, canEdit, save }) {
           A caller we know rings the phone of the person who looks after them: the owner of their
           lead, else of the person, else of the company. Anyone else rings the person chosen here.
         </p>
+        <p className="text-sm text-text-muted">
+          When that person does not pick up within 25 seconds, the person chosen here is rung next
+          (or, with nobody chosen, their manager). Nobody picks up: a missed call, a notification
+          and a call-back task for the first person.
+        </p>
         <label className="block max-w-sm">
-          <span className="mb-1 block text-sm font-medium">Calls from unknown numbers go to</span>
+          <span className="mb-1 block text-sm font-medium">
+            Unknown numbers, and calls nobody picked up, go to
+          </span>
           <select
             value={defaultInboundUserId}
             onChange={(event) => setDefaultInboundUserId(event.target.value)}

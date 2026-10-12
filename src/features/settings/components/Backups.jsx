@@ -1,7 +1,14 @@
+import { useState } from 'react';
 import { DatabaseBackup } from 'lucide-react';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
-import { FormError, primaryButtonClass } from '../../../components/shared/form.jsx';
-import { useBackups, useStartBackup } from '../api.js';
+import {
+  FormError,
+  compactInputClass,
+  fieldErrorsFrom,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from '../../../components/shared/form.jsx';
+import { useBackups, useSaveBackupCleanup, useStartBackup } from '../api.js';
 
 function formatDate(value) {
   return new Intl.DateTimeFormat('en-IN', {
@@ -17,12 +24,115 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** "02:30" → "2:30 am". */
+function formatClock(time) {
+  const [hours, minutes] = time.split(':').map(Number);
+  return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${hours < 12 ? 'am' : 'pm'}`;
+}
+
+// When old backups are deleted, and how long before that the person is told. Rendered with a
+// key, so saved values start it afresh.
+function CleanupForm({ cleanup, canEdit, save }) {
+  const [deleteTime, setDeleteTime] = useState(cleanup.deleteTime);
+  const [minutes, setMinutes] = useState(String(cleanup.notifyMinutesBefore));
+  const isChanged =
+    deleteTime !== cleanup.deleteTime || minutes !== String(cleanup.notifyMinutesBefore);
+  const errors = fieldErrorsFrom(save.error);
+
+  return (
+    <form
+      className="space-y-3 rounded-md border border-border bg-surface p-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        save.mutate({ deleteTime, notifyMinutesBefore: Number(minutes) });
+      }}
+    >
+      <div>
+        <h2 className="font-semibold">Deleting old backups</h2>
+        <p className="text-sm text-text-muted">
+          Backups older than {cleanup.keepDays} days are deleted once a day, at the time below
+          (India time). The newest 7 always stay. You get a notification.
+        </p>
+      </div>
+      <fieldset disabled={!canEdit} className="flex flex-wrap items-end gap-4">
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium">Delete old backups at</span>
+          <input
+            type="time"
+            required
+            value={deleteTime}
+            onChange={(event) => setDeleteTime(event.target.value)}
+            className={compactInputClass}
+          />
+          {errors.deleteTime && (
+            <span className="block text-sm text-danger">{errors.deleteTime}</span>
+          )}
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium">Tell me this many minutes before</span>
+          <input
+            type="number"
+            required
+            min={0}
+            max={720}
+            step={1}
+            value={minutes}
+            onChange={(event) => setMinutes(event.target.value)}
+            className={`${compactInputClass} w-28`}
+          />
+          {errors.notifyMinutesBefore && (
+            <span className="block text-sm text-danger">{errors.notifyMinutesBefore}</span>
+          )}
+        </label>
+      </fieldset>
+      <p className="text-sm text-text-muted">
+        {Number(minutes) > 0
+          ? `You are told ${minutes} minutes before ${formatClock(deleteTime || cleanup.deleteTime)}, so there is time to look.`
+          : `0 minutes: you are told at ${formatClock(deleteTime || cleanup.deleteTime)}, when they are deleted.`}
+      </p>
+      <FormError message={save.error?.message} />
+      {canEdit && (
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            className={primaryButtonClass}
+            disabled={!isChanged || save.isPending || minutes === ''}
+          >
+            {save.isPending ? 'Saving…' : 'Save'}
+          </button>
+          {isChanged && (
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              onClick={() => {
+                setDeleteTime(cleanup.deleteTime);
+                setMinutes(String(cleanup.notifyMinutesBefore));
+                save.reset();
+              }}
+            >
+              Reset
+            </button>
+          )}
+          {save.isSuccess && !isChanged && (
+            <span role="status" className="text-sm text-success">
+              Saved.
+            </span>
+          )}
+        </div>
+      )}
+    </form>
+  );
+}
+
 // Settings → Backups: the copies of the whole database kept in private storage.
 // A backup is made every night at 02:00 India time on the live server. Restoring one is done
 // from the command line, on purpose: it is rare and must never happen by a wrong click.
 export default function Backups({ canEdit }) {
   const backups = useBackups();
   const startBackup = useStartBackup();
+  // Kept here, not in the form: the form starts afresh after a save, and "Saved" must stay.
+  const saveCleanup = useSaveBackupCleanup();
+  const cleanup = backups.data?.cleanup;
 
   const list = backups.data?.backups ?? [];
   const storageReady = backups.data?.storage === 'configured';
@@ -54,7 +164,7 @@ export default function Backups({ canEdit }) {
             <p className={`text-sm ${isStale ? 'text-danger' : 'text-text-muted'}`}>
               {isStale
                 ? 'The last backup is more than 2 days old. Check Background jobs for a failure.'
-                : 'Made every night at 2:00 am. Kept for 7 days; older ones are deleted and you get a notification. The newest 7 always stay.'}
+                : 'Made every night at 2:00 am India time, and whenever you press “Back up now”.'}
             </p>
           </div>
           {canEdit && (
@@ -68,6 +178,15 @@ export default function Backups({ canEdit }) {
             </button>
           )}
         </div>
+      )}
+
+      {cleanup && (
+        <CleanupForm
+          key={JSON.stringify(cleanup)}
+          cleanup={cleanup}
+          canEdit={canEdit}
+          save={saveCleanup}
+        />
       )}
 
       {startBackup.isSuccess && (
