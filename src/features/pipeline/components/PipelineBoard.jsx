@@ -19,6 +19,8 @@ import CloseDialog from './CloseDialog.jsx';
 import LeadEditModal from './LeadEditModal.jsx';
 
 const RISK_CLASS = { high: 'text-danger', medium: 'text-warning', low: 'text-text-muted' };
+// The dot next to the AI's score: green, amber, red.
+const AI_RISK_DOT = { low: 'bg-success', medium: 'bg-warning', high: 'bg-danger' };
 
 // One lead on the board. It is dragged by its handle, so the name stays a normal link and the
 // card can still be scrolled past with a finger on a phone.
@@ -93,6 +95,19 @@ function LeadCard({ lead, now, onEdit, isMoving }) {
       )}
       {lead.risk?.level && (
         <p className={`mt-1 text-xs ${RISK_CLASS[lead.risk.level]}`}>Risk: {lead.risk.level}</p>
+      )}
+      {lead.aiScore !== null && lead.aiScore !== undefined && (
+        <p
+          className="mt-1 flex items-center gap-1.5 text-xs text-text-muted"
+          title="The AI's newest score and risk for this lead. Open the lead for the reasons."
+        >
+          <span
+            aria-hidden="true"
+            className={`size-2 rounded-full ${AI_RISK_DOT[lead.aiRiskLevel] ?? 'bg-border'}`}
+          />
+          AI {lead.aiScore}/100
+          {lead.aiRiskLevel && <> · {lead.aiRiskLevel} risk</>}
+        </p>
       )}
       <TagChips tags={lead.tags} className="mt-1.5" />
     </li>

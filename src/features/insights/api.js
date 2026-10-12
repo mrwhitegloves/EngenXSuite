@@ -7,7 +7,10 @@ const KEY = ['insights'];
 const SETTINGS_KEY = [...KEY, 'settings'];
 
 /**
- * The saved insight of one record, and the action that asks the AI for a new one.
+ * The saved insight of one record, and what can be done with it.
+ *   refresh  : ask the AI for a new one
+ *   feedback : say what I think of it ({ verdict, note })
+ *   accept   : make a task of the suggested next step (a lead's assessment only)
  * @param {'accounts' | 'leads'} kind
  * @param {string} id
  */
@@ -19,15 +22,31 @@ export function useInsight(kind, id) {
     queryFn: ({ signal }) => apiRequest(`/insights/${kind}/${id}`, { signal }),
     select: (payload) => payload.data,
   });
+  // Every action answers with the insight as it is now.
+  const keepAnswer = (payload) => queryClient.setQueryData(key, payload);
+  const insightId = saved.data?.insight?.id;
+
   const refresh = useMutation({
     mutationFn: () => apiRequest(`/insights/${kind}/${id}/refresh`, { method: 'POST' }),
     onSuccess: (payload) => {
-      queryClient.setQueryData(key, payload);
-      // A lead's score is also shown in lists.
+      keepAnswer(payload);
+      // A lead's score is also shown on the board and in lists.
       if (kind === 'leads') queryClient.invalidateQueries({ queryKey: ['opportunities'] });
     },
   });
-  return { saved, refresh };
+  const feedback = useMutation({
+    mutationFn: (body) => apiRequest(`/insights/${insightId}/feedback`, { method: 'POST', body }),
+    onSuccess: keepAnswer,
+  });
+  const accept = useMutation({
+    mutationFn: () => apiRequest(`/insights/${insightId}/accept-action`, { method: 'POST' }),
+    onSuccess: (payload) => {
+      keepAnswer(payload);
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['timeline'] });
+    },
+  });
+  return { saved, refresh, feedback, accept };
 }
 
 /** Settings → AI. */

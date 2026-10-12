@@ -49,6 +49,7 @@ function Usage({ settings }) {
               <th className="py-1 font-medium">Used for</th>
               <th className="py-1 font-medium">Runs</th>
               <th className="py-1 font-medium">Cost</th>
+              <th className="py-1 font-medium">People said (30 days)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -57,6 +58,11 @@ function Usage({ settings }) {
                 <td className="py-1">{TASK_LABELS[row.task] ?? row.task}</td>
                 <td className="py-1">{row.runs}</td>
                 <td className="py-1">{rupees(row.costPaise)}</td>
+                <td className="py-1 text-text-muted">
+                  {row.useful + row.corrected + row.notUseful === 0
+                    ? 'No opinions yet'
+                    : `${row.useful} useful · ${row.corrected} corrected · ${row.notUseful} not useful`}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -76,6 +82,7 @@ function SettingsForm({ settings, canEdit, save }) {
   const [cap, setCap] = useState(String(settings.monthlyCapPaise / 100));
   const [daily, setDaily] = useState(String(settings.dailyRunsPerUser));
   const [alert, setAlert] = useState(String(settings.alertPercent));
+  const [autoRefresh, setAutoRefresh] = useState(settings.autoRefresh);
   const startModels = Object.fromEntries(
     settings.classes.map((item) => [
       item.key,
@@ -87,6 +94,7 @@ function SettingsForm({ settings, canEdit, save }) {
     cap !== String(settings.monthlyCapPaise / 100) ||
     daily !== String(settings.dailyRunsPerUser) ||
     alert !== String(settings.alertPercent) ||
+    autoRefresh !== settings.autoRefresh ||
     JSON.stringify(models) !== JSON.stringify(startModels);
   const errors = fieldErrorsFrom(save.error);
   const providers = [...new Set(settings.choices.map((choice) => choice.provider))];
@@ -114,6 +122,7 @@ function SettingsForm({ settings, canEdit, save }) {
           monthlyCapPaise: Math.round(Number(cap) * 100),
           dailyRunsPerUser: Number(daily),
           alertPercent: Number(alert),
+          autoRefresh,
           models: Object.fromEntries(
             Object.entries(models).map(([key, value]) => [
               key,
@@ -151,6 +160,23 @@ function SettingsForm({ settings, canEdit, save }) {
           At {alert || '…'}% of the budget you get a notification. At 100% the AI features pause
           until next month or until you raise the budget; everything else keeps working.
         </p>
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-1 size-4 accent-brand"
+            checked={autoRefresh}
+            onChange={(event) => setAutoRefresh(event.target.checked)}
+          />
+          <span>
+            <span className="font-medium">Keep AI answers up to date by themselves</span>
+            <span className="block text-sm text-text-muted">
+              When something happens on a lead or a company that already has an AI answer (a note, a
+              call, a task, a stage change), the AI is asked again a few minutes later: at most once
+              in 20 minutes per record, and only for open leads. Off: an answer changes only when
+              someone presses “Ask again”.
+            </span>
+          </span>
+        </label>
       </fieldset>
 
       <fieldset disabled={!canEdit} className="space-y-3">
@@ -216,6 +242,7 @@ function SettingsForm({ settings, canEdit, save }) {
                 setCap(String(settings.monthlyCapPaise / 100));
                 setDaily(String(settings.dailyRunsPerUser));
                 setAlert(String(settings.alertPercent));
+                setAutoRefresh(settings.autoRefresh);
                 setModels(startModels);
                 save.reset();
               }}

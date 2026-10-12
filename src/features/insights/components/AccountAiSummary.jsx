@@ -3,7 +3,7 @@ import { useInsight } from '../api.js';
 
 // The AI's summary of one company, on its Overview. Built from what the person may see.
 export default function AccountAiSummary({ accountId }) {
-  const { saved, refresh } = useInsight('accounts', accountId);
+  const { saved, refresh, feedback } = useInsight('accounts', accountId);
   const insight = saved.data?.insight ?? null;
   const content = insight?.content;
 
@@ -14,6 +14,7 @@ export default function AccountAiSummary({ accountId }) {
       isAiReady={saved.data?.isAiReady ?? false}
       isLoading={saved.isPending}
       refresh={refresh}
+      feedback={feedback}
       askLabel="Write a summary"
       emptyText="No summary yet. The AI can write one from this company’s people, leads, tasks and history."
     >
