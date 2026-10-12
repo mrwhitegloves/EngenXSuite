@@ -48,12 +48,14 @@ function Setup({ setup, canStoreRecordings }) {
 // The form, started from the saved settings. Rendered with a key, so a save starts it afresh.
 function SettingsForm({ settings, canEdit, save }) {
   const [recordingEnabled, setRecordingEnabled] = useState(settings.recordingEnabled);
+  const [announcementEnabled, setAnnouncementEnabled] = useState(settings.announcementEnabled);
   const [consentText, setConsentText] = useState(settings.consentText);
   const [defaultInboundUserId, setDefaultInboundUserId] = useState(
     settings.defaultInboundUserId ?? '',
   );
   const isChanged =
     recordingEnabled !== settings.recordingEnabled ||
+    announcementEnabled !== settings.announcementEnabled ||
     consentText !== settings.consentText ||
     defaultInboundUserId !== (settings.defaultInboundUserId ?? '');
   const errors = fieldErrorsFrom(save.error);
@@ -66,6 +68,7 @@ function SettingsForm({ settings, canEdit, save }) {
         event.preventDefault();
         save.mutate({
           recordingEnabled,
+          announcementEnabled,
           consentText: consentText.trim(),
           defaultInboundUserId: defaultInboundUserId || null,
         });
@@ -88,6 +91,28 @@ function SettingsForm({ settings, canEdit, save }) {
             </span>
           </span>
         </label>
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-1 size-4 accent-brand"
+            checked={announcementEnabled}
+            disabled={!recordingEnabled}
+            onChange={(event) => setAnnouncementEnabled(event.target.checked)}
+          />
+          <span>
+            <span className="font-medium">Tell the other side that the call is recorded</span>
+            <span className="block text-sm text-text-muted">
+              Off: the call is recorded and nothing is said.
+            </span>
+          </span>
+        </label>
+        {recordingEnabled && !announcementEnabled && (
+          <p role="note" className="rounded-md border border-danger p-3 text-sm text-danger">
+            Calls will be recorded without the other person knowing. In India this needs a lawful
+            reason and a line in your privacy notice; in some countries and for some customers it is
+            not allowed at all. Check with your lawyer before using it with customers.
+          </p>
+        )}
         <label className="block">
           <span className="mb-1 block text-sm font-medium">The announcement</span>
           <textarea
@@ -150,6 +175,7 @@ function SettingsForm({ settings, canEdit, save }) {
               className={secondaryButtonClass}
               onClick={() => {
                 setRecordingEnabled(settings.recordingEnabled);
+                setAnnouncementEnabled(settings.announcementEnabled);
                 setConsentText(settings.consentText);
                 setDefaultInboundUserId(settings.defaultInboundUserId ?? '');
                 save.reset();

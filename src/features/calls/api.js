@@ -7,8 +7,9 @@ const CALLS_KEY = ['calls'];
 const SETTINGS_KEY = [...CALLS_KEY, 'settings'];
 
 /**
- * The calls of one lead, company or contact, newest first.
- * @param {{ opportunityId?: string, accountId?: string, contactId?: string }} target  One of them
+ * The calls of one lead, company or contact, newest first. With an empty target: every call I
+ * may see (mine, my team's or everyone's), and `linked: 'no'` for calls that belong to nobody.
+ * @param {{ opportunityId?: string, accountId?: string, contactId?: string, linked?: string }} target
  * @param {{ page?: number, pageSize?: number }} [options]
  */
 export function useCalls(target, options = {}) {
@@ -37,6 +38,30 @@ export function useSetOutcome() {
     mutationFn: ({ id, outcome }) =>
       apiRequest(`/calls/${id}`, { method: 'PATCH', body: { outcome } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: CALLS_KEY }),
+  });
+}
+
+/** Put a call on a person (their company and open lead follow); contactId null takes it off. */
+export function useLinkCall() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, contactId }) =>
+      apiRequest(`/calls/${id}`, { method: 'PATCH', body: { contactId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CALLS_KEY });
+      queryClient.invalidateQueries({ queryKey: ['timeline'] });
+    },
+  });
+}
+
+/** People that match the text, for choosing who a call was with (the server applies my access). */
+export function usePeopleSearch(text) {
+  return useQuery({
+    queryKey: ['search', text],
+    queryFn: ({ signal }) => apiRequest(`/search?q=${encodeURIComponent(text)}`, { signal }),
+    select: (payload) => payload.data.contacts ?? [],
+    enabled: text.length >= 2,
+    staleTime: 15_000,
   });
 }
 

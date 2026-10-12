@@ -54,7 +54,7 @@ export default function Backups({ canEdit }) {
             <p className={`text-sm ${isStale ? 'text-danger' : 'text-text-muted'}`}>
               {isStale
                 ? 'The last backup is more than 2 days old. Check Background jobs for a failure.'
-                : 'Made every night at 2:00 am. Kept for 14 days, and never fewer than the last 7.'}
+                : 'Made every night at 2:00 am. Kept for 7 days; older ones are deleted and you get a notification. The newest 7 always stay.'}
             </p>
           </div>
           {canEdit && (

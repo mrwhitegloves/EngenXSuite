@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { PhoneIncoming, PhoneOutgoing, Play } from 'lucide-react';
+import { Link2, PhoneIncoming, PhoneOutgoing, Play } from 'lucide-react';
 import Pagination from '../../../components/shared/Pagination.jsx';
 import { FormError, compactInputClass } from '../../../components/shared/form.jsx';
 import { useCalls, useRecordingLink, useSetOutcome } from '../api.js';
+import LinkCallDialog from './LinkCallDialog.jsx';
 
 const PAGE_SIZE = 5;
 const STATUS_LABELS = {
@@ -22,6 +23,8 @@ const OUTCOME_LABELS = {
   not_interested: 'Not interested',
   wrong_number: 'Wrong number',
 };
+const smallButton =
+  'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand';
 const DID_NOT_HAPPEN = ['missed', 'busy', 'no_answer', 'failed'];
 
 const formatMoment = (value) =>
@@ -35,6 +38,7 @@ const formatLength = (seconds) =>
 
 // One call: who, when, how it went; what came of it; and its recording.
 function CallRow({ call }) {
+  const [isLinking, setIsLinking] = useState(false);
   const outcome = useSetOutcome();
   const recording = useRecordingLink();
   const Icon = call.direction === 'inbound' ? PhoneIncoming : PhoneOutgoing;
@@ -61,6 +65,7 @@ function CallRow({ call }) {
           {formatMoment(call.startedAt)}
           {call.user && <> · {call.user.name}</>}
           {call.contact && <> · {call.number}</>}
+          {call.cost > 0 && <> · Plivo charge {call.cost.toFixed(2)}</>}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {call.permissions.canEdit ? (
@@ -83,10 +88,16 @@ function CallRow({ call }) {
           ) : (
             call.outcome && <span className="text-xs">{OUTCOME_LABELS[call.outcome]}</span>
           )}
+          {call.permissions.canEdit && (
+            <button type="button" className={smallButton} onClick={() => setIsLinking(true)}>
+              <Link2 size={12} aria-hidden="true" />
+              {call.contact ? 'Change the person' : 'Say who it was'}
+            </button>
+          )}
           {call.permissions.canPlayRecording && !recording.data && (
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand"
+              className={smallButton}
               disabled={recording.isPending}
               onClick={() => recording.mutate(call.id)}
             >
@@ -105,6 +116,7 @@ function CallRow({ call }) {
           />
         )}
         <FormError message={outcome.error?.message ?? recording.error?.message} />
+        {isLinking && <LinkCallDialog call={call} onClose={() => setIsLinking(false)} />}
       </div>
     </li>
   );
@@ -114,16 +126,23 @@ function CallRow({ call }) {
  * The phone calls of one lead or company, newest first: how each went, what came of it, and
  * its recording for someone who may listen.
  *
- * @param {{ target: { opportunityId?: string, accountId?: string, contactId?: string } }} props
+ * @param {{ target: { opportunityId?: string, accountId?: string, contactId?: string,
+ *           linked?: string }, title?: string, pageSize?: number, empty?: string }} props
+ *        target: one record; or no id at all for every call I may see.
  */
-export default function RecordCalls({ target }) {
+export default function RecordCalls({
+  target,
+  title = 'Calls',
+  pageSize = PAGE_SIZE,
+  empty = 'No calls yet. Use the Call button next to a phone number.',
+}) {
   const [page, setPage] = useState(1);
-  const calls = useCalls(target, { page, pageSize: PAGE_SIZE });
+  const calls = useCalls(target, { page, pageSize });
   const rows = calls.data?.data ?? [];
 
   return (
     <section aria-label="Calls" className="space-y-2">
-      <h2 className="font-semibold">Calls</h2>
+      {title && <h2 className="font-semibold">{title}</h2>}
       <FormError message={calls.error?.message} />
       {calls.isPending && (
         <p role="status" className="text-text-muted">
@@ -132,7 +151,7 @@ export default function RecordCalls({ target }) {
       )}
       {calls.isSuccess && rows.length === 0 && (
         <p className="rounded-md border border-dashed border-border bg-surface p-4 text-text-muted">
-          No calls yet. Use the Call button next to a person’s phone number.
+          {empty}
         </p>
       )}
       {rows.length > 0 && (
