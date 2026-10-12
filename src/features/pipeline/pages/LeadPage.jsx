@@ -23,6 +23,7 @@ const SOURCE_LABELS = {
   import: 'File import',
   email: 'Email',
   referral: 'Referral',
+  apollo: 'Apollo list',
 };
 const VIA_LABELS = {
   automation: 'by the system',

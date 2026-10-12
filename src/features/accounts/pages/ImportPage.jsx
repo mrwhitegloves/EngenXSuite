@@ -26,6 +26,17 @@ import {
   useUploadImport,
 } from '../importApi.js';
 
+// The same words as on the lead page.
+const LEAD_SOURCE_LABELS = {
+  manual: 'Typed in',
+  meta_ads: 'Meta ads',
+  website: 'Website',
+  import: 'File import',
+  email: 'Email',
+  referral: 'Referral',
+  apollo: 'Apollo list',
+};
+
 const STATUS_LABELS = {
   uploaded: 'Columns not chosen yet',
   mapped: 'Checked, not started',
@@ -97,6 +108,13 @@ function MappingStep({ item, options, canRun }) {
   );
   const [duplicateMode, setDuplicateMode] = useState(item.duplicateMode);
   const [templateName, setTemplateName] = useState('');
+  // Only used when the file has lead columns: where the leads come from, and for which rows
+  // no lead is made.
+  const [leadSource, setLeadSource] = useState(item.leadOptions?.source ?? 'meta_ads');
+  const [noLeadColumn, setNoLeadColumn] = useState(item.leadOptions?.noLeadColumn ?? '');
+  const [noLeadValues, setNoLeadValues] = useState(
+    (item.leadOptions?.noLeadValues ?? []).join(', '),
+  );
   const preview = usePreviewImport(item.id);
   const start = useStartImport(item.id);
   const suggest = useSuggestMapping(item.id);
@@ -106,7 +124,25 @@ function MappingStep({ item, options, canRun }) {
     .filter((column) => fieldOf[column])
     .map((column) => ({ column, field: fieldOf[column] }));
   const groups = [...new Set(options.fields.map((field) => field.group))];
-  const used = new Set(Object.values(fieldOf).filter(Boolean));
+  // A field is used once, except the ones that may fill from several columns.
+  const multi = new Set(options.fields.filter((field) => field.multi).map((field) => field.field));
+  const used = new Set(Object.values(fieldOf).filter((field) => field && !multi.has(field)));
+  const hasLeads = mapping.some((entry) => entry.field.startsWith('lead.'));
+  const leadOptions = hasLeads
+    ? {
+        source: leadSource,
+        ...(noLeadColumn && noLeadValues.trim()
+          ? {
+              noLeadColumn,
+              noLeadValues: noLeadValues
+                .split(',')
+                .map((value) => value.trim())
+                .filter(Boolean),
+            }
+          : {}),
+      }
+    : undefined;
+  const request = { mapping, duplicateMode, ...(leadOptions ? { leadOptions } : {}) };
 
   // Any change makes the last check out of date.
   const change = (apply) => {
@@ -183,6 +219,7 @@ function MappingStep({ item, options, canRun }) {
                   >
                     {field.label}
                     {field.required ? ' (needed)' : ''}
+                    {field.multi ? ' (can be several columns)' : ''}
                   </option>
                 ))}
             </optgroup>
@@ -270,6 +307,62 @@ function MappingStep({ item, options, canRun }) {
         ))}
       </fieldset>
 
+      {hasLeads && (
+        <fieldset disabled={!canRun} className="space-y-3 rounded-lg border border-border p-3">
+          <legend className="px-1 font-semibold">Leads in this file</legend>
+          <p className="text-sm text-text-muted">
+            This file has lead columns, so each row also becomes a lead of its company and person.
+            You become the owner. A lead with the status “Lost” or “Not interested” is closed in the
+            Lost stage. The same enquiry is never made a lead twice.
+          </p>
+          <label className="block max-w-xs">
+            <span className="mb-1 block text-sm font-medium">Where these leads come from</span>
+            <select
+              value={leadSource}
+              onChange={(event) => change(() => setLeadSource(event.target.value))}
+              className={inputClass}
+            >
+              {options.leadSources.map((source) => (
+                <option key={source} value={source}>
+                  {LEAD_SOURCE_LABELS[source] ?? source}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium">
+                No lead (company and person only) for rows where
+              </span>
+              <select
+                aria-label="Column that says which rows get no lead"
+                value={noLeadColumn}
+                onChange={(event) => change(() => setNoLeadColumn(event.target.value))}
+                className={`${inputClass} min-w-48`}
+              >
+                <option value="">Every row gets a lead</option>
+                {item.headers.map((column) => (
+                  <option key={column} value={column}>
+                    {column}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {noLeadColumn && (
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium">is one of (comma between)</span>
+                <input
+                  value={noLeadValues}
+                  placeholder="For example: apollo_companies_leads"
+                  onChange={(event) => change(() => setNoLeadValues(event.target.value))}
+                  className={`${inputClass} w-72`}
+                />
+              </label>
+            )}
+          </div>
+        </fieldset>
+      )}
+
       {canRun && (
         <section className="space-y-3">
           <h2 className="font-semibold">3. Check, then import</h2>
@@ -278,7 +371,7 @@ function MappingStep({ item, options, canRun }) {
             type="button"
             className={secondaryButtonClass}
             disabled={mapping.length === 0 || preview.isPending}
-            onClick={() => preview.mutate({ mapping, duplicateMode })}
+            onClick={() => preview.mutate(request)}
           >
             {preview.isPending ? 'Checking every row…' : 'Check the file'}
           </button>
@@ -299,8 +392,11 @@ function MappingStep({ item, options, canRun }) {
                 ]}
               />
               <p className="text-sm text-text-muted">
-                {number(checked.counts.people)} rows name a person. Nothing has been saved yet. Rows
-                with a problem are left out and listed in a file after the import.
+                {number(checked.counts.people)} rows name a person.
+                {checked.counts.leads !== undefined &&
+                  ` ${number(checked.counts.leads)} rows become a lead.`}{' '}
+                Nothing has been saved yet. Rows with a problem are left out and listed in a file
+                after the import.
               </p>
               <Problems
                 title={
@@ -329,8 +425,7 @@ function MappingStep({ item, options, canRun }) {
                   disabled={checked.counts.valid === 0 || start.isPending}
                   onClick={() =>
                     start.mutate({
-                      mapping,
-                      duplicateMode,
+                      ...request,
                       ...(templateName.trim() ? { saveTemplateAs: templateName.trim() } : {}),
                     })
                   }
@@ -411,6 +506,7 @@ function Result({ item, canRun }) {
         <p role="status" className="rounded-md border border-border bg-surface p-3">
           Undone: {number(item.undo.accountsRemoved)} companies and{' '}
           {number(item.undo.contactsRemoved)} people were removed.
+          {item.undo.leadsRemoved > 0 && ` ${number(item.undo.leadsRemoved)} leads were removed.`}
           {item.undo.kept > 0 &&
             ` ${number(item.undo.kept)} could not be removed (still in use, or not yours to delete) and were kept.`}
         </p>
@@ -419,6 +515,7 @@ function Result({ item, canRun }) {
       <Counts
         items={[
           ['New companies', item.counts.created, 'text-success'],
+          ...(item.counts.leads ? [['New leads', item.counts.leads, 'text-success']] : []),
           ['Existing, changed', item.counts.updated],
           ['Skipped', item.counts.skipped],
           ['Failed', item.counts.failed, item.counts.failed > 0 ? 'text-danger' : ''],
@@ -471,8 +568,9 @@ function Result({ item, canRun }) {
         onConfirm={() => undo.mutate(undefined, { onSuccess: () => setIsConfirming(false) })}
       >
         <p>
-          The {number(item.counts.created)} companies this import created, and the people it added,
-          will be removed. Companies it only changed stay as they are now.
+          The {number(item.counts.created)} companies this import created, and the people
+          {item.counts.leads ? ` and ${number(item.counts.leads)} leads` : ''} it added, will be
+          removed. Companies it only changed stay as they are now.
         </p>
       </ConfirmDialog>
     </div>
