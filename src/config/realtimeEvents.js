@@ -26,6 +26,8 @@ export const REALTIME_REFETCH = {
   'tasks.changed': [['tasks'], ['dashboard'], ['search']],
   // A call started, moved on or ended, its outcome was set, or the call settings changed.
   'calls.changed': [['calls']],
+  // Customer mail was read from a mailbox, or one was sent.
+  'emails.changed': [['emails'], ['timeline']],
   // An inbound lead arrived or was processed, or a lead form or the assignment rule changed.
   'inbound-leads.changed': [['inbound-leads']],
   // A tag was added, renamed, merged or deleted: reload the tags and the records that show them.
