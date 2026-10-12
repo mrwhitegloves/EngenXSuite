@@ -10,11 +10,17 @@ const GROUPS = [
 ];
 
 /**
- * Search for a lead, a company or a person to attach to the AI conversation. The search is the
- * global one, so it finds only what the person may see.
- * @param {{ onPick: (record: { type: string, id: string, title: string }) => void }} props
+ * Search for a lead, a company or a person and pick one (for the AI conversation, or for a
+ * meeting). The search is the global one, so it finds only what the person may see.
+ * @param {{ onPick: (record: { type: string, id: string, title: string }) => void,
+ *           label?: string, types?: string[] }} props
+ *        types: which kinds to offer ('lead', 'account', 'contact'); all of them when left out
  */
-export default function RecordPicker({ onPick }) {
+export default function RecordPicker({
+  onPick,
+  label = 'Attach a lead, a company or a person: type a name',
+  types,
+}) {
   const [text, setText] = useState('');
   const term = text.trim();
   const search = useQuery({
@@ -24,7 +30,7 @@ export default function RecordPicker({ onPick }) {
     enabled: term.length >= 2,
     staleTime: 15_000,
   });
-  const found = GROUPS.flatMap((group) =>
+  const found = GROUPS.filter((group) => !types || types.includes(group.type)).flatMap((group) =>
     (search.data?.[group.key] ?? []).slice(0, 4).map((item) => ({ ...item, group })),
   );
 
@@ -32,8 +38,8 @@ export default function RecordPicker({ onPick }) {
     <div className="space-y-1">
       <input
         type="search"
-        aria-label="Attach a lead, a company or a person"
-        placeholder="Attach a lead, a company or a person: type a name"
+        aria-label={label}
+        placeholder={label}
         value={text}
         onChange={(event) => setText(event.target.value)}
         className={`${inputClass} text-sm`}

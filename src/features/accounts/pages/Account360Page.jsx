@@ -8,6 +8,7 @@ import { HEALTH_LABELS, POTENTIAL_LABELS } from '../accountForm.js';
 import { RecordTasks } from '../../activities/components/Tasks.jsx';
 import Timeline from '../../activities/components/Timeline.jsx';
 import AskAiButton from '../../assistant/components/AskAiButton.jsx';
+import RecordMeetings from '../../calendar/components/RecordMeetings.jsx';
 import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import AccountAiSummary from '../../insights/components/AccountAiSummary.jsx';
 import { useAccount } from '../api.js';
@@ -282,6 +283,7 @@ export default function Account360Page() {
           </div>
           <div className="space-y-6">
             {can('tasks', 'view') && <RecordTasks target={{ accountId: data.id }} />}
+            {can('meetings', 'view') && <RecordMeetings target={{ accountId: data.id }} />}
             {can('calls', 'view') && <RecordCalls target={{ accountId: data.id }} />}
           </div>
         </div>

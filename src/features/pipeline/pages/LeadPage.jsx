@@ -8,6 +8,7 @@ import { RecordTasks } from '../../activities/components/Tasks.jsx';
 import Timeline from '../../activities/components/Timeline.jsx';
 import AskAiButton from '../../assistant/components/AskAiButton.jsx';
 import CallButton from '../../calls/components/CallButton.jsx';
+import RecordMeetings from '../../calendar/components/RecordMeetings.jsx';
 import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import LeadAiAssessment from '../../insights/components/LeadAiAssessment.jsx';
 import { useChangeStage, useLead, useLeadOptions, useStageHistory } from '../api.js';
@@ -354,6 +355,9 @@ export default function LeadPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           {can('tasks', 'view') && <RecordTasks target={{ opportunityId: data.id }} />}
+          {can('meetings', 'view') && (
+            <RecordMeetings target={{ opportunityId: data.id, accountId: data.account?.id }} />
+          )}
           {can('calls', 'view') && <RecordCalls target={{ opportunityId: data.id }} />}
         </div>
         <div className="space-y-2">
