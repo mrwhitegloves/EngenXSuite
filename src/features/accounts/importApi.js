@@ -67,6 +67,13 @@ export function usePreviewImport(id) {
   });
 }
 
+/** Ask the AI which column fills which field. A suggestion: nothing is saved. */
+export function useSuggestMapping(id) {
+  return useMutation({
+    mutationFn: () => apiRequest(`/imports/${id}/suggest-mapping`, { method: 'POST' }),
+  });
+}
+
 export function useStartImport(id) {
   return useImportsMutation((body) => apiRequest(`/imports/${id}/run`, { method: 'POST', body }));
 }

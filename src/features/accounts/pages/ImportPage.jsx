@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ArrowLeft, Download, FileUp, Undo2 } from 'lucide-react';
+import { ArrowLeft, Download, FileUp, Sparkles, Undo2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog.jsx';
@@ -21,6 +21,7 @@ import {
   useImports,
   usePreviewImport,
   useStartImport,
+  useSuggestMapping,
   useUndoImport,
   useUploadImport,
 } from '../importApi.js';
@@ -98,6 +99,7 @@ function MappingStep({ item, options, canRun }) {
   const [templateName, setTemplateName] = useState('');
   const preview = usePreviewImport(item.id);
   const start = useStartImport(item.id);
+  const suggest = useSuggestMapping(item.id);
   const deleteTemplate = useDeleteTemplate();
 
   const mapping = item.headers
@@ -112,6 +114,22 @@ function MappingStep({ item, options, canRun }) {
     preview.reset();
     start.reset();
   };
+  // The AI's suggestion goes on top of the choices on the screen: where it names a field, that
+  // wins; a column it says nothing about keeps its choice, unless the AI gave that field away.
+  function suggestWithAi() {
+    suggest.mutate(undefined, {
+      onSuccess: (payload) => {
+        const suggested = Object.fromEntries(
+          payload.data.mapping.map(({ column, field }) => [column, field]),
+        );
+        const taken = new Set(Object.values(suggested));
+        const kept = Object.fromEntries(
+          Object.entries(fieldOf).filter(([, field]) => field && !taken.has(field)),
+        );
+        change(() => setFieldOf({ ...kept, ...suggested }));
+      },
+    });
+  }
   function applyTemplate(id) {
     const template = options.templates.find((entry) => entry.id === id);
     if (!template) return;
@@ -186,6 +204,17 @@ function MappingStep({ item, options, canRun }) {
               names one, a person at it.
             </p>
           </div>
+          {canRun && (
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              disabled={suggest.isPending}
+              onClick={suggestWithAi}
+            >
+              <Sparkles size={14} aria-hidden="true" />
+              {suggest.isPending ? 'Thinking…' : 'Suggest with AI'}
+            </button>
+          )}
           {options.templates.length > 0 && canRun && (
             <div className="flex items-center gap-2">
               <select
@@ -204,6 +233,13 @@ function MappingStep({ item, options, canRun }) {
             </div>
           )}
         </div>
+        <FormError message={suggest.error?.message} />
+        {suggest.isSuccess && (
+          <p role="status" className="rounded-md border border-brand p-2 text-sm">
+            AI suggested {suggest.data.data.mapping.length} of {item.headers.length} columns. It can
+            be wrong: check each line before you continue.
+          </p>
+        )}
         <DataTable
           caption="Columns of the file"
           columns={columns}
