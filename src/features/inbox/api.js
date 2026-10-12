@@ -22,7 +22,7 @@ export function useMailbox() {
   });
 }
 
-/** Conversations, newest first. `params`: view, search, page, accountId, opportunityId. */
+/** Conversations, newest first. `params`: view, search, page, accountId, opportunityId, contactId. */
 export function useThreads(params) {
   return useQuery({
     queryKey: [...KEY, 'threads', params],
@@ -38,6 +38,16 @@ export function useThread(id) {
     queryFn: ({ signal }) => apiRequest(`/emails/threads/${id}`, { signal }),
     select: (payload) => payload.data,
     enabled: Boolean(id),
+  });
+}
+
+/** The files that came or went with the mail of one company, newest first. */
+export function useAccountFiles(accountId, enabled = true) {
+  return useQuery({
+    queryKey: [...KEY, 'files', accountId],
+    queryFn: ({ signal }) => apiRequest(`/emails/files?accountId=${accountId}`, { signal }),
+    select: (payload) => payload.data,
+    enabled: Boolean(accountId) && enabled,
   });
 }
 
@@ -57,6 +67,18 @@ export function useMailActions(threadId) {
     send: useMutation({
       mutationFn: (body) => apiRequest('/emails/send', { method: 'POST', body }),
       onSuccess: reload,
+    }),
+    // Keep a file from my device, to send with my next mail.
+    upload: useMutation({
+      mutationFn: (file) => {
+        const body = new FormData();
+        body.append('file', file);
+        return apiRequest('/emails/attachments', { method: 'POST', body });
+      },
+    }),
+    // The AI writes a mail or changes the one on the screen. It sends nothing.
+    write: useMutation({
+      mutationFn: (body) => apiRequest('/emails/write', { method: 'POST', body }),
     }),
     classify: useMutation({
       mutationFn: () => apiRequest(`/emails/threads/${threadId}/classify`, { method: 'POST' }),
