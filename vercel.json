@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://CLOUD-RUN-ADDRESS-NOT-SET.invalid/api/:path*"
+      "destination": "https://engenx-crm-fabl4kkrea-el.a.run.app/api/:path*"
     },
     {
       "source": "/((?!api/).*)",
