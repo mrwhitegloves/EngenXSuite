@@ -8,6 +8,7 @@ import {
 } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useRoles, useUpdateRole } from '../api.js';
+import AiSettings from '../components/AiSettings.jsx';
 import AuditLog from '../components/AuditLog.jsx';
 import Branding from '../components/Branding.jsx';
 import Calls from '../components/Calls.jsx';
@@ -128,6 +129,11 @@ const SECTIONS = [
     description: 'Calls: the phone connection, call recording, and who gets incoming calls.',
   },
   {
+    id: 'ai',
+    label: 'AI',
+    description: 'AI: what it cost this month, the budget and limits, and which model does what.',
+  },
+  {
     id: 'categories',
     label: 'Solution categories',
     description: 'Solution categories: what you sell, as your team picks it on a lead.',
@@ -198,6 +204,7 @@ export default function SettingsPage() {
       {section.id === 'lead-assignment' && <LeadAssignment canEdit={can('settings', 'edit')} />}
       {section.id === 'lead-forms' && <LeadForms canEdit={can('settings', 'edit')} />}
       {section.id === 'calls' && <Calls canEdit={can('settings', 'edit')} />}
+      {section.id === 'ai' && <AiSettings canEdit={can('settings', 'edit')} />}
       {section.id === 'categories' && <SolutionCategories canEdit={can('settings', 'edit')} />}
       {section.id === 'tags' && <Tags canEdit={can('settings', 'edit')} />}
       {section.id === 'jobs' && <BackgroundJobs canEdit={can('settings', 'edit')} />}

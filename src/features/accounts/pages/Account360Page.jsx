@@ -8,6 +8,7 @@ import { HEALTH_LABELS, POTENTIAL_LABELS } from '../accountForm.js';
 import { RecordTasks } from '../../activities/components/Tasks.jsx';
 import Timeline from '../../activities/components/Timeline.jsx';
 import RecordCalls from '../../calls/components/RecordCalls.jsx';
+import AccountAiSummary from '../../insights/components/AccountAiSummary.jsx';
 import { useAccount } from '../api.js';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
 import LeadsTab from '../components/LeadsTab.jsx';
@@ -249,7 +250,12 @@ export default function Account360Page() {
         })}
       </div>
 
-      {tab.id === 'overview' && <Overview account={data} />}
+      {tab.id === 'overview' && (
+        <div className="space-y-4">
+          {can('ai_insights', 'view') && <AccountAiSummary accountId={data.id} />}
+          <Overview account={data} />
+        </div>
+      )}
       {tab.id === 'people' && <PeopleTab accountId={data.id} />}
       {tab.id === 'plants' && <PlantsTab accountId={data.id} />}
       {tab.id === 'leads' && <LeadsTab account={data} />}

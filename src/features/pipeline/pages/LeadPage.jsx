@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Check, Pencil, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Pencil } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError, secondaryButtonClass } from '../../../components/shared/form.jsx';
@@ -8,6 +8,7 @@ import { RecordTasks } from '../../activities/components/Tasks.jsx';
 import Timeline from '../../activities/components/Timeline.jsx';
 import CallButton from '../../calls/components/CallButton.jsx';
 import RecordCalls from '../../calls/components/RecordCalls.jsx';
+import LeadAiAssessment from '../../insights/components/LeadAiAssessment.jsx';
 import { useChangeStage, useLead, useLeadOptions, useStageHistory } from '../api.js';
 import CloseDialog from '../components/CloseDialog.jsx';
 import LeadEditModal from '../components/LeadEditModal.jsx';
@@ -275,15 +276,7 @@ export default function LeadPage() {
             ['Risk note', data.risk?.note],
           ]}
         />
-        <section className="rounded-lg border border-dashed border-border bg-surface p-4">
-          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-text-muted uppercase">
-            <Sparkles size={15} aria-hidden="true" />
-            Next best action and AI insights
-          </h2>
-          <p className="text-text-muted">
-            Suggestions from the AI will show here once the AI part is built.
-          </p>
-        </section>
+        {can('ai_insights', 'view') && <LeadAiAssessment leadId={data.id} />}
         <Block
           title="Requirement"
           lines={[
