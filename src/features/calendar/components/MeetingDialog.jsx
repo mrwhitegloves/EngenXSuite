@@ -80,8 +80,10 @@ function CustomerPeople({ accountId, chosen, onChange }) {
  *           day?: Date, onClose: () => void }} props
  *        target: the lead or company a new meeting is about, when it is planned from its page
  *        day: the day a new meeting starts on, when it is planned from the calendar
+ *        initial: what a new meeting starts with ({ title, mode, startAt, minutes, contactIds }),
+ *                 for example what the AI found in a mail; the person still checks and saves
  */
-export default function MeetingDialog({ meeting, target, day, onClose }) {
+export default function MeetingDialog({ meeting, target, day, initial, onClose }) {
   const isNew = !meeting;
   const options = useMeetingOptions();
   const actions = useMeetingActions();
@@ -90,15 +92,24 @@ export default function MeetingDialog({ meeting, target, day, onClose }) {
   const [about, setAbout] = useState(target ?? null);
   const leadAccount = useLeadAccountId(isNew && !about?.accountId ? about?.opportunityId : null);
   const accountId = isNew ? (about?.accountId ?? leadAccount.data) : meeting.account?.id;
-  const start = isNew ? nextHour(day) : new Date(meeting.startAt);
+  const start = !isNew
+    ? new Date(meeting.startAt)
+    : initial?.startAt
+      ? new Date(initial.startAt)
+      : nextHour(day);
   const [form, setForm] = useState({
-    title: meeting?.title ?? '',
-    mode: meeting?.mode ?? 'online',
+    title: meeting?.title ?? initial?.title ?? '',
+    mode: meeting?.mode ?? initial?.mode ?? 'online',
     startAt: toMomentInput(start),
-    minutes: isNew ? 60 : Math.round((new Date(meeting.endAt) - start) / MINUTE),
+    minutes: isNew
+      ? (initial?.minutes ?? 60)
+      : Math.round((new Date(meeting.endAt) - start) / MINUTE),
     location: meeting?.location ?? '',
     agenda: meeting?.agenda ?? '',
-    contactIds: meeting?.attendees.map((person) => person.contactId).filter(Boolean) ?? [],
+    contactIds:
+      meeting?.attendees.map((person) => person.contactId).filter(Boolean) ??
+      initial?.contactIds ??
+      [],
     internalAttendeeIds: meeting?.colleagues.map((person) => person.id) ?? [],
     // Guests who are not people of the company: their addresses, as typed.
     extraGuests: (meeting?.attendees ?? [])

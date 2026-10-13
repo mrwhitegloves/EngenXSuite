@@ -10,6 +10,9 @@ export const CATEGORY_LABELS = {
   other: 'Other',
 };
 
+// How the customer sounds in their newest mail (only the two that matter are shown).
+export const MOOD_LABELS = { positive: 'Sounds pleased', negative: 'Sounds unhappy' };
+
 export const smallButton =
   'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand';
 

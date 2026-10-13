@@ -80,6 +80,15 @@ export function useMailActions(threadId) {
     write: useMutation({
       mutationFn: (body) => apiRequest('/emails/write', { method: 'POST', body }),
     }),
+    // A summary, the tasks, a meeting, a check of my mail, or three versions of it.
+    assist: useMutation({
+      mutationFn: (body) =>
+        apiRequest(`/emails/threads/${threadId}/assist`, { method: 'POST', body }),
+    }),
+    // What a file of a mail says.
+    fileSummary: useMutation({
+      mutationFn: (body) => apiRequest('/emails/files/summary', { method: 'POST', body }),
+    }),
     classify: useMutation({
       mutationFn: () => apiRequest(`/emails/threads/${threadId}/classify`, { method: 'POST' }),
       onSuccess: (payload) => {

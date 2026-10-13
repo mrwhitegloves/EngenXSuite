@@ -6,12 +6,14 @@ import { useCan } from '../../../hooks/useCan.js';
 import { useMailActions, useThread } from '../api.js';
 import {
   CATEGORY_LABELS,
+  MOOD_LABELS,
   formatMoment,
   formatSize,
   smallButton,
   splitQuoted,
 } from '../mailFormat.js';
 import MailComposer from './MailComposer.jsx';
+import ThreadAiTools, { FileSummary } from './ThreadAiTools.jsx';
 
 // A file of a message: opens (or downloads) through a link that works for an hour.
 function FileChip({ file }) {
@@ -102,8 +104,12 @@ function Message({ message, isOpen, onToggle }) {
             <ul aria-label="Files" className="flex flex-wrap gap-1.5">
               {message.attachments.map((file, index) => (
                 // A mail may carry two files of one name: the position tells them apart.
-                <li key={`${index}-${file.filename}`} className="max-w-full">
+                <li
+                  key={`${index}-${file.filename}`}
+                  className="flex max-w-full flex-wrap items-center"
+                >
                   <FileChip file={file} />
+                  {file.url && <FileSummary file={file} />}
                 </li>
               ))}
             </ul>
@@ -224,6 +230,11 @@ export default function ThreadView({ threadId, onBack, onNewConversation }) {
                   </span>
                   <span className="font-medium">{CATEGORY_LABELS[data.ai.category]}</span>
                   {data.ai.needsReply && <span className="text-danger">Needs an answer</span>}
+                  {data.ai.sentiment !== 'neutral' && (
+                    <span className={data.ai.sentiment === 'negative' ? 'text-danger' : ''}>
+                      {MOOD_LABELS[data.ai.sentiment]}
+                    </span>
+                  )}
                 </p>
                 <p className="mt-1 break-words">{data.ai.summary}</p>
                 {data.ai.suggestedAction && (
@@ -246,6 +257,7 @@ export default function ThreadView({ threadId, onBack, onNewConversation }) {
               )
             )}
             <FormError message={classify.error?.message} />
+            {can('ai_insights', 'view') && <ThreadAiTools threadId={data.id} />}
           </header>
 
           <div className="min-h-0 flex-1 overflow-y-auto">

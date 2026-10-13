@@ -22,6 +22,7 @@ const VIEWS = [
   { id: 'all', label: 'All' },
   { id: 'waiting', label: 'Waiting for us' },
   { id: 'mine', label: 'My mailbox' },
+  { id: 'follow_up', label: 'Follow-up due (no answer for 3 days)' },
 ];
 
 // The Inbox: customer mail of the connected mailboxes. A person sees their own conversations;

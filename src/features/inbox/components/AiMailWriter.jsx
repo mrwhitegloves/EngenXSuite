@@ -7,6 +7,16 @@ import {
 } from '../../../components/shared/form.jsx';
 import { useMailActions } from '../api.js';
 import { smallButton } from '../mailFormat.js';
+import { AiBox } from './ThreadAiTools.jsx';
+
+const ISSUE_LABELS = {
+  mistake: 'Mistake',
+  tone: 'Tone',
+  unclear: 'Not clear',
+  missing: 'Missing',
+  risk: 'Careful',
+};
+const VARIANT_LABELS = { short: 'Short', detailed: 'Detailed', formal: 'Formal' };
 
 const MODES = {
   reply: 'Answer the newest mail',
@@ -34,7 +44,24 @@ const QUICK_ASKS = [
  *        thread: the open conversation (with its messages); without it, a first mail is written
  */
 export default function AiMailWriter({ thread, accountId, contactId, draft, onDraft }) {
-  const { write } = useMailActions();
+  const { write, assist } = useMailActions(thread?.id);
+  // The answer of "Check it" or "Three versions"; closed again when the mail changes.
+  const [extra, setExtra] = useState(null);
+  const askExtra = (kind) =>
+    assist.mutate(
+      {
+        kind,
+        mode: mode === 'new' ? 'reply' : mode,
+        ...(draft.body.trim() ? { draft: draft.body.slice(0, 8000) } : {}),
+        ...(kind === 'variants' && wish.trim() ? { instruction: wish.trim() } : {}),
+      },
+      { onSuccess: (payload) => setExtra({ kind, answer: payload.data }) },
+    );
+  const take = (label, body) => {
+    setSteps((list) => [...list, { label: `Took the ${label} version`, before: draft }]);
+    onDraft({ subject: draft.subject, body });
+    setExtra(null);
+  };
   const modes = thread
     ? [
         ...(thread.messages.some((message) => message.direction === 'inbound') ? ['reply'] : []),
@@ -138,7 +165,85 @@ export default function AiMailWriter({ thread, accountId, contactId, draft, onDr
           <Sparkles size={16} aria-hidden="true" />
           {hasDraft ? 'Write it again' : 'Write the mail'}
         </button>
+        {thread && (
+          <>
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              disabled={assist.isPending}
+              onClick={() => askExtra('variants')}
+            >
+              Three versions
+            </button>
+            {hasDraft && (
+              <button
+                type="button"
+                className={secondaryButtonClass}
+                disabled={assist.isPending}
+                onClick={() => askExtra('review')}
+              >
+                Check it
+              </button>
+            )}
+          </>
+        )}
       </div>
+      {assist.isPending && (
+        <p role="status" className="text-xs text-text-muted">
+          The AI is reading…
+        </p>
+      )}
+      {extra?.kind === 'review' && (
+        <AiBox title="Check before sending" onClose={() => setExtra(null)}>
+          <p className={extra.answer.isReadyToSend ? '' : 'text-danger'}>
+            {extra.answer.isReadyToSend
+              ? 'Nothing stands in the way of sending it.'
+              : 'Look at these points before you send it.'}
+          </p>
+          {extra.answer.issues.length > 0 && (
+            <ul className="list-disc space-y-0.5 pl-5">
+              {extra.answer.issues.map((issue) => (
+                <li key={issue.text} className="break-words">
+                  <span className="font-medium">{ISSUE_LABELS[issue.kind]}:</span> {issue.text}
+                </li>
+              ))}
+            </ul>
+          )}
+          {extra.answer.unansweredQuestions.length > 0 && (
+            <>
+              <p className="font-medium">The customer asked, and the mail does not answer:</p>
+              <ul className="list-disc space-y-0.5 pl-5">
+                {extra.answer.unansweredQuestions.map((question) => (
+                  <li key={question} className="break-words">
+                    {question}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </AiBox>
+      )}
+      {extra?.kind === 'variants' && (
+        <AiBox title="Three versions: take one" onClose={() => setExtra(null)}>
+          <ul className="space-y-2">
+            {extra.answer.variants.map((variant) => (
+              <li key={variant.label} className="rounded-md border border-border bg-surface p-2">
+                <p className="mb-1 flex items-center justify-between gap-2">
+                  <span className="font-medium">{VARIANT_LABELS[variant.label]}</span>
+                  <button
+                    type="button"
+                    className={smallButton}
+                    onClick={() => take(variant.label, variant.body)}
+                  >
+                    Use this one
+                  </button>
+                </p>
+                <p className="break-words whitespace-pre-wrap text-text-muted">{variant.body}</p>
+              </li>
+            ))}
+          </ul>
+        </AiBox>
+      )}
       <div className="flex flex-wrap gap-1.5">
         {QUICK_ASKS.map((text) => (
           <button
@@ -176,7 +281,7 @@ export default function AiMailWriter({ thread, accountId, contactId, draft, onDr
           </p>
         </div>
       )}
-      <FormError message={write.error?.message} />
+      <FormError message={write.error?.message ?? assist.error?.message} />
     </section>
   );
 }

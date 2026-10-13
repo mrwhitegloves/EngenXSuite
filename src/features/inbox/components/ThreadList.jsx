@@ -1,4 +1,4 @@
-import { CATEGORY_LABELS, formatMoment, whoOf } from '../mailFormat.js';
+import { CATEGORY_LABELS, MOOD_LABELS, formatMoment, whoOf } from '../mailFormat.js';
 
 /**
  * Conversations as rows: who, subject, the newest line, and what state it is in.
@@ -43,6 +43,13 @@ export default function ThreadList({ rows, openId, onOpen, showAccount = true })
               {row.ai && (
                 <span className="rounded-full border border-brand px-1.5 text-brand-text">
                   {CATEGORY_LABELS[row.ai.category]}
+                </span>
+              )}
+              {row.ai && row.ai.sentiment !== 'neutral' && (
+                <span
+                  className={`rounded-full border px-1.5 ${row.ai.sentiment === 'negative' ? 'border-danger text-danger' : 'border-border'}`}
+                >
+                  {MOOD_LABELS[row.ai.sentiment]}
                 </span>
               )}
             </span>
