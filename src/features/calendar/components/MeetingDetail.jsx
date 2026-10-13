@@ -39,6 +39,7 @@ export default function MeetingDetail({ meetingId, onClose }) {
   const { close, update } = useMeetingActions();
   const [isEditing, setIsEditing] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   // The notes box: undefined until the person types, then their text.
   const [typed, setTyped] = useState();
   const data = meeting.data;
@@ -94,6 +95,17 @@ export default function MeetingDetail({ meetingId, onClose }) {
                     <Video size={14} aria-hidden="true" />
                     Join with Google Meet
                   </a>
+                  <button
+                    type="button"
+                    className="ml-3 text-xs text-text-muted hover:text-text hover:underline"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(data.meetLink);
+                      setIsCopied(true);
+                    }}
+                  >
+                    {isCopied ? 'Copied' : 'Copy the link'}
+                  </button>
+                  <span className="block text-xs break-all text-text-muted">{data.meetLink}</span>
                 </Row>
               )}
               {(data.account || data.lead) && (
@@ -124,10 +136,13 @@ export default function MeetingDetail({ meetingId, onClose }) {
                 </Row>
               )}
               {data.attendees.length > 0 && (
-                <Row label="Customer">
+                <Row label="Guests">
                   {data.attendees.map((person) => (
                     <span key={person.contactId ?? person.email} className="block">
                       {person.name ?? person.email}
+                      {person.name && person.email && !person.contactId && (
+                        <span className="text-text-muted"> {person.email}</span>
+                      )}
                       {person.email && data.isInGoogleCalendar && (
                         <span className="text-text-muted">
                           {' '}

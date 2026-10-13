@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, RefreshCw, Video } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import {
@@ -47,6 +47,9 @@ function MeetingChip({ meeting, onOpen, isWide = false }) {
       onClick={() => onOpen(meeting.id)}
       className={`block w-full rounded border px-1.5 py-0.5 text-left text-xs hover:border-text-muted focus-visible:outline-2 focus-visible:outline-brand ${STATUS_CLASS[meeting.status]} ${isWide ? 'py-1.5 text-sm' : 'truncate'}`}
     >
+      {meeting.meetLink && (
+        <Video size={11} aria-label="Has a Google Meet link" className="mr-1 inline align-[-1px]" />
+      )}
       <span className="font-medium">{formatTime(meeting.startAt)}</span> {meeting.title}
       {isWide && (
         <span className="block text-xs text-text-muted no-underline">

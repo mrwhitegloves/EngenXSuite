@@ -100,6 +100,16 @@ export default function MeetingDialog({ meeting, target, day, onClose }) {
     agenda: meeting?.agenda ?? '',
     contactIds: meeting?.attendees.map((person) => person.contactId).filter(Boolean) ?? [],
     internalAttendeeIds: meeting?.colleagues.map((person) => person.id) ?? [],
+    // Guests who are not people of the company: their addresses, as typed.
+    extraGuests: (meeting?.attendees ?? [])
+      .filter((person) => !person.contactId && person.email)
+      .map((person) => person.email)
+      .join(', '),
+    guestOptions: meeting?.guestOptions ?? {
+      canInviteOthers: true,
+      canModify: false,
+      canSeeGuests: true,
+    },
     tellGuests: true,
   });
   const errors = fieldErrorsFrom(save.error);
@@ -120,6 +130,11 @@ export default function MeetingDialog({ meeting, target, day, onClose }) {
       agenda: form.agenda.trim(),
       internalAttendeeIds: form.internalAttendeeIds,
       ...(accountId ? { contactIds: form.contactIds } : {}),
+      extraGuests: form.extraGuests
+        .split(/[,;\s]+/)
+        .filter(Boolean)
+        .map((email) => ({ email })),
+      guestOptions: form.guestOptions,
       tellGuests: form.tellGuests,
     };
     const links = about?.opportunityId
@@ -252,6 +267,21 @@ export default function MeetingDialog({ meeting, target, day, onClose }) {
           empty="No other users."
         />
         <Field
+          label="Other guests"
+          error={errors.extraGuests}
+          hint="Anyone else, by email address: a comma between several."
+        >
+          {(props) => (
+            <input
+              {...props}
+              value={form.extraGuests}
+              placeholder="name@company.com, other@company.com"
+              onChange={set('extraGuests')}
+              className={inputClass}
+            />
+          )}
+        </Field>
+        <Field
           label="What it is about"
           error={errors.agenda}
           hint="The guests read this in the invitation."
@@ -269,21 +299,49 @@ export default function MeetingDialog({ meeting, target, day, onClose }) {
         </Field>
         {options.data &&
           (options.data.isCalendarConnected ? (
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="mt-0.5 size-4 shrink-0 accent-brand"
-                checked={form.tellGuests}
-                onChange={(event) => setForm({ ...form, tellGuests: event.target.checked })}
-              />
-              <span>
-                Google mails the invitation to the guests.
-                <span className="block text-xs text-text-muted">
-                  The meeting goes into your Google Calendar
-                  {form.mode === 'online' && isNew ? ', with a Google Meet link' : ''}.
+            <div className="space-y-1 text-sm">
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 shrink-0 accent-brand"
+                  checked={form.tellGuests}
+                  onChange={(event) => setForm({ ...form, tellGuests: event.target.checked })}
+                />
+                <span>
+                  Google mails the invitation to the guests.
+                  <span className="block text-xs text-text-muted">
+                    The meeting goes into your Google Calendar
+                    {form.mode === 'online' && !meeting?.meetLink
+                      ? ', with a Google Meet link'
+                      : ''}
+                    .
+                  </span>
                 </span>
-              </span>
-            </label>
+              </label>
+              <p className="pl-6">
+                <span className="mr-3 text-xs font-medium text-text-muted">Guests may:</span>
+                {[
+                  ['canInviteOthers', 'invite others'],
+                  ['canSeeGuests', 'see the guest list'],
+                  ['canModify', 'change the event'],
+                ].map(([key, words]) => (
+                  <label key={key} className="mr-4 inline-flex items-center gap-1.5 text-xs">
+                    <input
+                      type="checkbox"
+                      className="size-3.5 accent-brand"
+                      checked={form.guestOptions[key]}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          guestOptions: { ...form.guestOptions, [key]: event.target.checked },
+                        })
+                      }
+                    />
+                    {words}
+                  </label>
+                ))}
+              </p>
+            </div>
           ) : (
             <p className="text-sm text-text-muted">
               Your Google Calendar is not connected: the meeting is kept in the CRM only, with no
@@ -294,6 +352,9 @@ export default function MeetingDialog({ meeting, target, day, onClose }) {
           message={
             errors.contactIds ??
             errors.internalAttendeeIds ??
+            (Object.keys(errors).some((key) => key.startsWith('extraGuests'))
+              ? 'One of the other guests is not an email address.'
+              : null) ??
             (Object.keys(errors).length === 0 ? save.error?.message : null)
           }
         />
