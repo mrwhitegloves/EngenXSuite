@@ -13,7 +13,6 @@ import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import AccountAiSummary from '../../insights/components/AccountAiSummary.jsx';
 import { useAccount } from '../api.js';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
-import AccountDocuments from '../../documents/components/AccountDocuments.jsx';
 import AccountMailTab from '../../inbox/components/AccountMailTab.jsx';
 import LeadsTab from '../components/LeadsTab.jsx';
 import PeopleTab from '../components/PeopleTab.jsx';
@@ -148,7 +147,6 @@ const TABS = [
   { id: 'plants', label: 'Plants', feature: 'plants' },
   { id: 'leads', label: 'Leads', feature: 'opportunities' },
   { id: 'mail', label: 'Mail', feature: 'email' },
-  { id: 'documents', label: 'Documents', feature: 'documents' },
   { id: 'timeline', label: 'Timeline' },
 ];
 
@@ -272,7 +270,6 @@ export default function Account360Page() {
       {tab.id === 'plants' && <PlantsTab accountId={data.id} />}
       {tab.id === 'leads' && <LeadsTab account={data} />}
       {tab.id === 'mail' && <AccountMailTab account={{ id: data.id, name: data.name }} />}
-      {tab.id === 'documents' && <AccountDocuments accountId={data.id} />}
       {tab.id === 'timeline' && (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-2">
