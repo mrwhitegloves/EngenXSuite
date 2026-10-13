@@ -17,6 +17,7 @@ import LeadForms from '../components/LeadForms.jsx';
 import Backups from '../components/Backups.jsx';
 import BackgroundJobs from '../components/BackgroundJobs.jsx';
 import StatusLists, { PipelineStages, SolutionCategories } from '../components/StatusLists.jsx';
+import MeetingTypes from '../components/MeetingTypes.jsx';
 import Tags from '../components/Tags.jsx';
 import PermissionMatrix, { grantsToMap, mapToGrants } from '../components/PermissionMatrix.jsx';
 
@@ -139,6 +140,11 @@ const SECTIONS = [
     description: 'Solution categories: what you sell, as your team picks it on a lead.',
   },
   {
+    id: 'meeting-types',
+    label: 'Meeting types',
+    description: 'Meeting types: the kinds of meeting your team plans and customers can book.',
+  },
+  {
     id: 'tags',
     label: 'Tags',
     description: 'Tags: the labels your team puts on companies and people.',
@@ -206,6 +212,7 @@ export default function SettingsPage() {
       {section.id === 'calls' && <Calls canEdit={can('settings', 'edit')} />}
       {section.id === 'ai' && <AiSettings canEdit={can('settings', 'edit')} />}
       {section.id === 'categories' && <SolutionCategories canEdit={can('settings', 'edit')} />}
+      {section.id === 'meeting-types' && <MeetingTypes canEdit={can('settings', 'edit')} />}
       {section.id === 'tags' && <Tags canEdit={can('settings', 'edit')} />}
       {section.id === 'jobs' && <BackgroundJobs canEdit={can('settings', 'edit')} />}
       {section.id === 'backups' && <Backups canEdit={can('settings', 'edit')} />}

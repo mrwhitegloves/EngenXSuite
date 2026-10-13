@@ -115,3 +115,55 @@ export function useMeetingRecordActions(id) {
     decide: useMutation({ mutationFn: post('/summary/tasks'), onSuccess }),
   };
 }
+
+// ── The kinds of meeting (Settings → Meeting types)
+const TYPES_KEY = ['meeting-types'];
+
+export function useMeetingTypes() {
+  return useQuery({
+    queryKey: TYPES_KEY,
+    queryFn: ({ signal }) => apiRequest('/meeting-types', { signal }),
+    select: (payload) => payload.data,
+    staleTime: 60_000,
+  });
+}
+
+export function useMeetingTypeActions() {
+  const queryClient = useQueryClient();
+  const onSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: TYPES_KEY });
+    queryClient.invalidateQueries({ queryKey: ['booking-page'] });
+  };
+  return {
+    create: useMutation({
+      mutationFn: (body) => apiRequest('/meeting-types', { method: 'POST', body }),
+      onSuccess,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, ...body }) =>
+        apiRequest(`/meeting-types/${id}`, { method: 'PATCH', body }),
+      onSuccess,
+    }),
+    remove: useMutation({
+      mutationFn: (id) => apiRequest(`/meeting-types/${id}`, { method: 'DELETE' }),
+      onSuccess,
+    }),
+  };
+}
+
+// ── My public booking page
+export function useBookingPage() {
+  return useQuery({
+    queryKey: ['booking-page'],
+    queryFn: ({ signal }) => apiRequest('/booking-page', { signal }),
+    select: (payload) => payload.data,
+  });
+}
+
+export function useUpdateBookingPage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => apiRequest('/booking-page', { method: 'PATCH', body }),
+    onSuccess: (payload) => queryClient.setQueryData(['booking-page'], payload),
+  });
+}

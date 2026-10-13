@@ -10,7 +10,7 @@ import {
 } from '../../../components/shared/form.jsx';
 import { useAccountContacts } from '../../accounts/api.js';
 import RecordPicker from '../../assistant/components/RecordPicker.jsx';
-import { useLeadAccountId, useMeetingActions, useMeetingOptions } from '../api.js';
+import { useLeadAccountId, useMeetingActions, useMeetingOptions, useMeetingTypes } from '../api.js';
 import { MODE_LABELS, toMomentInput } from '../dates.js';
 
 const DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240];
@@ -99,6 +99,7 @@ export default function MeetingDialog({ meeting, target, day, initial, onClose }
       : nextHour(day);
   const [form, setForm] = useState({
     title: meeting?.title ?? initial?.title ?? '',
+    typeId: meeting?.typeId ?? '',
     mode: meeting?.mode ?? initial?.mode ?? 'online',
     startAt: toMomentInput(start),
     minutes: isNew
@@ -125,6 +126,21 @@ export default function MeetingDialog({ meeting, target, day, initial, onClose }
   });
   const errors = fieldErrorsFrom(save.error);
   const set = (field) => (event) => setForm({ ...form, [field]: event.target.value });
+  // The kinds of meeting from Settings: those in use, and the one this meeting has.
+  const types = useMeetingTypes();
+  const kinds = (types.data ?? []).filter((type) => type.isActive || type.id === form.typeId);
+  const kindValue = kinds.some((type) => type.id === form.typeId) ? form.typeId : '';
+  const chooseKind = (event) => {
+    const type = kinds.find((item) => item.id === event.target.value);
+    if (!type) return;
+    // A new meeting takes the kind's usual length; a planned one keeps its own.
+    setForm({
+      ...form,
+      typeId: type.id,
+      mode: type.mode,
+      ...(isNew ? { minutes: type.durationMinutes } : {}),
+    });
+  };
   const durations = DURATIONS.includes(form.minutes)
     ? DURATIONS
     : [...DURATIONS, form.minutes].sort((a, b) => a - b);
@@ -134,6 +150,7 @@ export default function MeetingDialog({ meeting, target, day, initial, onClose }
     const startAt = new Date(form.startAt);
     const body = {
       title: form.title.trim(),
+      ...(form.typeId ? { typeId: form.typeId } : {}),
       mode: form.mode,
       startAt: startAt.toISOString(),
       endAt: new Date(startAt.getTime() + form.minutes * MINUTE).toISOString(),
@@ -208,12 +225,14 @@ export default function MeetingDialog({ meeting, target, day, initial, onClose }
           )}
         </Field>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Kind" error={errors.mode}>
+          <Field label="Kind" error={errors.mode ?? errors.typeId}>
             {(props) => (
-              <select {...props} value={form.mode} onChange={set('mode')} className={inputClass}>
-                {(options.data?.modes ?? Object.keys(MODE_LABELS)).map((mode) => (
-                  <option key={mode} value={mode}>
-                    {MODE_LABELS[mode]}
+              <select {...props} value={kindValue} onChange={chooseKind} className={inputClass}>
+                {/* A meeting without a kind from Settings (an older one, or one from Google). */}
+                {!form.typeId && <option value="">{MODE_LABELS[form.mode]}</option>}
+                {kinds.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
                   </option>
                 ))}
               </select>

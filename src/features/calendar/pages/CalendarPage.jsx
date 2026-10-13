@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, RefreshCw, Video } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Link2, Plus, RefreshCw, Video } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import {
@@ -10,6 +10,7 @@ import {
 } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useMeetingActions, useMeetingOptions, useMeetings } from '../api.js';
+import BookingPageDialog from '../components/BookingPageDialog.jsx';
 import MeetingDetail from '../components/MeetingDetail.jsx';
 import MeetingDialog from '../components/MeetingDialog.jsx';
 import {
@@ -73,6 +74,7 @@ export default function CalendarPage() {
   const openId = params.get('meeting');
   // null: closed. Otherwise the day a new meeting starts on (undefined: today).
   const [planning, setPlanning] = useState(null);
+  const [isSharing, setIsSharing] = useState(false);
   const change = (changes) => {
     const next = new URLSearchParams(params);
     for (const [key, value] of Object.entries(changes)) {
@@ -116,6 +118,12 @@ export default function CalendarPage() {
               className={sync.isPending ? 'animate-spin' : ''}
             />
             Read my Google Calendar now
+          </button>
+        )}
+        {can('meetings', 'create') && (
+          <button type="button" className={secondaryButtonClass} onClick={() => setIsSharing(true)}>
+            <Link2 size={16} aria-hidden="true" />
+            My booking page
           </button>
         )}
         {can('meetings', 'create') && (
@@ -286,6 +294,7 @@ export default function CalendarPage() {
         })}
       </div>
 
+      {isSharing && <BookingPageDialog onClose={() => setIsSharing(false)} />}
       {planning && <MeetingDialog day={planning.day} onClose={() => setPlanning(null)} />}
       {openId && <MeetingDetail meetingId={openId} onClose={() => change({ meeting: '' })} />}
     </>
