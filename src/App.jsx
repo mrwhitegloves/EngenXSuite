@@ -7,6 +7,7 @@ import { useRealtime } from './hooks/useRealtime.js';
 import { useTheme } from './hooks/useTheme.js';
 import LoginPage from './features/auth/pages/LoginPage.jsx';
 import BookingPage from './features/public/pages/BookingPage.jsx';
+import StopMailPage from './features/public/pages/StopMailPage.jsx';
 
 // Decides what to show from the sign-in state: loading, an error, the sign-in pages, or the app.
 export default function App() {
@@ -19,10 +20,11 @@ export default function App() {
   const { pathname } = useLocation();
 
   // A customer's page: shown to anyone, signed in or not.
-  if (pathname.startsWith('/book/')) {
+  if (pathname.startsWith('/book/') || pathname.startsWith('/stop-mail/')) {
     return (
       <Routes>
         <Route path="/book/:slug" element={<BookingPage />} />
+        <Route path="/stop-mail/:token" element={<StopMailPage />} />
       </Routes>
     );
   }

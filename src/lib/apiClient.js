@@ -43,10 +43,17 @@ export async function apiRequest(path, { method = 'GET', body, signal } = {}) {
  * @param {string} path  Path under /api, e.g. "/accounts/export?industry=Steel"
  * @param {string} fallbackName  Used when the server names no file
  */
-export async function apiDownload(path, fallbackName) {
+export async function apiDownload(path, fallbackName, { method = 'GET', body } = {}) {
   let response;
   try {
-    response = await fetch(`/api${path}`, { credentials: 'same-origin' });
+    response = await fetch(`/api${path}`, {
+      method,
+      credentials: 'same-origin',
+      // A long list (the chosen records) goes in the body, not in the address.
+      ...(body
+        ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+        : {}),
+    });
   } catch {
     throw toClientError('NETWORK_ERROR', 'Cannot reach the server. Check your connection.', 0);
   }

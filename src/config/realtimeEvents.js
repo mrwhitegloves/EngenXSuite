@@ -30,6 +30,8 @@ export const REALTIME_REFETCH = {
   'emails.changed': [['emails'], ['timeline']],
   // A meeting was planned, changed, closed, or taken over from Google Calendar.
   'meetings.changed': [['meetings'], ['timeline']],
+  // A bulk sending was made, started, stopped, or handled its next person.
+  'campaigns.changed': [['campaigns'], ['bundles']],
   // An inbound lead arrived or was processed, or a lead form or the assignment rule changed.
   'inbound-leads.changed': [['inbound-leads']],
   // A tag was added, renamed, merged or deleted: reload the tags and the records that show them.

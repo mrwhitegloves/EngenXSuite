@@ -5,6 +5,7 @@ import { NAV_ITEMS, SETTINGS_ITEM, visibleItems } from './config/navigation.js';
 import AccountsRoutes from './features/accounts/AccountsRoutes.jsx';
 import ConnectionsPage from './features/connections/pages/ConnectionsPage.jsx';
 import ActivitiesPage from './features/activities/pages/ActivitiesPage.jsx';
+import BulkPage from './features/bulk/pages/BulkPage.jsx';
 import CalendarPage from './features/calendar/pages/CalendarPage.jsx';
 import CallsRoutes from './features/calls/CallsRoutes.jsx';
 import DashboardPage from './features/dashboard/pages/DashboardPage.jsx';
@@ -25,6 +26,7 @@ const PAGES = {
   '/calls': CallsRoutes,
   '/calendar': CalendarPage,
   '/documents': DocumentsPage,
+  '/bulk': BulkPage,
   '/users': UsersPage,
   '/settings': SettingsPage,
 };
