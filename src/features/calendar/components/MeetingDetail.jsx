@@ -12,6 +12,7 @@ import {
 import { useMeeting, useMeetingActions } from '../api.js';
 import { MODE_LABELS, STATUS_LABELS, formatMoment, formatTime } from '../dates.js';
 import MeetingDialog from './MeetingDialog.jsx';
+import MeetingRecord from './MeetingRecord.jsx';
 
 const RESPONSE_LABELS = {
   needsAction: 'no answer yet',
@@ -194,6 +195,11 @@ export default function MeetingDetail({ meetingId, onClose }) {
               )
             )}
             <FormError message={close.error?.message ?? update.error?.message} />
+            <MeetingRecord
+              meetingId={data.id}
+              canEdit={Boolean(canEdit)}
+              hasNotes={(data.notes ?? '').trim().length >= 20}
+            />
 
             {canEdit && (
               <div className="flex flex-wrap justify-end gap-2">

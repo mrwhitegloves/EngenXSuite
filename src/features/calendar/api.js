@@ -81,3 +81,37 @@ export function useMeetingActions() {
     }),
   };
 }
+
+/** What is kept after a meeting: the AI's summary (when made) and its files. */
+export function useMeetingRecord(id) {
+  return useQuery({
+    queryKey: [...KEY, 'record', id],
+    queryFn: ({ signal }) => apiRequest(`/meetings/${id}/record`, { signal }),
+    select: (payload) => payload.data,
+    enabled: Boolean(id),
+  });
+}
+
+export function useMeetingRecordActions(id) {
+  const queryClient = useQueryClient();
+  const onSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: KEY });
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  };
+  const post = (path) => (body) => apiRequest(`/meetings/${id}${path}`, { method: 'POST', body });
+  return {
+    upload: useMutation({
+      mutationFn: (file) => {
+        const body = new FormData();
+        body.append('file', file);
+        return post('/files')(body);
+      },
+      onSuccess,
+    }),
+    // A voice note becomes text, added to the notes.
+    transcribe: useMutation({ mutationFn: post('/files/transcribe'), onSuccess }),
+    summarize: useMutation({ mutationFn: () => post('/summary')(), onSuccess }),
+    // Accept (it becomes a real task) or reject a task the AI proposed.
+    decide: useMutation({ mutationFn: post('/summary/tasks'), onSuccess }),
+  };
+}
