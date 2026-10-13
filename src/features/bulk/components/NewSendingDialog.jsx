@@ -39,6 +39,7 @@ export default function NewSendingDialog({ bundle, onClose, onMade }) {
     body: '',
     minDaysBeforeReminder: 3,
     attachments: [],
+    addStopLine: true,
     templateName: '',
     templateLanguage: 'en',
     templateParams: '',
@@ -71,6 +72,7 @@ export default function NewSendingDialog({ bundle, onClose, onMade }) {
           ...(form.subject.trim() ? { subject: form.subject.trim() } : {}),
           ...(form.writeMode === 'fixed' ? { body: form.body.trim() } : {}),
           minDaysBeforeReminder: Number(form.minDaysBeforeReminder),
+          addStopLine: form.addStopLine,
           ...(form.attachments.length
             ? {
                 attachments: form.attachments.map(({ url, filename, mimeType }) => ({
@@ -262,6 +264,23 @@ export default function NewSendingDialog({ bundle, onClose, onMade }) {
                 />
               )}
             </Field>
+            <div className="text-sm">
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 accent-brand"
+                  checked={form.addStopLine}
+                  onChange={(event) => setForm({ ...form, addStopLine: event.target.checked })}
+                />
+                <span>
+                  End every mail with a line and a link to stop such mails
+                  <span className="block text-xs text-text-muted">
+                    Who uses the link gets on the list “Do not write to” and is skipped by every
+                    later sending. Leave this on for mails to people who did not ask for them.
+                  </span>
+                </span>
+              </label>
+            </div>
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <button

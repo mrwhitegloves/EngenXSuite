@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Eye, Layers, Pause, Play, Square } from 'lucide-react';
+import { ArrowLeft, CalendarClock, Eye, Layers, Pause, Play, Square } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog.jsx';
 import Dialog from '../../../components/shared/Dialog.jsx';
@@ -16,10 +16,16 @@ import { useRecipients, useSending, useSendingActions } from '../api.js';
 
 export const SENDING_STATUS = {
   draft: 'Draft (not started)',
+  scheduled: 'Planned for later',
   running: 'Sending…',
   paused: 'Paused',
   finished: 'Finished',
   cancelled: 'Cancelled',
+};
+// The value a "date and time" box shows for a moment, in the time of this device.
+const toBoxValue = (date) => {
+  const two = (number) => String(number).padStart(2, '0');
+  return `${date.getFullYear()}-${two(date.getMonth() + 1)}-${two(date.getDate())}T${two(date.getHours())}:${two(date.getMinutes())}`;
 };
 const ROW_STATUS = {
   pending: ['Waiting', 'text-text-muted'],
@@ -61,7 +67,8 @@ export default function SendingDetail({ sendingId, onBack, onOpenBundle }) {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [openRow, setOpenRow] = useState(null);
-  const [dialog, setDialog] = useState(null); // 'cancel' | 'keep' | 'preview'
+  const [dialog, setDialog] = useState(null); // 'cancel' | 'keep' | 'preview' | 'later'
+  const [startAt, setStartAt] = useState('');
   const [bundleName, setBundleName] = useState('');
   const data = sending.data;
   const recipients = useRecipients(sendingId, { status, page }, data?.status === 'running');
@@ -109,6 +116,11 @@ export default function SendingDetail({ sendingId, onBack, onOpenBundle }) {
                   {SENDING_STATUS[data.status]}
                 </span>
                 {data.pauseReason && <span className="ml-2 text-danger">{data.pauseReason}</span>}
+                {data.scheduledAt && (
+                  <span className="ml-2">
+                    Starts by itself on {formatMoment(data.scheduledAt)}.
+                  </span>
+                )}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -125,15 +137,49 @@ export default function SendingDetail({ sendingId, onBack, onOpenBundle }) {
                   {actions.preview.isPending ? 'Looking…' : 'Look before sending'}
                 </button>
               )}
-              {['draft', 'paused'].includes(data.status) && canRun && (
+              {['draft', 'scheduled'].includes(data.status) && canRun && (
+                <button
+                  type="button"
+                  className={secondaryButtonClass}
+                  onClick={() => {
+                    actions.start.reset();
+                    // Offered: the planned moment, or tomorrow at nine.
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    tomorrow.setHours(9, 0, 0, 0);
+                    setStartAt(
+                      toBoxValue(data.scheduledAt ? new Date(data.scheduledAt) : tomorrow),
+                    );
+                    setDialog('later');
+                  }}
+                >
+                  <CalendarClock size={16} aria-hidden="true" />
+                  {data.status === 'draft' ? 'Start later' : 'Change the time'}
+                </button>
+              )}
+              {data.status === 'scheduled' && can('campaigns', 'edit') && (
+                <button
+                  type="button"
+                  className={secondaryButtonClass}
+                  disabled={actions.stop.isPending}
+                  onClick={() => actions.stop.mutate({ id: data.id, action: 'unschedule' })}
+                >
+                  Take the plan off
+                </button>
+              )}
+              {['draft', 'scheduled', 'paused'].includes(data.status) && canRun && (
                 <button
                   type="button"
                   className={primaryButtonClass}
                   disabled={actions.start.isPending}
-                  onClick={() => actions.start.mutate(data.id)}
+                  onClick={() => actions.start.mutate({ id: data.id })}
                 >
                   <Play size={16} aria-hidden="true" />
-                  {data.status === 'draft' ? 'Start sending' : 'Go on'}
+                  {data.status === 'draft'
+                    ? 'Start sending'
+                    : data.status === 'scheduled'
+                      ? 'Start now'
+                      : 'Go on'}
                 </button>
               )}
               {data.status === 'running' && can('campaigns', 'edit') && (
@@ -147,19 +193,20 @@ export default function SendingDetail({ sendingId, onBack, onOpenBundle }) {
                   Pause
                 </button>
               )}
-              {['draft', 'running', 'paused'].includes(data.status) && can('campaigns', 'edit') && (
-                <button
-                  type="button"
-                  className={secondaryButtonClass}
-                  onClick={() => {
-                    actions.stop.reset();
-                    setDialog('cancel');
-                  }}
-                >
-                  <Square size={16} aria-hidden="true" />
-                  Cancel it
-                </button>
-              )}
+              {['draft', 'scheduled', 'running', 'paused'].includes(data.status) &&
+                can('campaigns', 'edit') && (
+                  <button
+                    type="button"
+                    className={secondaryButtonClass}
+                    onClick={() => {
+                      actions.stop.reset();
+                      setDialog('cancel');
+                    }}
+                  >
+                    <Square size={16} aria-hidden="true" />
+                    Cancel it
+                  </button>
+                )}
             </div>
           </div>
           {!canRun && ['draft', 'paused'].includes(data.status) && (
@@ -319,6 +366,55 @@ export default function SendingDetail({ sendingId, onBack, onOpenBundle }) {
             onPageChange={setPage}
           />
         </>
+      )}
+
+      {dialog === 'later' && (
+        <Dialog open title="Start this sending later" onClose={() => setDialog(null)}>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              actions.start.mutate(
+                { id: sendingId, at: new Date(startAt).toISOString() },
+                { onSuccess: () => setDialog(null) },
+              );
+            }}
+          >
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium">Day and time</span>
+              <input
+                type="datetime-local"
+                required
+                value={startAt}
+                min={toBoxValue(new Date())}
+                onChange={(event) => setStartAt(event.target.value)}
+                className={inputClass}
+              />
+            </label>
+            <p className="text-sm text-text-muted">
+              It starts by itself at that moment, within a minute, also when nobody is signed in.
+              Who is skipped is decided then, not now. If your Gmail is not connected at that
+              moment, it waits and you are told.
+            </p>
+            <FormError message={actions.start.error?.message} />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className={secondaryButtonClass}
+                onClick={() => setDialog(null)}
+              >
+                Not now
+              </button>
+              <button
+                type="submit"
+                className={primaryButtonClass}
+                disabled={!startAt || actions.start.isPending}
+              >
+                Plan it
+              </button>
+            </div>
+          </form>
+        </Dialog>
       )}
 
       <ConfirmDialog

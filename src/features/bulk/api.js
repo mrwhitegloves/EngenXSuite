@@ -110,7 +110,11 @@ export function useSendingActions() {
     create: useMutation({ mutationFn: (body) => post('', body), onSuccess: reload }),
     // What it would do, and one mail as the AI would write it. Sends nothing.
     preview: useMutation({ mutationFn: (id) => post(`/${id}/preview`) }),
-    start: useMutation({ mutationFn: (id) => post(`/${id}/start`), onSuccess: reload }),
+    // Start now; with "at" (a moment), plan it: it then starts by itself.
+    start: useMutation({
+      mutationFn: ({ id, at }) => post(`/${id}/start`, at ? { at } : {}),
+      onSuccess: reload,
+    }),
     stop: useMutation({
       mutationFn: ({ id, action }) => post(`/${id}/stop`, { action }),
       onSuccess: reload,
@@ -118,6 +122,30 @@ export function useSendingActions() {
     // The people who did not get it, as a new bundle.
     keepUnsent: useMutation({
       mutationFn: ({ id, name }) => post(`/${id}/bundle`, { name }),
+      onSuccess: reload,
+    }),
+  };
+}
+
+// ── "Do not write to": who gets no bulk messages
+export function useOptOuts(params) {
+  return useQuery({
+    queryKey: [...SENDINGS, 'opt-outs', params],
+    queryFn: ({ signal }) => apiRequest(`/campaigns/opt-outs?${query(params)}`, { signal }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useOptOutActions() {
+  const queryClient = useQueryClient();
+  const reload = () => queryClient.invalidateQueries({ queryKey: [...SENDINGS, 'opt-outs'] });
+  return {
+    add: useMutation({
+      mutationFn: (body) => apiRequest('/campaigns/opt-outs', { method: 'POST', body }),
+      onSuccess: reload,
+    }),
+    remove: useMutation({
+      mutationFn: (id) => apiRequest(`/campaigns/opt-outs/${id}`, { method: 'DELETE' }),
       onSuccess: reload,
     }),
   };

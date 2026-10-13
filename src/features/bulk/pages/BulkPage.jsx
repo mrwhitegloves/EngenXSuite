@@ -15,11 +15,13 @@ import { useCan } from '../../../hooks/useCan.js';
 import { useBundleActions, useBundles, useSendings } from '../api.js';
 import BundleDetail from '../components/BundleDetail.jsx';
 import NewSendingDialog from '../components/NewSendingDialog.jsx';
+import OptOutList from '../components/OptOutList.jsx';
 import SendingDetail, { SENDING_STATUS } from '../components/SendingDetail.jsx';
 
 const TABS = [
   { id: 'sendings', label: 'Sendings' },
   { id: 'bundles', label: 'Bundles' },
+  { id: 'stopped', label: 'Do not write to' },
 ];
 const formatDay = (value) =>
   new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(
@@ -241,6 +243,8 @@ export default function BulkPage() {
         />
       ) : tab.id === 'bundles' ? (
         <BundleList onOpen={(id) => go({ bundle: id })} />
+      ) : tab.id === 'stopped' ? (
+        <OptOutList />
       ) : (
         <SendingList onOpen={(id) => go({ send: id })} />
       )}
