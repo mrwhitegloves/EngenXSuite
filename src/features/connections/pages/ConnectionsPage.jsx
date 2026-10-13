@@ -47,6 +47,41 @@ const formatMoment = (value) =>
   }).format(new Date(value));
 
 // "Mail and calendar": a person connects their own company Gmail and Google Calendar.
+// The lines under my mails. The mail screen offers "Add my signature".
+function SignatureBox({ saved }) {
+  const queryClient = useQueryClient();
+  const [text, setText] = useState(saved ?? '');
+  const save = useMutation({
+    mutationFn: () =>
+      apiRequest('/integrations/google/signature', { method: 'PATCH', body: { signature: text } }),
+    onSuccess: (payload) => queryClient.setQueryData(KEY, payload),
+  });
+  return (
+    <div className="space-y-2 border-t border-border pt-3">
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium">My mail signature</span>
+        <textarea
+          rows={4}
+          maxLength={1000}
+          value={text}
+          placeholder={'Your name\nYour role, your phone number'}
+          onChange={(event) => setText(event.target.value)}
+          className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-brand"
+        />
+      </label>
+      <button
+        type="button"
+        className={secondaryButtonClass}
+        disabled={save.isPending || text === (saved ?? '')}
+        onClick={() => save.mutate()}
+      >
+        {save.isPending ? 'Saving…' : 'Save the signature'}
+      </button>
+      <FormError message={save.error?.message} />
+    </div>
+  );
+}
+
 // Opened from My profile. Only company addresses can connect (the server decides).
 export default function ConnectionsPage() {
   const queryClient = useQueryClient();
@@ -130,6 +165,7 @@ export default function ConnectionsPage() {
               </dl>
             )}
             {connection?.lastError && <p className="text-sm text-danger">{connection.lastError}</p>}
+            {connection && <SignatureBox key={connection.signature} saved={connection.signature} />}
 
             {data.isConfigured && data.mayConnect && (
               <>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Inbox, PenSquare, RefreshCw } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Inbox, PenSquare, RefreshCw, UserPlus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import Pagination from '../../../components/shared/Pagination.jsx';
 import EmptyState from '../../../components/shared/states/EmptyState.jsx';
@@ -14,6 +14,7 @@ import { useCan } from '../../../hooks/useCan.js';
 import { useListParams } from '../../../hooks/useListParams.js';
 import { useMailActions, useMailbox, useThreads } from '../api.js';
 import ComposeDialog from '../components/ComposeDialog.jsx';
+import { BringInDialog } from '../components/MailLinks.jsx';
 import ThreadList from '../components/ThreadList.jsx';
 import ThreadView from '../components/ThreadView.jsx';
 import { formatMoment } from '../mailFormat.js';
@@ -32,6 +33,8 @@ export default function InboxPage() {
   const list = useListParams(['view', 'search', 'thread']);
   // null: closed. Otherwise the company and the address a new mail starts with.
   const [composing, setComposing] = useState(null);
+  const [isBringingIn, setIsBringingIn] = useState(false);
+  const navigate = useNavigate();
   const view = VIEWS.find((item) => item.id === list.values.view) ?? VIEWS[0];
   const { search, thread: openId } = list.values;
   const mailbox = useMailbox();
@@ -58,6 +61,16 @@ export default function InboxPage() {
               />
               Read my mailbox now
             </button>
+            {can('email', 'create') && can('accounts', 'create') && (
+              <button
+                type="button"
+                className={secondaryButtonClass}
+                onClick={() => setIsBringingIn(true)}
+              >
+                <UserPlus size={16} aria-hidden="true" />
+                Add a new sender
+              </button>
+            )}
             {can('email', 'create') && (
               <button type="button" className={primaryButtonClass} onClick={() => setComposing({})}>
                 <PenSquare size={16} aria-hidden="true" />
@@ -166,6 +179,12 @@ export default function InboxPage() {
         )}
       </div>
 
+      {isBringingIn && (
+        <BringInDialog
+          onClose={() => setIsBringingIn(false)}
+          onDone={(accountId) => navigate(`/accounts/${accountId}?tab=mail`)}
+        />
+      )}
       {composing && (
         <ComposeDialog
           account={composing.account}

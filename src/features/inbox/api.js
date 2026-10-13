@@ -89,6 +89,22 @@ export function useMailActions(threadId) {
     fileSummary: useMutation({
       mutationFn: (body) => apiRequest('/emails/files/summary', { method: 'POST', body }),
     }),
+    // Put the conversation on another lead or company, or on nothing.
+    relink: useMutation({
+      mutationFn: (body) =>
+        apiRequest(`/emails/threads/${threadId}/link`, { method: 'PATCH', body }),
+      onSuccess: reload,
+    }),
+    // Add a sender who is not in the CRM, and bring in my mail with them.
+    bringIn: useMutation({
+      mutationFn: (body) => apiRequest('/emails/bring-in', { method: 'POST', body }),
+      onSuccess: () => {
+        reload();
+        for (const key of ['accounts', 'contacts', 'opportunities']) {
+          queryClient.invalidateQueries({ queryKey: [key] });
+        }
+      },
+    }),
     classify: useMutation({
       mutationFn: () => apiRequest(`/emails/threads/${threadId}/classify`, { method: 'POST' }),
       onSuccess: (payload) => {
@@ -101,4 +117,13 @@ export function useMailActions(threadId) {
         apiRequest(`/emails/threads/${threadId}/draft`, { method: 'POST', body: body ?? {} }),
     }),
   };
+}
+
+/** The lines I put under my mails (kept with my Gmail connection). */
+export function useSignature() {
+  return useQuery({
+    queryKey: ['google-connection'],
+    queryFn: ({ signal }) => apiRequest('/integrations/google', { signal }),
+    select: (payload) => payload.data.connection?.signature ?? '',
+  });
 }

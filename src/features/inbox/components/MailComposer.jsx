@@ -6,7 +6,7 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from '../../../components/shared/form.jsx';
-import { useAccountFiles, useMailActions } from '../api.js';
+import { useAccountFiles, useMailActions, useSignature } from '../api.js';
 import { addressesOf, formatMoment, formatSize, smallButton } from '../mailFormat.js';
 import AiMailWriter from './AiMailWriter.jsx';
 
@@ -75,6 +75,7 @@ export default function MailComposer({
   const [text, setText] = useState('');
   const [files, setFiles] = useState([]);
   const [isChoosing, setIsChoosing] = useState(false);
+  const signature = useSignature().data;
   const [problem, setProblem] = useState('');
 
   const accountId = thread?.account?.id ?? account?.id;
@@ -225,6 +226,15 @@ export default function MailComposer({
           <Paperclip size={16} aria-hidden="true" />
           {upload.isPending ? 'Uploading…' : 'Attach a file'}
         </button>
+        {signature && !text.includes(signature) && (
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            onClick={() => setText(`${text.trimEnd()}\n\n${signature}`.trimStart())}
+          >
+            Add my signature
+          </button>
+        )}
         {accountId && (
           <button
             type="button"

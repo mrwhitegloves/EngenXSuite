@@ -13,6 +13,7 @@ import {
   splitQuoted,
 } from '../mailFormat.js';
 import MailComposer from './MailComposer.jsx';
+import { RelinkPanel } from './MailLinks.jsx';
 import ThreadAiTools, { FileSummary } from './ThreadAiTools.jsx';
 
 // A file of a message: opens (or downloads) through a link that works for an hour.
@@ -134,6 +135,7 @@ export default function ThreadView({ threadId, onBack, onNewConversation }) {
   const data = thread.data;
   // Which mails are open, when the person chose; otherwise only the newest one.
   const [chosen, setChosen] = useState(null);
+  const [isLinking, setIsLinking] = useState(false);
   const openIds = chosen ?? new Set(data ? [data.messages.at(-1)?.id] : []);
   const toggle = (id) => {
     const next = new Set(openIds);
@@ -182,6 +184,16 @@ export default function ThreadView({ threadId, onBack, onNewConversation }) {
                     {openIds.size === data.messages.length ? 'Close all' : 'Open all'}
                   </button>
                 )}
+                {data.permissions.canReply && (
+                  <button
+                    type="button"
+                    className={smallButton}
+                    aria-expanded={isLinking}
+                    onClick={() => setIsLinking((value) => !value)}
+                  >
+                    Change the company or lead
+                  </button>
+                )}
                 {onNewConversation && can('email', 'create') && (
                   <button
                     type="button"
@@ -194,6 +206,7 @@ export default function ThreadView({ threadId, onBack, onNewConversation }) {
                 )}
               </div>
             </div>
+            {isLinking && <RelinkPanel thread={data} onClose={() => setIsLinking(false)} />}
             <p className="text-sm text-text-muted">
               {data.account ? (
                 <Link
