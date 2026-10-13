@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   ListChecks,
   MessagesSquare,
+  Send,
   Settings,
   Sparkles,
   Users,
@@ -38,6 +39,7 @@ export const NAV_ITEMS = [
   },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays, features: ['meetings'], phase: '06' },
   { to: '/documents', label: 'Documents', icon: FolderOpen, features: ['documents'], phase: '08' },
+  { to: '/bulk', label: 'Bulk send', icon: Send, features: ['campaigns'], phase: '11' },
   { to: '/reports', label: 'Reports', icon: BarChart3, features: ['reports'], phase: '09' },
   {
     to: '/ai-insights',

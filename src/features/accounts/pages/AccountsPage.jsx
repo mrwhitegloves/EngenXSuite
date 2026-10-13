@@ -22,6 +22,7 @@ import { useCan } from '../../../hooks/useCan.js';
 import { useListParams } from '../../../hooks/useListParams.js';
 import { useTagsFor } from '../../../hooks/useTags.js';
 import { useAccountOptions, useAccounts, useDeleteAccount, useExportAccounts } from '../api.js';
+import AccountsBulkBar from '../../bulk/components/AccountsBulkBar.jsx';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
 
 const FILTER_KEYS = [
@@ -54,6 +55,10 @@ export default function AccountsPage() {
   // null = closed, 'new' = the create form, or the id of the account being edited.
   const [formTarget, setFormTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  // The companies ticked for a bulk action (kept across pages and filters until cleared).
+  const [selected, setSelected] = useState([]);
+  const toggleSelected = (id) =>
+    setSelected((ids) => (ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id]));
 
   const { search, statusId, industry, region, ownerId, tagId, range, from, to } = list.values;
   const dates = { range, from, to };
@@ -102,6 +107,21 @@ export default function AccountsPage() {
   ].filter(Boolean);
 
   const columns = [
+    {
+      key: 'select',
+      header: 'Select',
+      hideHeader: true,
+      className: 'w-8',
+      render: (row) => (
+        <input
+          type="checkbox"
+          className="size-4 accent-brand"
+          aria-label={`Select ${row.name}`}
+          checked={selected.includes(row.id)}
+          onChange={() => toggleSelected(row.id)}
+        />
+      ),
+    },
     {
       key: 'accountCode',
       header: 'Code',
@@ -299,6 +319,16 @@ export default function AccountsPage() {
         />
       )}
 
+      {rows.length > 0 && (
+        <AccountsBulkBar
+          pageIds={rows.map((row) => row.id)}
+          filters={filters}
+          total={accounts.data?.meta?.total ?? rows.length}
+          users={users}
+          selected={selected}
+          onChange={setSelected}
+        />
+      )}
       {rows.length > 0 && (
         <DataTable
           caption="Accounts"
