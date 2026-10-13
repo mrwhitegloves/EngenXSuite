@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ListChecks, Plus } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
 import FilterBar from '../../../components/shared/FilterBar.jsx';
 import Pagination from '../../../components/shared/Pagination.jsx';
@@ -12,7 +13,6 @@ import {
 import { useCan } from '../../../hooks/useCan.js';
 import { useListParams } from '../../../hooks/useListParams.js';
 import { useTaskOptions, useTaskSummary, useTasks } from '../api.js';
-import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import { TaskDialog, TaskList } from '../components/Tasks.jsx';
 
 const VIEWS = [
@@ -21,8 +21,6 @@ const VIEWS = [
   { id: 'overdue', label: 'Overdue', empty: 'Nothing is overdue. Well done.' },
   { id: 'completed', label: 'Completed', empty: 'No finished tasks yet.' },
 ];
-// Not a view of tasks: the list of phone calls. Shown to people who may see calls.
-const CALLS_VIEW = { id: 'calls', label: 'Calls' };
 
 // Activities: the tasks, follow-ups and reminders, in four views. Everyone sees their own
 // tasks; a manager also their team's, the CEO everyone's (the server decides that).
@@ -31,18 +29,16 @@ export default function ActivitiesPage() {
   const can = useCan();
   const list = useListParams(['view', 'search', 'assigneeId']);
   const [isAdding, setIsAdding] = useState(false);
-  const [onlyUnknown, setOnlyUnknown] = useState(false);
-  const isCalls = list.values.view === CALLS_VIEW.id && can('calls', 'view');
-  const view = isCalls
-    ? CALLS_VIEW
-    : (VIEWS.find((item) => item.id === list.values.view) ?? VIEWS[0]);
-  const tabs = can('calls', 'view') ? [...VIEWS, CALLS_VIEW] : VIEWS;
+  // An old link to the calls that used to be listed here goes to the call log.
+  const isCalls = list.values.view === 'calls';
+  const view = VIEWS.find((item) => item.id === list.values.view) ?? VIEWS[0];
+  const tabs = VIEWS;
   const { search, assigneeId } = list.values;
 
   const options = useTaskOptions();
   const summary = useTaskSummary();
   const tasks = useTasks({
-    view: isCalls ? VIEWS[0].id : view.id,
+    view: view.id,
     search,
     assigneeId,
     page: list.page,
@@ -63,6 +59,7 @@ export default function ActivitiesPage() {
     },
   ].filter(Boolean);
 
+  if (isCalls) return <Navigate to="/calls" replace />;
   return (
     <>
       <PageHeader title="Activities" description="Tasks, follow-ups and reminders.">
@@ -110,80 +107,52 @@ export default function ActivitiesPage() {
         })}
       </div>
 
-      {isCalls && (
-        <div className="space-y-3">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="size-4 accent-brand"
-              checked={onlyUnknown}
-              onChange={(event) => setOnlyUnknown(event.target.checked)}
-            />
-            Only calls that belong to nobody yet (unknown numbers)
-          </label>
-          <RecordCalls
-            key={String(onlyUnknown)}
-            target={onlyUnknown ? { linked: 'no' } : {}}
-            title=""
-            pageSize={20}
-            empty={onlyUnknown ? 'Every call belongs to a person.' : 'No calls yet.'}
-          />
-        </div>
-      )}
-      {!isCalls && (
-        <>
-          <FilterBar
-            search={{
-              value: search,
-              onChange: (text) => list.setFilters({ search: text }),
-              placeholder: 'Search tasks',
-              label: 'Search tasks',
-            }}
-            chips={chips}
-            onClearAll={() => list.setFilters({ search: '', assigneeId: '' })}
+      <FilterBar
+        search={{
+          value: search,
+          onChange: (text) => list.setFilters({ search: text }),
+          placeholder: 'Search tasks',
+          label: 'Search tasks',
+        }}
+        chips={chips}
+        onClearAll={() => list.setFilters({ search: '', assigneeId: '' })}
+      >
+        {options.data?.canAssign && users.length > 1 && (
+          <select
+            aria-label="Filter by person"
+            value={assigneeId}
+            onChange={(event) => list.setFilters({ assigneeId: event.target.value })}
+            className={compactInputClass}
           >
-            {options.data?.canAssign && users.length > 1 && (
-              <select
-                aria-label="Filter by person"
-                value={assigneeId}
-                onChange={(event) => list.setFilters({ assigneeId: event.target.value })}
-                className={compactInputClass}
-              >
-                <option value="">Everyone I may see</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </FilterBar>
+            <option value="">Everyone I may see</option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </FilterBar>
 
-          <FormError message={tasks.error?.message} />
-          {tasks.isPending && (
-            <p role="status" className="p-4 text-text-muted">
-              Loading tasks…
-            </p>
-          )}
-          {tasks.isSuccess && rows.length === 0 && (
-            <EmptyState
-              icon={ListChecks}
-              title={chips.length > 0 ? 'No tasks match' : view.empty}
-              description={
-                chips.length > 0
-                  ? 'Change or clear the search and the filter.'
-                  : 'Add a task here, or from a lead or a company to keep it with that record.'
-              }
-            />
-          )}
-          {rows.length > 0 && <TaskList tasks={rows} />}
-          <Pagination
-            meta={tasks.data?.meta}
-            noun={['task', 'tasks']}
-            onPageChange={list.setPage}
-          />
-        </>
+      <FormError message={tasks.error?.message} />
+      {tasks.isPending && (
+        <p role="status" className="p-4 text-text-muted">
+          Loading tasks…
+        </p>
       )}
+      {tasks.isSuccess && rows.length === 0 && (
+        <EmptyState
+          icon={ListChecks}
+          title={chips.length > 0 ? 'No tasks match' : view.empty}
+          description={
+            chips.length > 0
+              ? 'Change or clear the search and the filter.'
+              : 'Add a task here, or from a lead or a company to keep it with that record.'
+          }
+        />
+      )}
+      {rows.length > 0 && <TaskList tasks={rows} />}
+      <Pagination meta={tasks.data?.meta} noun={['task', 'tasks']} onPageChange={list.setPage} />
 
       {isAdding && <TaskDialog onClose={() => setIsAdding(false)} />}
     </>
