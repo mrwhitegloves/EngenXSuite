@@ -12,6 +12,7 @@ import {
   smallButton,
   splitQuoted,
 } from '../mailFormat.js';
+import HtmlBody from './HtmlBody.jsx';
 import MailComposer from './MailComposer.jsx';
 import { RelinkPanel } from './MailLinks.jsx';
 import ThreadAiTools, { FileSummary } from './ThreadAiTools.jsx';
@@ -47,6 +48,8 @@ function FileChip({ file }) {
 // One mail of the conversation. Closed, it is one line; open, its text and files.
 function Message({ message, isOpen, onToggle }) {
   const [showsQuoted, setShowsQuoted] = useState(false);
+  // A mail with a laid-out form is shown that way first; plain text is one press away.
+  const [isPlain, setIsPlain] = useState(false);
   const { main, quoted } = splitQuoted(message.text || '');
   const isOurs = message.direction === 'outbound';
   return (
@@ -83,21 +86,37 @@ function Message({ message, isOpen, onToggle }) {
           {message.cc.length > 0 && (
             <p className="text-xs text-text-muted">Cc: {message.cc.join(', ')}</p>
           )}
-          <p className="break-words whitespace-pre-wrap">{main || '(no text)'}</p>
-          {quoted && (
+          {message.html && (
+            <button
+              type="button"
+              className={smallButton}
+              aria-pressed={!isPlain}
+              onClick={() => setIsPlain((value) => !value)}
+            >
+              {isPlain ? 'Show it as it was sent' : 'Show plain text'}
+            </button>
+          )}
+          {message.html && !isPlain ? (
+            <HtmlBody html={message.html} />
+          ) : (
             <>
-              <button
-                type="button"
-                className={smallButton}
-                aria-expanded={showsQuoted}
-                onClick={() => setShowsQuoted((value) => !value)}
-              >
-                {showsQuoted ? 'Hide the earlier mails' : 'Show the earlier mails below it'}
-              </button>
-              {showsQuoted && (
-                <p className="border-l-2 border-border pl-2 break-words whitespace-pre-wrap text-text-muted">
-                  {quoted}
-                </p>
+              <p className="break-words whitespace-pre-wrap">{main || '(no text)'}</p>
+              {quoted && (
+                <>
+                  <button
+                    type="button"
+                    className={smallButton}
+                    aria-expanded={showsQuoted}
+                    onClick={() => setShowsQuoted((value) => !value)}
+                  >
+                    {showsQuoted ? 'Hide the earlier mails' : 'Show the earlier mails below it'}
+                  </button>
+                  {showsQuoted && (
+                    <p className="border-l-2 border-border pl-2 break-words whitespace-pre-wrap text-text-muted">
+                      {quoted}
+                    </p>
+                  )}
+                </>
               )}
             </>
           )}

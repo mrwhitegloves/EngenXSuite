@@ -165,6 +165,13 @@ export default function ConnectionsPage() {
               </dl>
             )}
             {connection?.lastError && <p className="text-sm text-danger">{connection.lastError}</p>}
+            {connection?.status === 'connected' && connection.hasMail && (
+              <p className="text-sm text-text-muted">
+                {connection.mailPushUntil && new Date(connection.mailPushUntil) > new Date()
+                  ? 'New mail arrives at once (Google tells the CRM when your mailbox changes).'
+                  : 'New mail is read every 3 minutes.'}
+              </p>
+            )}
             {connection && <SignatureBox key={connection.signature} saved={connection.signature} />}
 
             {data.isConfigured && data.mayConnect && (

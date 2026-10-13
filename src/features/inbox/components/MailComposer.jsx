@@ -6,6 +6,8 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from '../../../components/shared/form.jsx';
+import { useCan } from '../../../hooks/useCan.js';
+import { useAccountDocuments } from '../../documents/api.js';
 import { useAccountFiles, useMailActions, useSignature } from '../api.js';
 import { addressesOf, formatMoment, formatSize, smallButton } from '../mailFormat.js';
 import AiMailWriter from './AiMailWriter.jsx';
@@ -15,7 +17,23 @@ const MAX_FILES = 10;
 // The files of the company's earlier mail, to send one of them again.
 function CompanyFiles({ accountId, chosen, onAdd }) {
   const files = useAccountFiles(accountId);
-  const rows = (files.data ?? []).filter((file) => !chosen.some((item) => item.url === file.url));
+  const can = useCan();
+  const documents = useAccountDocuments(accountId, can('documents', 'view'));
+  const rows = [
+    ...(documents.data ?? []).map((document) => ({
+      url: document.url,
+      filename: document.filename,
+      mimeType: document.mimeType,
+      size: document.size,
+      title: document.name,
+      note: `Document · added ${formatMoment(document.createdAt)}`,
+    })),
+    ...(files.data ?? []).map((file) => ({
+      ...file,
+      title: file.filename,
+      note: `${file.direction === 'inbound' ? 'Received' : 'Sent'} ${formatMoment(file.sentAt)} · ${file.subject}`,
+    })),
+  ].filter((file) => !chosen.some((item) => item.url === file.url));
   return (
     <div className="rounded-md border border-border p-2 text-sm">
       {files.isPending && (
@@ -26,18 +44,17 @@ function CompanyFiles({ accountId, chosen, onAdd }) {
       <FormError message={files.error?.message} />
       {files.isSuccess && rows.length === 0 && (
         <p className="text-text-muted">
-          No file from this company’s mail to add. A file shows here once it came or went with a
-          mail.
+          Nothing to add. A file shows here when it is among the company’s documents (the
+          “Documents” tab of the company), or once it came or went with a mail.
         </p>
       )}
       <ul className="max-h-48 divide-y divide-border overflow-y-auto">
         {rows.map((file) => (
           <li key={file.url} className="flex items-center justify-between gap-2 py-1">
             <span className="min-w-0">
-              <span className="block truncate">{file.filename}</span>
+              <span className="block truncate">{file.title}</span>
               <span className="block truncate text-xs text-text-muted">
-                {file.direction === 'inbound' ? 'Received' : 'Sent'} {formatMoment(file.sentAt)} ·{' '}
-                {formatSize(file.size)} · {file.subject}
+                {formatSize(file.size)} · {file.note}
               </span>
             </span>
             <button type="button" className={smallButton} onClick={() => onAdd(file)}>
