@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Video } from 'lucide-react';
+import { Pencil, Trash2, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog.jsx';
 import Dialog from '../../../components/shared/Dialog.jsx';
@@ -37,7 +37,8 @@ function Row({ label, children }) {
  */
 export default function MeetingDetail({ meetingId, onClose }) {
   const meeting = useMeeting(meetingId);
-  const { close, update } = useMeetingActions();
+  const { close, update, remove } = useMeetingActions();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -203,6 +204,19 @@ export default function MeetingDetail({ meetingId, onClose }) {
 
             {canEdit && (
               <div className="flex flex-wrap justify-end gap-2">
+                {data.permissions.canDelete && (
+                  <button
+                    type="button"
+                    className={`${secondaryButtonClass} mr-auto`}
+                    onClick={() => {
+                      remove.reset();
+                      setIsDeleting(true);
+                    }}
+                  >
+                    <Trash2 size={16} aria-hidden="true" />
+                    Delete
+                  </button>
+                )}
                 {isPlanned ? (
                   <>
                     <button
@@ -258,6 +272,24 @@ export default function MeetingDetail({ meetingId, onClose }) {
         )}
       </Dialog>
 
+      <ConfirmDialog
+        open={isDeleting}
+        title="Delete this meeting?"
+        confirmLabel="Delete the meeting"
+        isBusy={remove.isPending}
+        error={remove.error?.message}
+        onClose={() => setIsDeleting(false)}
+        onConfirm={() => remove.mutate(data.id, { onSuccess: onClose })}
+      >
+        <p>
+          <strong>{data?.title}</strong> will be deleted for good, with its notes, files and
+          summary.
+          {isPlanned &&
+            data?.isInGoogleCalendar &&
+            ' It leaves Google Calendar, and Google tells the guests that it is cancelled.'}{' '}
+          To keep the record, cancel it instead.
+        </p>
+      </ConfirmDialog>
       <ConfirmDialog
         open={isCancelling}
         title="Cancel this meeting?"

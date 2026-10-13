@@ -74,6 +74,11 @@ export function useMeetingActions() {
         apiRequest(`/meetings/${id}/close`, { method: 'POST', body }),
       onSuccess,
     }),
+    // Delete a meeting for good (it also leaves Google Calendar).
+    remove: useMutation({
+      mutationFn: (id) => apiRequest(`/meetings/${id}`, { method: 'DELETE' }),
+      onSuccess,
+    }),
     // Read my Google Calendar now.
     sync: useMutation({
       mutationFn: () => apiRequest('/meetings/sync', { method: 'POST' }),

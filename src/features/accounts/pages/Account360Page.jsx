@@ -147,6 +147,7 @@ const TABS = [
   { id: 'plants', label: 'Plants', feature: 'plants' },
   { id: 'leads', label: 'Leads', feature: 'opportunities' },
   { id: 'mail', label: 'Mail', feature: 'email' },
+  { id: 'meetings', label: 'Meetings', feature: 'meetings' },
   { id: 'timeline', label: 'Timeline' },
 ];
 
@@ -270,6 +271,11 @@ export default function Account360Page() {
       {tab.id === 'plants' && <PlantsTab accountId={data.id} />}
       {tab.id === 'leads' && <LeadsTab account={data} />}
       {tab.id === 'mail' && <AccountMailTab account={{ id: data.id, name: data.name }} />}
+      {tab.id === 'meetings' && (
+        <div className="max-w-3xl">
+          <RecordMeetings target={{ accountId: data.id }} />
+        </div>
+      )}
       {tab.id === 'timeline' && (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-2">
@@ -282,7 +288,6 @@ export default function Account360Page() {
           </div>
           <div className="space-y-6">
             {can('tasks', 'view') && <RecordTasks target={{ accountId: data.id }} />}
-            {can('meetings', 'view') && <RecordMeetings target={{ accountId: data.id }} />}
             {can('calls', 'view') && <RecordCalls target={{ accountId: data.id }} />}
           </div>
         </div>
