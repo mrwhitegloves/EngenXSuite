@@ -68,7 +68,7 @@ function CallRow({ call }) {
           {call.user && <> · {call.user.name}</>}
           {call.answeredBy && <> · picked up by {call.answeredBy.name}</>}
           {call.contact && <> · {call.number}</>}
-          {call.cost > 0 && <> · Plivo charge {call.cost.toFixed(2)}</>}
+          {call.costInr > 0 && <> · Plivo charge ₹{call.costInr.toFixed(2)}</>}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {call.permissions.canEdit ? (
