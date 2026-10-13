@@ -9,6 +9,7 @@ const SETTINGS_KEY = [...CALLS_KEY, 'settings'];
 /**
  * The calls of one lead, company or contact, newest first. With an empty target: every call I
  * may see (mine, my team's or everyone's), and `linked: 'no'` for calls that belong to nobody.
+ * The call log passes its filters here too (search, direction, status, sort, dates…).
  * @param {{ opportunityId?: string, accountId?: string, contactId?: string, linked?: string }} target
  * @param {{ page?: number, pageSize?: number }} [options]
  */
@@ -19,6 +20,25 @@ export function useCalls(target, options = {}) {
     queryFn: ({ signal }) =>
       apiRequest(`/calls?${new URLSearchParams(params).toString()}`, { signal }),
     placeholderData: keepPreviousData,
+  });
+}
+
+/** One call in full: its times, both of its sides, and what happened step by step. */
+export function useCallDetail(id) {
+  return useQuery({
+    queryKey: [...CALLS_KEY, 'detail', id],
+    queryFn: ({ signal }) => apiRequest(`/calls/${id}`, { signal }),
+    select: (payload) => payload.data,
+  });
+}
+
+/** The people whose calls I may see: for the "who called" filter of the call log. */
+export function useCallOptions() {
+  return useQuery({
+    queryKey: [...CALLS_KEY, 'form-options'],
+    queryFn: ({ signal }) => apiRequest('/calls/form-options', { signal }),
+    select: (payload) => payload.data,
+    staleTime: 5 * 60_000,
   });
 }
 
