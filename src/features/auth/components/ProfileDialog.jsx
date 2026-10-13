@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { apiRequest } from '../../../lib/apiClient.js';
 import { CURRENT_USER_KEY, useAuth } from '../../../hooks/useAuth.js';
 import Dialog from '../../../components/shared/Dialog.jsx';
@@ -57,6 +58,12 @@ export default function ProfileDialog({ onClose }) {
         <dt className="text-text-muted">Account type</dt>
         <dd>{user.role.name}</dd>
       </dl>
+      {/* The person's own Gmail and Google Calendar. */}
+      <p className="mt-4 text-sm">
+        <Link to="/connections" onClick={onClose} className="text-brand-text hover:underline">
+          Mail and calendar: connect your Gmail and Google Calendar
+        </Link>
+      </p>
     </Dialog>
   );
 }
