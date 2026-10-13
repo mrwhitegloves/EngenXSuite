@@ -3,39 +3,20 @@ import { FileText, Link2, PhoneIncoming, PhoneOutgoing, Play } from 'lucide-reac
 import Pagination from '../../../components/shared/Pagination.jsx';
 import { FormError, compactInputClass } from '../../../components/shared/form.jsx';
 import { useCalls, useRecordingLink, useSetOutcome } from '../api.js';
+import {
+  DID_NOT_HAPPEN,
+  OUTCOME_LABELS,
+  STATUS_LABELS,
+  formatLength,
+  formatMoment,
+  formatRupees,
+} from '../labels.js';
 import CallTranscript from './CallTranscript.jsx';
 import LinkCallDialog from './LinkCallDialog.jsx';
 
 const PAGE_SIZE = 5;
-const STATUS_LABELS = {
-  initiated: 'Starting',
-  ringing: 'Ringing',
-  in_progress: 'Talking now',
-  completed: 'Talked',
-  missed: 'Missed',
-  busy: 'Busy',
-  no_answer: 'No answer',
-  failed: 'Did not go through',
-};
-const OUTCOME_LABELS = {
-  connected: 'Talked to them',
-  no_answer: 'No answer',
-  callback_requested: 'Asked to call back',
-  not_interested: 'Not interested',
-  wrong_number: 'Wrong number',
-};
 const smallButton =
   'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand';
-const DID_NOT_HAPPEN = ['missed', 'busy', 'no_answer', 'failed'];
-
-const formatMoment = (value) =>
-  new Intl.DateTimeFormat('en-IN', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'Asia/Kolkata',
-  }).format(new Date(value));
-const formatLength = (seconds) =>
-  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 
 // One call: who, when, how it went; what came of it; and its recording.
 function CallRow({ call }) {
@@ -68,7 +49,7 @@ function CallRow({ call }) {
           {call.user && <> · {call.user.name}</>}
           {call.answeredBy && <> · picked up by {call.answeredBy.name}</>}
           {call.contact && <> · {call.number}</>}
-          {call.costInr > 0 && <> · Plivo charge ₹{call.costInr.toFixed(2)}</>}
+          {call.costInr > 0 && <> · Plivo charge {formatRupees(call.costInr)}</>}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {call.permissions.canEdit ? (

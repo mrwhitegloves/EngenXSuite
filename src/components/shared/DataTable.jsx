@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 
 /**
@@ -13,6 +14,8 @@ import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
  *   onSortChange?: (sort: string) => void,
  *   caption: string,                    read out by screen readers, e.g. "Users"
  *   isRefreshing?: boolean,             true while a new page loads over the old one
+ *   renderBelow?: (row: object) => any, something opened under a row, over the full width;
+ *                                       nothing (null) for a row that has nothing open
  * }} props
  */
 export default function DataTable({
@@ -23,6 +26,7 @@ export default function DataTable({
   onSortChange,
   caption,
   isRefreshing = false,
+  renderBelow,
 }) {
   const sortedKey = sort.replace(/^-/, '');
   const isDescending = sort.startsWith('-');
@@ -70,15 +74,27 @@ export default function DataTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={rowKey(row)} className="border-b border-border align-top last:border-0">
-              {columns.map((column) => (
-                <td key={column.key} className={`px-4 py-2 ${column.className ?? ''}`}>
-                  {column.render(row)}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const below = renderBelow?.(row) ?? null;
+            return (
+              <Fragment key={rowKey(row)}>
+                <tr className="border-b border-border align-top last:border-0">
+                  {columns.map((column) => (
+                    <td key={column.key} className={`px-4 py-2 ${column.className ?? ''}`}>
+                      {column.render(row)}
+                    </td>
+                  ))}
+                </tr>
+                {below && (
+                  <tr className="border-b border-border last:border-0">
+                    <td colSpan={columns.length} className="bg-page px-4 py-3">
+                      {below}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>

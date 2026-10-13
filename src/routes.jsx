@@ -6,6 +6,7 @@ import AccountsRoutes from './features/accounts/AccountsRoutes.jsx';
 import ConnectionsPage from './features/connections/pages/ConnectionsPage.jsx';
 import ActivitiesPage from './features/activities/pages/ActivitiesPage.jsx';
 import CalendarPage from './features/calendar/pages/CalendarPage.jsx';
+import CallsRoutes from './features/calls/CallsRoutes.jsx';
 import DashboardPage from './features/dashboard/pages/DashboardPage.jsx';
 import DocumentsPage from './features/documents/pages/DocumentsPage.jsx';
 import InboxPage from './features/inbox/pages/InboxPage.jsx';
@@ -21,6 +22,7 @@ const PAGES = {
   '/pipeline': PipelineRoutes,
   '/activities': ActivitiesPage,
   '/inbox': InboxPage,
+  '/calls': CallsRoutes,
   '/calendar': CalendarPage,
   '/documents': DocumentsPage,
   '/users': UsersPage,
