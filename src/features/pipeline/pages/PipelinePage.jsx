@@ -38,11 +38,11 @@ const FILTER_KEYS = [
 const STATE_LABELS = { open: 'Open', won: 'Won', lost: 'Lost' };
 
 const VIEWS = [
-  { id: 'board', label: 'Board', icon: KanbanSquare },
   { id: 'table', label: 'Table', icon: List },
+  { id: 'board', label: 'Board', icon: KanbanSquare },
 ];
 
-// Pipeline: the leads, as a board (one column per stage) or as a table. The chosen view is
+// Pipeline: the leads, as a table (the first view) or as a board (one column per stage). The chosen view is
 // kept in the address, like the filters. Everyone sees only the leads inside their own scope (an agent: only
 // the leads assigned to them); the server decides that, this screen shows what it is given.
 export default function PipelinePage() {
@@ -50,11 +50,12 @@ export default function PipelinePage() {
   const list = useListParams(FILTER_KEYS);
   const [isCreating, setIsCreating] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const isTable = searchParams.get('view') === 'table';
+  // The table unless the board was chosen ("?view=board").
+  const isTable = searchParams.get('view') !== 'board';
   function showView(id) {
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
-      if (id === 'table') next.set('view', 'table');
+      if (id === 'board') next.set('view', 'board');
       else next.delete('view');
       // The board has no pages and its own order.
       next.delete('page');

@@ -6,7 +6,6 @@ import EmptyState from '../../../components/shared/states/EmptyState.jsx';
 import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError, primaryButtonClass } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
-import { useTagsFor } from '../../../hooks/useTags.js';
 import CallButton from '../../calls/components/CallButton.jsx';
 import { STAKEHOLDER_ROLE_LABELS } from '../accountForm.js';
 import { useAccountContacts, useContactActions } from '../api.js';
@@ -103,7 +102,7 @@ export default function PeopleTab({ accountId }) {
   const can = useCan();
   const contacts = useAccountContacts(accountId);
   const actions = useContactActions(accountId);
-  const tagField = { name: 'tagIds', label: 'Tags', type: 'tags', tags: useTagsFor('contact') };
+  const tagField = { name: 'tagIds', label: 'Tags', type: 'tags', target: 'contact' };
   // null = closed, 'new' = the add form, or the contact being edited.
   const [formTarget, setFormTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);

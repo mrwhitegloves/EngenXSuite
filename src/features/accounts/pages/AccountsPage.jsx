@@ -145,7 +145,6 @@ export default function AccountsPage() {
           <p className="text-text-muted">
             {[row.industry, row.city].filter(Boolean).join(' · ') || '—'}
           </p>
-          <TagChips tags={row.tags} className="mt-1" />
         </>
       ),
     },
@@ -157,6 +156,16 @@ export default function AccountsPage() {
           {row.status?.name ?? '—'}
         </span>
       ),
+    },
+    {
+      key: 'tags',
+      header: 'Tags',
+      render: (row) =>
+        row.tags?.length ? (
+          <TagChips tags={row.tags} className="max-w-56" />
+        ) : (
+          <span className="text-text-muted">—</span>
+        ),
     },
     { key: 'owner', header: 'Owner', render: (row) => row.owner?.name ?? '—' },
     {

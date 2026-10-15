@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Dialog from '../../../components/shared/Dialog.jsx';
-import { TagPicker } from '../../../components/shared/Tags.jsx';
+import { TagField } from '../../../components/shared/TagDialog.jsx';
 import {
   Field,
   FormError,
@@ -134,9 +134,9 @@ export default function RecordFormDialog({
             ) : field.type === 'tags' ? (
               <div key={field.name} className="sm:col-span-2">
                 <p className="mb-1 font-medium">{field.label}</p>
-                <TagPicker
+                <TagField
                   label={field.label}
-                  tags={field.tags}
+                  target={field.target}
                   value={values[field.name]}
                   onChange={(ids) => set(field.name, ids)}
                 />
