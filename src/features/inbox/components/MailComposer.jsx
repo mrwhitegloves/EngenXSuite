@@ -237,7 +237,7 @@ export default function MailComposer({
             className={secondaryButtonClass}
             onClick={() => setText(`${text.trimEnd()}\n\n${signature}`.trimStart())}
           >
-            Add my signature
+            Add the signature
           </button>
         )}
         {can('documents', 'view') && (
@@ -272,8 +272,8 @@ export default function MailComposer({
       </div>
       {!thread && (
         <p className="text-xs text-text-muted">
-          It goes out from your own Gmail as a new conversation. It is kept here when it goes to a
-          person who is in the CRM.
+          It goes out from the company mailbox as a new conversation (the CRM keeps that you sent
+          it). It is kept here when it goes to a person who is in the CRM.
         </p>
       )}
       <FormError message={problem || upload.error?.message || send.error?.message} />

@@ -117,7 +117,7 @@ export default function CalendarPage() {
               aria-hidden="true"
               className={sync.isPending ? 'animate-spin' : ''}
             />
-            Read my Google Calendar now
+            Read Google Calendar now
           </button>
         )}
         {can('meetings', 'create') && (
@@ -192,8 +192,8 @@ export default function CalendarPage() {
       )}
       {options.data && !options.data.isCalendarConnected && (
         <p className="mb-3 text-xs text-text-muted">
-          Your Google Calendar is not connected: your meetings are kept here only. Connect it under
-          “Mail and calendar” in your profile.
+          The company Google Calendar is not connected: meetings are kept here only. Someone who
+          manages the settings connects it under “Mail and calendar” in the profile.
         </p>
       )}
 

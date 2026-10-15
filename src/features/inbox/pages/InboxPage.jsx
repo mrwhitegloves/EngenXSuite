@@ -22,7 +22,7 @@ import { formatMoment } from '../mailFormat.js';
 const VIEWS = [
   { id: 'all', label: 'All' },
   { id: 'waiting', label: 'Waiting for us' },
-  { id: 'mine', label: 'My mailbox' },
+  { id: 'mine', label: 'My companies and leads' },
   { id: 'follow_up', label: 'Follow-up due (no answer for 3 days)' },
 ];
 
@@ -59,7 +59,7 @@ export default function InboxPage() {
                 aria-hidden="true"
                 className={sync.isPending ? 'animate-spin' : ''}
               />
-              Read my mailbox now
+              Read the mailbox now
             </button>
             {can('email', 'create') && can('accounts', 'create') && (
               <button
@@ -84,12 +84,12 @@ export default function InboxPage() {
       {mailbox.data && !mailbox.data.isConnected && (
         <p className="mb-4 rounded-md border border-border bg-surface p-3 text-sm">
           {mailbox.data.needsReconnect
-            ? 'Google no longer allows access to your mailbox. '
-            : 'Your own Gmail is not connected, so your customer mail is not shown here. '}
+            ? 'Google no longer allows access to the company mailbox. '
+            : 'The company mailbox is not connected, so customer mail cannot be read or sent. '}
           <Link to="/connections" className="text-brand-text hover:underline">
-            Open “Mail and calendar” to connect it
-          </Link>
-          .
+            Open “Mail and calendar”
+          </Link>{' '}
+          (someone who manages the settings connects it, once for everyone) .
         </p>
       )}
       {mailbox.data?.isConnected && (
@@ -97,7 +97,7 @@ export default function InboxPage() {
           {mailbox.data.googleEmail} ·{' '}
           {mailbox.data.lastSyncAt
             ? `last read ${formatMoment(mailbox.data.lastSyncAt)}`
-            : 'not read yet: press “Read my mailbox now”'}
+            : 'not read yet: press “Read the mailbox now”'}
           . Only mail with people who are in the CRM is kept.
           {sync.isSuccess && ' Reading now; new mail shows in a few seconds.'}
         </p>

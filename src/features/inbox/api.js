@@ -13,7 +13,7 @@ function toQueryString(params) {
   return search.toString();
 }
 
-/** Is my mailbox connected, and when was it last read. */
+/** Is the company mailbox connected, and when was it last read. */
 export function useMailbox() {
   return useQuery({
     queryKey: [...KEY, 'mailbox'],
@@ -51,7 +51,7 @@ export function useAccountFiles(accountId, enabled = true) {
   });
 }
 
-/** Read my mailbox now, send a mail, and the AI's help on one conversation. */
+/** Read the company mailbox now, send a mail, and the AI's help on one conversation. */
 export function useMailActions(threadId) {
   const queryClient = useQueryClient();
   const reload = () => {

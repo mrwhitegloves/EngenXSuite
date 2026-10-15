@@ -79,7 +79,7 @@ export function useMeetingActions() {
       mutationFn: (id) => apiRequest(`/meetings/${id}`, { method: 'DELETE' }),
       onSuccess,
     }),
-    // Read my Google Calendar now.
+    // Read the company Google Calendar now.
     sync: useMutation({
       mutationFn: () => apiRequest('/meetings/sync', { method: 'POST' }),
       onSuccess,

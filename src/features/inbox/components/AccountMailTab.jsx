@@ -122,9 +122,9 @@ export default function AccountMailTab({ account }) {
       </div>
       {mailbox.data && !mailbox.data.isConnected && (
         <p className="rounded-md border border-border bg-surface p-3 text-sm">
-          Your own Gmail is not connected, so you cannot write from here.{' '}
+          The company mailbox is not connected, so customer mail cannot be read or sent.
           <Link to="/connections" className="text-brand-text hover:underline">
-            Open “Mail and calendar” to connect it
+            Open “Mail and calendar”
           </Link>
           .
         </p>

@@ -17,7 +17,7 @@ function ForCompany({ account, initialTo, onClose }) {
 }
 
 /**
- * A new mail, as a new conversation, from my own mailbox.
+ * A new mail, as a new conversation, from the company mailbox.
  * @param {{ account?: { id: string, name: string }, initialTo?: string, onClose: () => void }} props
  *        account: the company it is for (then its people, its files and the AI are offered)
  */
