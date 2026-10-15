@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Dialog from '../../../components/shared/Dialog.jsx';
-import { TagPicker } from '../../../components/shared/Tags.jsx';
+import { TagField } from '../../../components/shared/TagDialog.jsx';
 import {
   Field,
   FormError,
@@ -9,7 +9,6 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from '../../../components/shared/form.jsx';
-import { useTagsFor } from '../../../hooks/useTags.js';
 import {
   EMPTY_ACCOUNT_FORM,
   HEALTH_LABELS,
@@ -46,7 +45,6 @@ function AccountForm({ account, options, onClose }) {
   const createAccount = useCreateAccount();
   const updateAccount = useUpdateAccount();
   const save = isNew ? createAccount : updateAccount;
-  const tags = useTagsFor('account');
 
   const serverErrors = Object.fromEntries(
     Object.entries(fieldErrorsFrom(save.error)).map(([field, message]) => [
@@ -199,8 +197,8 @@ function AccountForm({ account, options, onClose }) {
 
       <fieldset>
         <legend className="mb-2 text-sm font-semibold text-text-muted uppercase">Tags</legend>
-        <TagPicker
-          tags={tags}
+        <TagField
+          target="account"
           value={form.tagIds}
           onChange={(tagIds) => setForm({ ...form, tagIds })}
         />

@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../lib/apiClient.js';
 
-// Tags: the labels put on companies and people. Every signed-in person reads them (the pickers
-// need the names); only someone with the "settings" permission changes the list.
+// Tags: the labels put on companies, people and leads. Every signed-in person reads them and may
+// add a new one; only someone with the "settings" permission renames, merges or deletes them.
 export const TAGS_KEY = ['tags'];
 
 /**

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, Pencil, Tag } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { TagSelectDialog } from '../../../components/shared/TagDialog.jsx';
 import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError, secondaryButtonClass } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
@@ -11,7 +12,7 @@ import AskAiButton from '../../assistant/components/AskAiButton.jsx';
 import RecordMeetings from '../../calendar/components/RecordMeetings.jsx';
 import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import AccountAiSummary from '../../insights/components/AccountAiSummary.jsx';
-import { useAccount } from '../api.js';
+import { useAccount, useUpdateAccount } from '../api.js';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
 import AccountMailTab from '../../inbox/components/AccountMailTab.jsx';
 import LeadsTab from '../components/LeadsTab.jsx';
@@ -157,6 +158,9 @@ export default function Account360Page() {
   const can = useCan();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
+  // The window for the tags at the top, and its save.
+  const [isTagging, setIsTagging] = useState(false);
+  const saveTags = useUpdateAccount();
   const account = useAccount(accountId);
 
   const tabs = TABS.filter((tab) => !tab.feature || can(tab.feature, 'view'));
@@ -217,7 +221,38 @@ export default function Account360Page() {
             {data.hq?.city && <> · {data.hq.city}</>}
             {data.owner?.name && <> · Owner: {data.owner.name}</>}
           </p>
-          <TagChips tags={data.tags} className="mt-2" />
+          {data.permissions.canEdit ? (
+            <button
+              type="button"
+              onClick={() => {
+                saveTags.reset();
+                setIsTagging(true);
+              }}
+              aria-label={data.tags.length ? 'Change the tags' : 'Add tags'}
+              className="mt-2 flex flex-wrap items-center gap-1 rounded-md p-0.5 text-left hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand"
+            >
+              <TagChips tags={data.tags} />
+              <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-text-muted">
+                <Tag size={12} aria-hidden="true" />
+                {data.tags.length ? 'Change' : 'Add tags'}
+              </span>
+            </button>
+          ) : (
+            <TagChips tags={data.tags} className="mt-2" />
+          )}
+          {isTagging && (
+            <TagSelectDialog
+              target="account"
+              title={`Tags of ${data.name}`}
+              value={data.tags.map((tag) => tag.id)}
+              isSaving={saveTags.isPending}
+              error={saveTags.error?.message}
+              onClose={() => setIsTagging(false)}
+              onSave={(tagIds) =>
+                saveTags.mutate({ id: data.id, tagIds }, { onSuccess: () => setIsTagging(false) })
+              }
+            />
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <AskAiButton record={{ type: 'account', id: data.id, title: data.name }} />

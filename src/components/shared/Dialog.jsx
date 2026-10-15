@@ -19,6 +19,7 @@ export default function Dialog({ open, title, onClose, children, footer, wide = 
   return (
     <dialog
       ref={ref}
+      aria-label={title}
       onClose={onClose}
       // Clicking the dark area around the dialog closes it.
       onClick={(event) => {

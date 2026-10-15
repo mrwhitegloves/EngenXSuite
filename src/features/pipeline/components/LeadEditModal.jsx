@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Dialog from '../../../components/shared/Dialog.jsx';
+import { TagField } from '../../../components/shared/TagDialog.jsx';
 import { TagPicker } from '../../../components/shared/Tags.jsx';
 import {
   Field,
@@ -10,7 +11,6 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from '../../../components/shared/form.jsx';
-import { useTagsFor } from '../../../hooks/useTags.js';
 import { apiRequest } from '../../../lib/apiClient.js';
 import { isStaleData, useCreateLead, useLead, useLeadOptions, useUpdateLead } from '../api.js';
 import {
@@ -93,7 +93,6 @@ function LeadForm({ lead: latestLead, presetAccount, options, onClose, onReload 
   const save = isNew ? createLead : updateLead;
   const accounts = useAccountChoices(isNew && !presetAccount);
   const people = useAccountPeople(form.accountId);
-  const tags = useTagsFor('opportunity');
 
   // The main contact's own details can be changed here while it is still the same person
   // (choosing another main contact above is a different change), and only by someone who may
@@ -325,7 +324,15 @@ function LeadForm({ lead: latestLead, presetAccount, options, onClose, onReload 
         {input('riskNote', 'Risk note')}
       </Section>
 
-      {tags.length > 0 && picker('tagIds', 'Tags', tags)}
+      <fieldset className={`rounded-md border p-3 ${mark('tagIds') || 'border-transparent px-0'}`}>
+        <legend className="mb-2 text-sm font-semibold text-text-muted uppercase">Tags</legend>
+        <TagField target="opportunity" value={form.tagIds} onChange={(ids) => set('tagIds', ids)} />
+        {serverErrors.tagIds && (
+          <p role="alert" className="mt-1 text-sm text-danger">
+            {serverErrors.tagIds}
+          </p>
+        )}
+      </fieldset>
 
       {showContact && (
         <Section title="Main contact">
