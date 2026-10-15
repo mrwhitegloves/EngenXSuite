@@ -15,14 +15,13 @@ const KEY = ['google-connection'];
 
 // What Google's way back tells us (a short code in the address), in words.
 const RESULTS = {
-  connected: ['success', 'Connected. Your mail and calendar can now be used in the CRM.'],
-  cancelled: ['muted', 'You cancelled on Google’s screen. Nothing was connected.'],
-  not_allowed: ['danger', 'Only company accounts can connect Gmail and Calendar.'],
-  wrong_domain: ['danger', 'Choose your company Google account, not a personal one.'],
-  wrong_account: [
-    'danger',
-    'You can connect only your own mailbox: choose the account you sign in with.',
+  connected: [
+    'success',
+    'Connected. Everyone in the CRM now works with this mailbox and calendar.',
   ],
+  cancelled: ['muted', 'You cancelled on Google’s screen. Nothing was connected.'],
+  not_allowed: ['danger', 'Only someone who manages the settings can connect the company mailbox.'],
+  wrong_domain: ['danger', 'Choose a company Google account, not a personal one.'],
   permission_missing: [
     'danger',
     'Both permissions are needed. Connect again and tick mail and calendar on Google’s screen.',
@@ -46,8 +45,9 @@ const formatMoment = (value) =>
     timeZone: 'Asia/Kolkata',
   }).format(new Date(value));
 
-// "Mail and calendar": a person connects their own company Gmail and Google Calendar.
-// The lines under my mails. The mail screen offers "Add my signature".
+// "Mail and calendar": the ONE company mailbox (Gmail and Google Calendar) the whole CRM uses
+// (decision 0014). Someone who manages the settings connects it once; everyone sees it here.
+// The lines under the company's mails. The mail screen offers "Add the signature".
 function SignatureBox({ saved }) {
   const queryClient = useQueryClient();
   const [text, setText] = useState(saved ?? '');
@@ -59,12 +59,12 @@ function SignatureBox({ saved }) {
   return (
     <div className="space-y-2 border-t border-border pt-3">
       <label className="block">
-        <span className="mb-1 block text-sm font-medium">My mail signature</span>
+        <span className="mb-1 block text-sm font-medium">Signature of the company mailbox</span>
         <textarea
           rows={4}
           maxLength={1000}
           value={text}
-          placeholder={'Your name\nYour role, your phone number'}
+          placeholder={'EngenX Sales\nPhone, website'}
           onChange={(event) => setText(event.target.value)}
           className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-brand"
         />
@@ -82,7 +82,7 @@ function SignatureBox({ saved }) {
   );
 }
 
-// Opened from My profile. Only company addresses can connect (the server decides).
+// Opened from My profile. Only someone who manages the settings connects (the server decides).
 export default function ConnectionsPage() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -110,7 +110,7 @@ export default function ConnectionsPage() {
     <>
       <PageHeader
         title="Mail and calendar"
-        description="Connect your own company Gmail and Google Calendar to the CRM."
+        description="The one company Gmail and Google Calendar that everyone in the CRM works with."
       />
       <div className="max-w-2xl space-y-4">
         {result && (
@@ -141,8 +141,9 @@ export default function ConnectionsPage() {
             )}
             {data.isConfigured && !data.mayConnect && (
               <p className="text-text-muted">
-                Only @{data.workspaceDomain} accounts can connect Gmail and Calendar. You can use
-                everything else in the CRM as before.
+                {connection
+                  ? 'You send and read customer mail, and plan meetings, through this mailbox. Only someone who manages the settings can change it.'
+                  : 'The company mailbox is not connected yet. Ask someone who manages the settings (for example the CEO) to connect it here.'}
               </p>
             )}
 
@@ -155,7 +156,10 @@ export default function ConnectionsPage() {
                   {connection.status === 'connected' ? 'Connected' : 'Needs to be connected again'}
                 </dd>
                 <dt className="text-text-muted">Since</dt>
-                <dd>{formatMoment(connection.connectedAt)}</dd>
+                <dd>
+                  {formatMoment(connection.connectedAt)}
+                  {connection.connectedBy && ` · by ${connection.connectedBy}`}
+                </dd>
                 <dt className="text-text-muted">Allowed</dt>
                 <dd>
                   {[connection.hasMail && 'Mail', connection.hasCalendar && 'Calendar']
@@ -168,26 +172,34 @@ export default function ConnectionsPage() {
             {connection?.status === 'connected' && connection.hasMail && (
               <p className="text-sm text-text-muted">
                 {connection.mailPushUntil && new Date(connection.mailPushUntil) > new Date()
-                  ? 'New mail arrives at once (Google tells the CRM when your mailbox changes).'
+                  ? 'New mail arrives at once (Google tells the CRM when the mailbox changes).'
                   : 'New mail is read every 3 minutes.'}
               </p>
             )}
-            {connection && <SignatureBox key={connection.signature} saved={connection.signature} />}
+            {connection && data.mayConnect && (
+              <SignatureBox key={connection.signature} saved={connection.signature} />
+            )}
 
             {data.isConfigured && data.mayConnect && (
               <>
                 {!connection && (
                   <p className="text-sm text-text-muted">
-                    Google will ask you to allow two things: reading and sending your mail, and your
-                    calendar events. Choose your own @{data.workspaceDomain} account and tick both.
-                    Mail of customers in the CRM is then shown with their company and lead; your
-                    other mail is not stored.
+                    Google will ask to allow two things: reading and sending the mail, and the
+                    calendar events. Choose the company @{data.workspaceDomain} account (for example
+                    kunal@{data.workspaceDomain}) and tick both. It is done once, for everyone. Only
+                    mail with people saved in the CRM is brought in, with their company and lead;
+                    all other mail of the mailbox is never stored.
                   </p>
                 )}
                 <div className="flex flex-wrap gap-2">
                   {(!connection || connection.status !== 'connected') && (
                     <button type="button" className={primaryButtonClass} onClick={connect}>
-                      {connection ? 'Connect again' : 'Connect Gmail and Calendar'}
+                      {connection ? 'Connect again' : 'Connect the company mailbox'}
+                    </button>
+                  )}
+                  {connection?.status === 'connected' && (
+                    <button type="button" className={secondaryButtonClass} onClick={connect}>
+                      Use another mailbox
                     </button>
                   )}
                   {connection && (
@@ -211,7 +223,7 @@ export default function ConnectionsPage() {
 
       <ConfirmDialog
         open={isConfirming}
-        title="Disconnect Gmail and Calendar?"
+        title="Disconnect the company mailbox?"
         confirmLabel="Disconnect"
         isBusy={disconnect.isPending}
         error={disconnect.error?.message}
@@ -219,8 +231,9 @@ export default function ConnectionsPage() {
         onConfirm={() => disconnect.mutate()}
       >
         <p>
-          The CRM stops reading and sending your mail and stops using your calendar. Google is told
-          to take the permission back. You can connect again at any time.
+          Nobody in the CRM can read or send mail, or put meetings into Google Calendar, until it is
+          connected again. The mail already in the CRM stays. Google is told to take the permission
+          back.
         </p>
       </ConfirmDialog>
     </>

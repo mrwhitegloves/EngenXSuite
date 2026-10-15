@@ -340,7 +340,7 @@ export default function MeetingDialog({ meeting, target, day, initial, onClose }
                 <span>
                   Google mails the invitation to the guests.
                   <span className="block text-xs text-text-muted">
-                    The meeting goes into your Google Calendar
+                    The meeting goes into the company Google Calendar, with you as a guest
                     {form.mode === 'online' && !meeting?.meetLink
                       ? ', with a Google Meet link'
                       : ''}

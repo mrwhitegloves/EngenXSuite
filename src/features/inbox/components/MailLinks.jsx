@@ -58,7 +58,7 @@ export function RelinkPanel({ thread, onClose }) {
 /**
  * A sender who is not in the CRM yet is a customer: add them to a new company (with a first
  * lead when wanted) or to a company that is there. Their mail of the last three months is
- * then brought in from my own mailbox.
+ * then brought in from the company mailbox.
  * @param {{ onClose: () => void, onDone: (accountId: string) => void }} props
  */
 export function BringInDialog({ onClose, onDone }) {

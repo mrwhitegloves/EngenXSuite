@@ -68,7 +68,11 @@ function Message({ message, isOpen, onToggle }) {
           <ChevronRight size={14} aria-hidden="true" className="shrink-0 self-center" />
         )}
         <span className="shrink-0 font-medium">
-          {isOurs ? 'We wrote' : (message.fromName ?? message.from)}
+          {isOurs
+            ? message.sentBy
+              ? `${message.sentBy} wrote`
+              : 'We wrote'
+            : (message.fromName ?? message.from)}
         </span>
         <span className="min-w-0 flex-1 truncate text-text-muted">
           {isOpen ? `to ${message.to.join(', ')}` : main.replace(/\s+/g, ' ')}
