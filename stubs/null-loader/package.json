@@ -1,0 +1,7 @@
+{
+  "name": "null-loader",
+  "version": "4.0.1",
+  "private": true,
+  "description": "Empty stand-in. plivo-browser-sdk lists this webpack loader as a dependency but never uses it in the browser (its file is already built); the real one asks for webpack itself. Replaced through \"overrides\" in client/package.json.",
+  "license": "MIT"
+}
