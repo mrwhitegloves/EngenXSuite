@@ -6,7 +6,7 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from '../../../components/shared/form.jsx';
-import { useCallSettings, useSaveCallSettings } from '../../calls/api.js';
+import { useCallSettings, useRingtone, useSaveCallSettings } from '../../calls/api.js';
 
 // Whether the phone service is connected, and what to enter on its side.
 function Setup({ setup, canStoreRecordings }) {
@@ -53,7 +53,11 @@ function SettingsForm({ settings, canEdit, save }) {
   const [defaultInboundUserId, setDefaultInboundUserId] = useState(
     settings.defaultInboundUserId ?? '',
   );
+  const [browserCallingEnabled, setBrowserCallingEnabled] = useState(
+    settings.browserCallingEnabled,
+  );
   const isChanged =
+    browserCallingEnabled !== settings.browserCallingEnabled ||
     recordingEnabled !== settings.recordingEnabled ||
     announcementEnabled !== settings.announcementEnabled ||
     consentText !== settings.consentText ||
@@ -67,6 +71,7 @@ function SettingsForm({ settings, canEdit, save }) {
       onSubmit={(event) => {
         event.preventDefault();
         save.mutate({
+          browserCallingEnabled,
           recordingEnabled,
           announcementEnabled,
           consentText: consentText.trim(),
@@ -74,6 +79,32 @@ function SettingsForm({ settings, canEdit, save }) {
         });
       }}
     >
+      <fieldset disabled={!canEdit} className="space-y-2">
+        <legend className="mb-1 font-semibold">Calls inside the CRM</legend>
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-1 size-4 accent-brand"
+            checked={browserCallingEnabled}
+            onChange={(event) => setBrowserCallingEnabled(event.target.checked)}
+          />
+          <span>
+            <span className="font-medium">Make and take calls in the browser</span>
+            <span className="block text-sm text-text-muted">
+              On: the Call button calls from the CRM itself (talk through the computer), and an
+              incoming call rings in the CRM and on the person’s phone at the same time. Off: every
+              call rings the person’s phone, as before.
+            </span>
+          </span>
+        </label>
+        {!settings.browser.isConfigured && (
+          <p className="text-sm text-danger">
+            Not set up on the server yet. Missing:{' '}
+            <span className="font-mono text-xs">{settings.browser.missing.join(', ')}</span>
+          </p>
+        )}
+      </fieldset>
+
       <fieldset disabled={!canEdit} className="space-y-2">
         <legend className="mb-1 font-semibold">Recording</legend>
         <label className="flex items-start gap-2">
@@ -129,8 +160,9 @@ function SettingsForm({ settings, canEdit, save }) {
       <fieldset disabled={!canEdit} className="space-y-2">
         <legend className="mb-1 font-semibold">Incoming calls</legend>
         <p className="text-sm text-text-muted">
-          A caller we know rings the phone of the person who looks after them: the owner of their
-          lead, else of the person, else of the company. Anyone else rings the person chosen here.
+          A caller we know rings the person who looks after them (in the CRM and on their phone):
+          the owner of their lead, else of the person, else of the company. Anyone else rings the
+          person chosen here.
         </p>
         <p className="text-sm text-text-muted">
           When that person does not pick up within 25 seconds, the person chosen here is rung next
@@ -181,6 +213,7 @@ function SettingsForm({ settings, canEdit, save }) {
               type="button"
               className={secondaryButtonClass}
               onClick={() => {
+                setBrowserCallingEnabled(settings.browserCallingEnabled);
                 setRecordingEnabled(settings.recordingEnabled);
                 setAnnouncementEnabled(settings.announcementEnabled);
                 setConsentText(settings.consentText);
@@ -199,6 +232,61 @@ function SettingsForm({ settings, canEdit, save }) {
         </div>
       )}
     </form>
+  );
+}
+
+// The ringtone of calls coming into the browser: Plivo's, or a sound file of our own.
+function Ringtone({ ringtone, canEdit }) {
+  const { upload, remove } = useRingtone();
+  return (
+    <section className="max-w-2xl space-y-2 rounded-lg border border-border bg-surface p-4 text-sm">
+      <h2 className="font-semibold">Ringtone in the browser</h2>
+      {ringtone ? (
+        <div className="space-y-2">
+          <p>
+            Our own: <span className="font-mono text-xs break-all">{ringtone.name}</span>
+          </p>
+          <audio
+            controls
+            src={ringtone.url}
+            className="w-full max-w-sm"
+            aria-label="Our ringtone"
+          />
+        </div>
+      ) : (
+        <p className="text-text-muted">Plivo’s ringtone is used.</p>
+      )}
+      {canEdit && (
+        <div className="flex flex-wrap items-center gap-2">
+          <label className={`${secondaryButtonClass} cursor-pointer`}>
+            {upload.isPending ? 'Uploading…' : ringtone ? 'Use another sound' : 'Use our own sound'}
+            <input
+              type="file"
+              accept="audio/mpeg,audio/wav,audio/ogg,.mp3,.wav,.ogg"
+              className="sr-only"
+              disabled={upload.isPending}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) upload.mutate(file);
+                event.target.value = '';
+              }}
+            />
+          </label>
+          {ringtone && (
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              disabled={remove.isPending}
+              onClick={() => remove.mutate()}
+            >
+              Back to Plivo’s ringtone
+            </button>
+          )}
+          <span className="text-xs text-text-muted">MP3, WAV or OGG, at most 1 MB.</span>
+        </div>
+      )}
+      <FormError message={upload.error?.message ?? remove.error?.message} />
+    </section>
   );
 }
 
@@ -221,6 +309,7 @@ export default function Calls({ canEdit }) {
             setup={settings.data.setup}
             canStoreRecordings={settings.data.canStoreRecordings}
           />
+          <Ringtone ringtone={settings.data.ringtone} canEdit={canEdit} />
           <SettingsForm
             key={JSON.stringify(settings.data)}
             settings={settings.data}
