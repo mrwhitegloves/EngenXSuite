@@ -52,6 +52,84 @@ function Setup({ setup }) {
   );
 }
 
+// The Facebook Page behind the token: is it connected so that its new leads come here, and
+// its lead forms brought in. Done once; every campaign of the Page then sends its leads.
+function MetaPage({ canEdit }) {
+  const queryClient = useQueryClient();
+  const status = useQuery({
+    queryKey: [...KEY, 'meta-page'],
+    queryFn: ({ signal }) => apiRequest('/lead-forms/meta/page', { signal }),
+    select: (payload) => payload.data,
+  });
+  const connect = useMutation({
+    mutationFn: () => apiRequest('/lead-forms/meta/page/connect', { method: 'POST' }),
+    onSuccess: (payload) => queryClient.setQueryData([...KEY, 'meta-page'], payload),
+  });
+  const sync = useMutation({
+    mutationFn: () => apiRequest('/lead-forms/meta/forms/sync', { method: 'POST' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [...KEY, 'forms'] }),
+  });
+  const data = status.data;
+  if (!data?.isConfigured) return null;
+  return (
+    <section className="rounded-lg border border-border bg-surface p-4 text-sm">
+      <h2 className="text-base font-semibold">The Facebook Page</h2>
+      {status.isFetching && !data && <p className="text-text-muted">Asking Meta…</p>}
+      {data.problem && (
+        <p role="alert" className="mt-1 text-danger">
+          Meta says: {data.problem}
+        </p>
+      )}
+      {data.page && (
+        <div className="mt-1 space-y-1">
+          <p>
+            Page: <span className="font-medium">{data.page.name ?? data.page.id}</span>{' '}
+            <span className="font-mono text-xs text-text-muted">({data.page.id})</span>
+          </p>
+          {data.isSubscribed ? (
+            <p className="text-success">
+              Connected: every new lead of this Page’s lead ads (any campaign, any form) comes here
+              at once.
+            </p>
+          ) : (
+            <p className="text-danger">
+              Not connected yet: Meta does not send this Page’s leads to the CRM.
+            </p>
+          )}
+        </div>
+      )}
+      {canEdit && data.page && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {!data.isSubscribed && (
+            <button
+              type="button"
+              className={primaryButtonClass}
+              disabled={connect.isPending}
+              onClick={() => connect.mutate()}
+            >
+              {connect.isPending ? 'Connecting…' : 'Connect the Page'}
+            </button>
+          )}
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            disabled={sync.isPending}
+            onClick={() => sync.mutate()}
+          >
+            {sync.isPending ? 'Asking Meta…' : 'Bring in the forms of the Page'}
+          </button>
+          {sync.data && (
+            <span role="status" className="text-success">
+              {sync.data.data.found} forms found, {sync.data.data.added} new.
+            </span>
+          )}
+        </div>
+      )}
+      <FormError message={connect.error?.message ?? sync.error?.message} />
+    </section>
+  );
+}
+
 // One form: which question fills which field, who gets its leads, on or off.
 function FormEditor({ form, page, canEdit }) {
   const queryClient = useQueryClient();
@@ -300,12 +378,14 @@ export default function LeadForms({ canEdit }) {
       {page.data && (
         <>
           <Setup setup={page.data.setup} />
+          <MetaPage canEdit={canEdit} />
           <section className="space-y-2">
             <h2 className="font-semibold">Forms</h2>
             <p className="max-w-2xl text-sm text-text-muted">
-              A form appears here by itself when its first lead arrives. Name, phone, email,
-              company, job title and city are recognised by the question’s name; choose a field for
-              any other question, or leave it to be kept as a note on the lead.
+              A form appears here by itself when its first lead arrives, or at once with “Bring in
+              the forms of the Page”. Name, phone, email, company, job title and city are recognised
+              by the question’s name; choose a field for any other question, or leave it to be kept
+              as a note on the lead.
             </p>
             {page.data.forms.length === 0 && (
               <p className="rounded-md border border-dashed border-border bg-surface p-4 text-text-muted">
