@@ -1,0 +1,7 @@
+{
+  "name": "wasm-pack",
+  "version": "0.12.1",
+  "private": true,
+  "description": "Empty stand-in. plivo-browser-sdk lists the wasm-pack build tool as a dependency but never uses it in the browser; the real package downloads a binary from GitHub at install time and pulls in old axios/tar. Replaced through \"overrides\" in client/package.json.",
+  "license": "MIT"
+}

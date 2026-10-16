@@ -21,6 +21,7 @@
     "@tanstack/react-query": "^5.104.1",
     "dompurify": "^3.4.17",
     "lucide-react": "^1.53.0",
+    "plivo-browser-sdk": "2.2.21",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router-dom": "^7.18.4",
@@ -37,6 +38,10 @@
     "husky": "^9.1.7",
     "prettier": "^3.9.9",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.3"
+    "vite": "^8.3.3",
+    "wasm-pack": "file:stubs/wasm-pack"
+  },
+  "overrides": {
+    "wasm-pack": "$wasm-pack"
   }
 }

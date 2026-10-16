@@ -122,6 +122,26 @@ export function useCallSettings() {
   });
 }
 
+/** Settings → Calls: our own ringtone (a sound file), or back to Plivo's. */
+export function useRingtone() {
+  const queryClient = useQueryClient();
+  const onSuccess = (payload) => queryClient.setQueryData(SETTINGS_KEY, payload);
+  return {
+    upload: useMutation({
+      mutationFn: (file) => {
+        const body = new FormData();
+        body.append('file', file);
+        return apiRequest('/settings/calls/ringtone', { method: 'POST', body });
+      },
+      onSuccess,
+    }),
+    remove: useMutation({
+      mutationFn: () => apiRequest('/settings/calls/ringtone', { method: 'DELETE' }),
+      onSuccess,
+    }),
+  };
+}
+
 export function useSaveCallSettings() {
   const queryClient = useQueryClient();
   return useMutation({
