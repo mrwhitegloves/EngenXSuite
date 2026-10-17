@@ -10,7 +10,9 @@ import { useCan } from '../../../hooks/useCan.js';
 import DocumentPicker from '../../documents/components/DocumentPicker.jsx';
 import { useAccountFiles, useMailActions, useSignature } from '../api.js';
 import { addressesOf, formatMoment, formatSize, smallButton } from '../mailFormat.js';
+import { mailHtmlForSending } from '../richText.js';
 import AiMailWriter from './AiMailWriter.jsx';
+import RichTextEditor from './RichTextEditor.jsx';
 
 const MAX_FILES = 10;
 
@@ -54,8 +56,8 @@ function CompanyFiles({ accountId, chosen, onAdd }) {
 
 /**
  * Where a mail is written: an answer inside a conversation, or a new mail. With files from the
- * device or from the company's earlier mail, and the AI's help. It always goes out from the
- * person's own Gmail.
+ * device or from the company's earlier mail, and the AI's help. It goes out from the company
+ * mailbox, with its layout (HTML) and its plain text.
  *
  * @param {{ thread?: object, account?: { id: string, name: string }, contacts?: object[],
  *           initialTo?: string, rows?: number, onSent?: () => void }} props
@@ -74,7 +76,11 @@ export default function MailComposer({
   const picker = useRef(null);
   const [to, setTo] = useState(initialTo);
   const [subject, setSubject] = useState('');
+  // What is written: its plain text (for checks, the AI and the plain part of the mail) and
+  // its layout (HTML), from the editor.
+  const editor = useRef(null);
   const [text, setText] = useState('');
+  const [html, setHtml] = useState('');
   const [files, setFiles] = useState([]);
   // Which picker is open: '' (none), 'documents' (the library) or 'mail' (the company's mail).
   const [choosing, setChoosing] = useState('');
@@ -110,11 +116,13 @@ export default function MailComposer({
       {
         ...(thread ? { threadId: thread.id } : { to: recipients, subject: subject.trim() }),
         text,
+        // The layout goes along, so the mail looks as written (bold, lists, headings, links).
+        ...(html ? { html: mailHtmlForSending(html) } : {}),
         ...(attachments.length ? { attachments } : {}),
       },
       {
         onSuccess: () => {
-          setText('');
+          editor.current?.setHtml('');
           setFiles([]);
           onSent?.();
         },
@@ -164,13 +172,15 @@ export default function MailComposer({
           </label>
         </>
       )}
-      <textarea
-        aria-label={thread ? 'Your answer' : 'Message'}
+      <RichTextEditor
+        ref={editor}
+        label={thread ? 'Your answer' : 'Message'}
         rows={rows}
-        placeholder={thread ? 'Write in this conversation…' : 'Write the mail…'}
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        className={inputClass}
+        placeholder={thread ? 'Write in this conversation…' : 'Write or paste the mail…'}
+        onChange={(value) => {
+          setText(value.text);
+          setHtml(value.html);
+        }}
       />
 
       {(thread || accountId) && (
@@ -180,7 +190,7 @@ export default function MailComposer({
           contactId={contactId}
           draft={{ subject: thread ? thread.subject : subject, body: text }}
           onDraft={(draft) => {
-            setText(draft.body);
+            editor.current?.setText(draft.body);
             if (!thread) setSubject(draft.subject);
           }}
         />
@@ -235,7 +245,7 @@ export default function MailComposer({
           <button
             type="button"
             className={secondaryButtonClass}
-            onClick={() => setText(`${text.trimEnd()}\n\n${signature}`.trimStart())}
+            onClick={() => editor.current?.appendText(signature)}
           >
             Add the signature
           </button>
