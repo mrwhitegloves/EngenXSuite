@@ -201,7 +201,9 @@ function FormEditor({ form, page, canEdit }) {
                 className={inputClass}
               >
                 <option value="">
-                  {item.automatic ? 'Recognised by its name' : 'Keep as a note on the lead'}
+                  {item.automatic
+                    ? 'Recognised by its name'
+                    : 'Keep in the company’s form answers (form_data)'}
                 </option>
                 {page.fields.map((field) => (
                   <option key={field.field} value={field.field}>
@@ -384,8 +386,9 @@ export default function LeadForms({ canEdit }) {
             <p className="max-w-2xl text-sm text-text-muted">
               A form appears here by itself when its first lead arrives, or at once with “Bring in
               the forms of the Page”. Name, phone, email, company, job title and city are recognised
-              by the question’s name; choose a field for any other question, or leave it to be kept
-              as a note on the lead.
+              by the question’s name. Every other question needs nothing: its answer is kept in the
+              company’s form answers (form_data), shown on the company and its leads. Choose a field
+              only to fill a particular CRM field with it.
             </p>
             {page.data.forms.length === 0 && (
               <p className="rounded-md border border-dashed border-border bg-surface p-4 text-text-muted">

@@ -10,6 +10,7 @@ import AskAiButton from '../../assistant/components/AskAiButton.jsx';
 import CallButton from '../../calls/components/CallButton.jsx';
 import RecordMeetings from '../../calendar/components/RecordMeetings.jsx';
 import RecordCalls from '../../calls/components/RecordCalls.jsx';
+import FormDataCard from '../../accounts/components/FormDataCard.jsx';
 import LeadAiAssessment from '../../insights/components/LeadAiAssessment.jsx';
 import { useChangeStage, useLead, useLeadOptions, useStageHistory } from '../api.js';
 import CloseDialog from '../components/CloseDialog.jsx';
@@ -350,6 +351,14 @@ export default function LeadPage() {
           ]}
         />
         <StageHistory leadId={data.id} />
+        {data.account && (
+          <FormDataCard
+            accountId={data.account.id}
+            formData={data.accountFormData}
+            canEdit={data.canEditAccount}
+            title={`Form answers and own fields of ${data.account.name}`}
+          />
+        )}
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

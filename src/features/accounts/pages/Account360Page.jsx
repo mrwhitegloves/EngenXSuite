@@ -14,6 +14,7 @@ import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import AccountAiSummary from '../../insights/components/AccountAiSummary.jsx';
 import { useAccount, useUpdateAccount } from '../api.js';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
+import FormDataCard from '../components/FormDataCard.jsx';
 import AccountMailTab from '../../inbox/components/AccountMailTab.jsx';
 import LeadsTab from '../components/LeadsTab.jsx';
 import PeopleTab from '../components/PeopleTab.jsx';
@@ -299,6 +300,11 @@ export default function Account360Page() {
       {tab.id === 'overview' && (
         <div className="space-y-4">
           {can('ai_insights', 'view') && <AccountAiSummary accountId={data.id} />}
+          <FormDataCard
+            accountId={data.id}
+            formData={data.form_data}
+            canEdit={data.permissions.canEdit}
+          />
           <Overview account={data} />
         </div>
       )}
