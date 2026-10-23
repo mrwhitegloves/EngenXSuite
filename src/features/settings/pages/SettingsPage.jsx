@@ -19,6 +19,7 @@ import BackgroundJobs from '../components/BackgroundJobs.jsx';
 import StatusLists, { PipelineStages, SolutionCategories } from '../components/StatusLists.jsx';
 import MeetingTypes from '../components/MeetingTypes.jsx';
 import Tags from '../components/Tags.jsx';
+import WhatsAppSettings from '../components/WhatsAppSettings.jsx';
 import PermissionMatrix, { grantsToMap, mapToGrants } from '../components/PermissionMatrix.jsx';
 
 // The editor for one account type. Rendered with key={role.id}, so switching to another
@@ -130,6 +131,11 @@ const SECTIONS = [
     description: 'Calls: the phone connection, call recording, and who gets incoming calls.',
   },
   {
+    id: 'whatsapp',
+    label: 'WhatsApp',
+    description: 'WhatsApp: the business number, its quality, and the message templates.',
+  },
+  {
     id: 'ai',
     label: 'AI',
     description: 'AI: what it cost this month, the budget and limits, and which model does what.',
@@ -210,6 +216,7 @@ export default function SettingsPage() {
       {section.id === 'lead-assignment' && <LeadAssignment canEdit={can('settings', 'edit')} />}
       {section.id === 'lead-forms' && <LeadForms canEdit={can('settings', 'edit')} />}
       {section.id === 'calls' && <Calls canEdit={can('settings', 'edit')} />}
+      {section.id === 'whatsapp' && <WhatsAppSettings />}
       {section.id === 'ai' && <AiSettings canEdit={can('settings', 'edit')} />}
       {section.id === 'categories' && <SolutionCategories canEdit={can('settings', 'edit')} />}
       {section.id === 'meeting-types' && <MeetingTypes canEdit={can('settings', 'edit')} />}
