@@ -104,6 +104,7 @@ export default function DocumentPicker({ chosen, onPick }) {
                 disabled={isAdded}
                 onClick={() =>
                   onPick({
+                    id: document.id,
                     url: document.url,
                     filename: document.filename,
                     mimeType: document.mimeType,

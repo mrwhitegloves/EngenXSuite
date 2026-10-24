@@ -7,6 +7,7 @@ import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError, primaryButtonClass } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import CallButton from '../../calls/components/CallButton.jsx';
+import WhatsAppButton from '../../whatsapp/components/WhatsAppButton.jsx';
 import { STAKEHOLDER_ROLE_LABELS } from '../accountForm.js';
 import { useAccountContacts, useContactActions } from '../api.js';
 import RecordFormDialog, { numberOrNull, onlyFilled, textOrNull } from './RecordFormDialog.jsx';
@@ -176,6 +177,7 @@ export default function PeopleTab({ accountId }) {
       render: (row) => (
         <div className="flex justify-end gap-2">
           {row.phone_number && !row.consent.doNotCall && <CallButton contact={row} />}
+          {row.phone_number && <WhatsAppButton contact={row} />}
           {can('contacts', 'edit') && (
             <button
               type="button"

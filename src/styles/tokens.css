@@ -30,6 +30,11 @@
   --edited: #f97316;
   --edited-soft: #fff7ed;
 
+  /* WhatsApp chat bubbles: our messages (green, like WhatsApp) and the customer's. */
+  --chat-out: #d9fdd3;
+  --chat-in: #ffffff;
+  --chat-read: #0284c7;
+
   /* Background colours for initials avatars. Each is dark enough for white letters.
      A user's colour is picked from this list by their name, so it is always the same. */
   --avatar-1: #2563eb;
@@ -68,6 +73,10 @@
 
   --edited: #fb923c;
   --edited-soft: #431407;
+
+  --chat-out: #144d37;
+  --chat-in: #262626;
+  --chat-read: #38bdf8;
 
   color-scheme: dark;
 }

@@ -15,6 +15,7 @@ import NotificationsPage from './features/notifications/pages/NotificationsPage.
 import PipelineRoutes from './features/pipeline/PipelineRoutes.jsx';
 import SettingsPage from './features/settings/pages/SettingsPage.jsx';
 import UsersPage from './features/users/pages/UsersPage.jsx';
+import WhatsAppRoutes from './features/whatsapp/WhatsAppRoutes.jsx';
 import { useCan } from './hooks/useCan.js';
 
 // Sections that have a real page. Every other visible section shows a "not built yet" notice.
@@ -23,6 +24,7 @@ const PAGES = {
   '/pipeline': PipelineRoutes,
   '/activities': ActivitiesPage,
   '/inbox': InboxPage,
+  '/whatsapp': WhatsAppRoutes,
   '/calls': CallsRoutes,
   '/calendar': CalendarPage,
   '/documents': DocumentsPage,

@@ -28,6 +28,8 @@ export const REALTIME_REFETCH = {
   'calls.changed': [['calls']],
   // Customer mail was read from a mailbox, or one was sent.
   'emails.changed': [['emails'], ['timeline']],
+  // A WhatsApp message came or went, its status moved, or a chat was read, assigned or linked.
+  'whatsapp.changed': [['whatsapp'], ['timeline']],
   // A meeting was planned, changed, closed, or taken over from Google Calendar.
   'meetings.changed': [['meetings'], ['timeline']],
   // A bulk sending was made, started, stopped, or handled its next person.

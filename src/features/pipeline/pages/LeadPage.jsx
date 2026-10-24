@@ -8,6 +8,7 @@ import { RecordTasks } from '../../activities/components/Tasks.jsx';
 import Timeline from '../../activities/components/Timeline.jsx';
 import AskAiButton from '../../assistant/components/AskAiButton.jsx';
 import CallButton from '../../calls/components/CallButton.jsx';
+import WhatsAppButton from '../../whatsapp/components/WhatsAppButton.jsx';
 import RecordMeetings from '../../calendar/components/RecordMeetings.jsx';
 import RecordCalls from '../../calls/components/RecordCalls.jsx';
 import FormDataCard from '../../accounts/components/FormDataCard.jsx';
@@ -324,6 +325,7 @@ export default function LeadPage() {
                 <span className="flex flex-wrap items-center gap-2">
                   {contact.phone_number}
                   <CallButton contact={contact} opportunityId={data.id} />
+                  <WhatsAppButton contact={contact} />
                 </span>
               ),
             ],
