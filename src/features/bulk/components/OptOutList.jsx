@@ -12,16 +12,13 @@ import {
 } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useOptOutActions, useOptOuts } from '../api.js';
+import { formatDateTime } from '../../../lib/dates.js';
 
 const CHANNEL_WORDS = { email: 'Mail', whatsapp: 'WhatsApp' };
 const SOURCE_WORDS = {
   link: 'They used the link in a bulk mail',
   message: 'They wrote STOP on WhatsApp',
 };
-const formatDay = (value) =>
-  new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(
-    new Date(value),
-  );
 
 // "Do not write to": the addresses and numbers that never get a bulk mail or a bulk WhatsApp
 // message. A customer gets on it by themselves (the link in a bulk mail, STOP on WhatsApp),
@@ -125,7 +122,7 @@ export default function OptOutList() {
             <span className="min-w-0 flex-1">
               <span className="block font-medium break-all">{row.address}</span>
               <span className="block text-xs text-text-muted">
-                {CHANNEL_WORDS[row.channel]} · since {formatDay(row.createdAt)} ·{' '}
+                {CHANNEL_WORDS[row.channel]} · since {formatDateTime(row.createdAt)} ·{' '}
                 {SOURCE_WORDS[row.source] ?? `Put on the list by ${row.addedBy ?? 'a colleague'}`}
                 {row.note && ` · ${row.note}`}
               </span>

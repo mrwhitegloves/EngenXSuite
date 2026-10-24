@@ -305,7 +305,7 @@ export default function LeadPage() {
             ['Budget', BUDGET_LABELS[data.budgetStatus]],
             ['They decide', data.decisionTimeline],
             ['Competitor', data.competitor],
-            ['Closed on', data.closedAt && formatDay(data.closedAt)],
+            ['Closed on', data.closedAt && formatMoment(data.closedAt)],
             [data.status === 'won' ? 'Why won' : 'Why lost', data.closeReason],
             ['Lost to', data.lostToCompetitor],
           ]}
@@ -345,7 +345,7 @@ export default function LeadPage() {
             ['Owner', data.owner?.name ?? 'Unassigned'],
             ['Also assigned', data.assignedUsers.map((user) => user.name).join(', ')],
             ['Added by', data.formFilledBy?.name],
-            ['Added on', formatDay(data.createdAt)],
+            ['Added on', formatMoment(data.createdAt)],
             ['Source', SOURCE_LABELS[data.source] ?? data.source],
             ['Campaign', data.sourceDetail?.campaign],
             ['Ad', data.sourceDetail?.ad],

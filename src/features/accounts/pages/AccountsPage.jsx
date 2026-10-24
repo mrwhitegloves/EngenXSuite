@@ -24,6 +24,7 @@ import { useTagsFor } from '../../../hooks/useTags.js';
 import { useAccountOptions, useAccounts, useDeleteAccount, useExportAccounts } from '../api.js';
 import AccountsBulkBar from '../../bulk/components/AccountsBulkBar.jsx';
 import AccountFormDialog from '../components/AccountFormDialog.jsx';
+import { formatDateTime } from '../../../lib/dates.js';
 
 const FILTER_KEYS = [
   'search',
@@ -39,13 +40,6 @@ const FILTER_KEYS = [
 
 const rowButton =
   'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand';
-
-function formatDate(value) {
-  if (!value) return '—';
-  return new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(
-    new Date(value),
-  );
-}
 
 // Accounts: the customer companies. Everyone sees only the accounts inside their own scope;
 // the server decides that, this screen only shows what it is given.
@@ -173,14 +167,14 @@ export default function AccountsPage() {
       header: 'Last activity',
       sortKey: 'lastActivityAt',
       className: 'whitespace-nowrap text-text-muted',
-      render: (row) => formatDate(row.lastActivityAt),
+      render: (row) => formatDateTime(row.lastActivityAt),
     },
     {
       key: 'createdAt',
       header: 'Created',
       sortKey: 'createdAt',
       className: 'whitespace-nowrap text-text-muted',
-      render: (row) => formatDate(row.createdAt),
+      render: (row) => formatDateTime(row.createdAt),
     },
     {
       key: 'actions',

@@ -19,6 +19,7 @@ import AccountMailTab from '../../inbox/components/AccountMailTab.jsx';
 import LeadsTab from '../components/LeadsTab.jsx';
 import PeopleTab from '../components/PeopleTab.jsx';
 import PlantsTab from '../components/PlantsTab.jsx';
+import { formatDateTime } from '../../../lib/dates.js';
 
 const rupees = (paise) =>
   paise === null || paise === undefined
@@ -28,11 +29,6 @@ const rupees = (paise) =>
         currency: 'INR',
         maximumFractionDigits: 0,
       }).format(paise / 100);
-
-const formatDate = (value) =>
-  new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(
-    new Date(value),
-  );
 
 // A titled block of "label: value" lines. Lines without a value are left out; a block with no
 // values at all says so instead of showing an empty box.
@@ -133,7 +129,7 @@ function Overview({ account }) {
           ['Owner', account.owner?.name],
           ['Also assigned', account.assignedUsers.map((user) => user.name).join(', ')],
           ['Added by', account.formFilledBy?.name],
-          ['Added on', formatDate(account.createdAt)],
+          ['Added on', formatDateTime(account.createdAt)],
           ['Source', account.source === 'manual' ? 'Typed in' : account.source],
           ['Campaign', account.sourceDetail?.campaign],
           ['Form', account.sourceDetail?.form],

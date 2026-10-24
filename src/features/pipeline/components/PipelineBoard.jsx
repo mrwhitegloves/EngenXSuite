@@ -13,7 +13,7 @@ import { Link } from 'react-router-dom';
 import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError } from '../../../components/shared/form.jsx';
 import { useChangeStage } from '../api.js';
-import { daysInStage, formatDay } from '../leadDisplay.js';
+import { daysInStage, formatMoment } from '../leadDisplay.js';
 import { rupees } from '../leadForm.js';
 import CloseDialog from './CloseDialog.jsx';
 import LeadEditModal from './LeadEditModal.jsx';
@@ -89,7 +89,7 @@ function LeadCard({ lead, now, onEdit, isMoving }) {
         <p className="mt-1 text-xs break-words">
           Next: {lead.nextAction.text}
           {lead.nextAction.dueAt && (
-            <span className="text-text-muted"> (by {formatDay(lead.nextAction.dueAt)})</span>
+            <span className="text-text-muted"> (by {formatMoment(lead.nextAction.dueAt)})</span>
           )}
         </p>
       )}

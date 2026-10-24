@@ -17,16 +17,13 @@ import BundleDetail from '../components/BundleDetail.jsx';
 import NewSendingDialog from '../components/NewSendingDialog.jsx';
 import OptOutList from '../components/OptOutList.jsx';
 import SendingDetail, { SENDING_STATUS } from '../components/SendingDetail.jsx';
+import { formatDateTime } from '../../../lib/dates.js';
 
 const TABS = [
   { id: 'sendings', label: 'Sendings' },
   { id: 'bundles', label: 'Bundles' },
   { id: 'stopped', label: 'Do not write to' },
 ];
-const formatDay = (value) =>
-  new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(
-    new Date(value),
-  );
 
 function BundleList({ onOpen }) {
   const can = useCan();
@@ -77,7 +74,7 @@ function BundleList({ onOpen }) {
                 <span className="block truncate font-medium">{bundle.name}</span>
                 <span className="block text-xs text-text-muted">
                   {bundle.memberCount} {bundle.memberCount === 1 ? 'address' : 'addresses'} · made{' '}
-                  {formatDay(bundle.createdAt)}
+                  {formatDateTime(bundle.createdAt)}
                   {bundle.createdBy && ` by ${bundle.createdBy}`}
                 </span>
               </span>
@@ -161,7 +158,7 @@ function SendingList({ onOpen }) {
                 {sending.channel === 'email' ? 'Mail' : 'WhatsApp'} · to “{sending.bundleName}” ·{' '}
                 {sending.counts.sent} sent, {sending.counts.failed} not sent,{' '}
                 {sending.counts.skipped} skipped, {sending.counts.pending} waiting · made{' '}
-                {formatDay(sending.createdAt)}
+                {formatDateTime(sending.createdAt)}
                 {sending.sender && ` by ${sending.sender}`}
               </span>
             </button>
