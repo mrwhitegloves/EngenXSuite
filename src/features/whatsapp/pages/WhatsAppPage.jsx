@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import PageHeader from '../../../components/layout/PageHeader.jsx';
@@ -8,6 +8,7 @@ import EmptyState from '../../../components/shared/states/EmptyState.jsx';
 import { FormError, compactInputClass } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useListParams } from '../../../hooks/useListParams.js';
+import { playMessageSound } from '../../../lib/sounds.js';
 import { useTags } from '../../../hooks/useTags.js';
 import { useLeadOptions } from '../../pipeline/api.js';
 import { useConversation, useConversations, useWhatsAppSetup } from '../api.js';
@@ -75,6 +76,23 @@ export default function WhatsAppPage() {
     pageSize: PAGE_SIZE,
   });
   const rows = conversations.data?.data ?? [];
+  // A customer's new message in any chat of the list plays the message sound (once, however
+  // many arrive together). The first answer is what was there already.
+  const lastSeenRef = useRef(null);
+  const listRows = conversations.data?.data;
+  useEffect(() => {
+    if (!listRows) return;
+    const before = lastSeenRef.current;
+    lastSeenRef.current = new Map(listRows.map((row) => [row.id, row.lastMessageAt]));
+    if (!before) return;
+    const hasNew = listRows.some(
+      (row) =>
+        row.lastDirection === 'inbound' &&
+        row.lastMessageAt &&
+        (!before.has(row.id) || new Date(row.lastMessageAt) > new Date(before.get(row.id) ?? 0)),
+    );
+    if (hasNew) playMessageSound();
+  }, [listRows]);
   const counts = conversations.data?.meta?.counts ?? {};
   const users = options.data?.canAssign ? options.data.users : [];
   const stages = options.data?.stages ?? [];

@@ -11,6 +11,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../../hooks/useAuth.js';
 import { useCan } from '../../../hooks/useCan.js';
 import { apiRequest } from '../../../lib/apiClient.js';
+import { startRingtone, stopRingtone } from '../../../lib/sounds.js';
+import {
+  closeSystemNotification,
+  isPageInBackground,
+  showSystemNotification,
+} from '../../../lib/systemNotifications.js';
 
 // Calls inside the CRM (docs/planning/browser-calling.md). This keeps the person's browser
 // signed in to Plivo (Plivo's Browser SDK, over WebRTC), holds the state of the one call that
@@ -26,6 +32,8 @@ const LOCK_KEY = 'crm-browser-phone-tab';
 const LOCK_STALE_MS = 15_000;
 const HEARTBEAT_MS = 5_000;
 const RETRY_MS = 10_000;
+// The computer's notification of an incoming call; a new one replaces the old one.
+const CALL_NOTIFICATION_TAG = 'incoming-call';
 const tabId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 function readLock() {
@@ -91,6 +99,8 @@ export default function BrowserPhoneProvider({ children }) {
   /** @type {[CallState | null, Function]} */
   const [call, setCall] = useState(null);
   const [incoming, setIncoming] = useState(null);
+  // The custom ringtone of Settings → Calls; null: the CRM's own ringtone (lib/sounds.js).
+  const ringtoneRef = useRef(null);
   const clientRef = useRef(null);
   const retryRef = useRef(null);
   const endTimerRef = useRef(null);
@@ -115,6 +125,33 @@ export default function BrowserPhoneProvider({ children }) {
       return null;
     }
   }, []);
+
+  // While a call is coming in: the ringtone, and the computer's own notification when the CRM
+  // tab is not in front. Both stop when the call is answered, refused, or given up.
+  const ringingId = incoming ? (incoming.callUUID ?? 'ringing') : null;
+  useEffect(() => {
+    if (!ringingId) return undefined;
+    startRingtone(ringtoneRef.current);
+    return () => {
+      stopRingtone();
+      closeSystemNotification(CALL_NOTIFICATION_TAG);
+    };
+  }, [ringingId]);
+  const incomingName = incoming?.name;
+  const incomingDetail = incoming
+    ? [incoming.company, incoming.number !== incoming.name ? incoming.number : null]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
+  useEffect(() => {
+    if (!ringingId || !isPageInBackground()) return;
+    showSystemNotification({
+      tag: CALL_NOTIFICATION_TAG,
+      title: `Incoming call: ${incomingName}`,
+      body: incomingDetail || 'Open the CRM to answer.',
+      requireInteraction: true,
+    });
+  }, [ringingId, incomingName, incomingDetail]);
 
   const finishCall = useCallback(
     (reason) => {
@@ -162,7 +199,9 @@ export default function BrowserPhoneProvider({ children }) {
           client.removeAllListeners?.();
           wire(client);
         }
-        client.setRingTone(data.ringtoneUrl || true);
+        // The CRM rings itself (a better sound, and the same ringtone setting): Plivo's is off.
+        ringtoneRef.current = data.ringtoneUrl ?? null;
+        client.setRingTone(false);
         setStatus('loading');
         client.loginWithAccessToken(data.token);
       } catch (error) {
