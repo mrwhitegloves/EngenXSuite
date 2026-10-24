@@ -5,6 +5,7 @@ import Avatar from '../../../components/shared/Avatar.jsx';
 import { FormError } from '../../../components/shared/form.jsx';
 import { fetchOlderMessages, useChatActions, useConversation } from '../api.js';
 import { dayLabel, isSameDay, windowLeft } from '../waFormat.jsx';
+import CallButton from '../../calls/components/CallButton.jsx';
 import ChatBubble from './ChatBubble.jsx';
 import Composer, { checkFile } from './Composer.jsx';
 import ImageViewer from './ImageViewer.jsx';
@@ -198,6 +199,13 @@ export default function ChatPanel({ conversationId, onBack, isDetailsOpen, onTog
             <WindowStatus chat={chat} />
           </p>
         </div>
+        {chat.contact && !chat.contact.doNotCall && (
+          <CallButton
+            contact={{ id: chat.contact.id, name: chat.contact.name }}
+            opportunityId={chat.lead?.id}
+            iconOnly
+          />
+        )}
         <button
           type="button"
           aria-label={isDetailsOpen ? 'Hide the details' : 'Show the details'}

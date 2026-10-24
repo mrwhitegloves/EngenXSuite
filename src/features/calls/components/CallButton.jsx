@@ -10,6 +10,8 @@ import { useCan } from '../../../hooks/useCan.js';
 import { useStartCall } from '../api.js';
 import { useBrowserPhone } from '../browserPhone/BrowserPhoneProvider.jsx';
 
+const iconButtonClass =
+  'rounded p-1.5 text-text-muted hover:bg-page hover:text-success focus-visible:outline-2 focus-visible:outline-brand';
 const buttonClass =
   'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand';
 
@@ -20,10 +22,11 @@ const buttonClass =
  * own phone rings first; when they pick up, the contact is dialled. Either way the contact sees
  * the company's number. Shows nothing for someone who may not make calls.
  *
- * @param {{ contact: { id: string, name: string }, opportunityId?: string }} props
+ * @param {{ contact: { id: string, name: string }, opportunityId?: string, iconOnly?: boolean }} props
  *        opportunityId: the lead the call is about, when it is started from a lead.
+ *        iconOnly: a round phone icon without the word (the header of a WhatsApp chat).
  */
-export default function CallButton({ contact, opportunityId }) {
+export default function CallButton({ contact, opportunityId, iconOnly = false }) {
   const can = useCan();
   const [isOpen, setIsOpen] = useState(false);
   const start = useStartCall();
@@ -55,15 +58,16 @@ export default function CallButton({ contact, opportunityId }) {
     <>
       <button
         type="button"
-        className={buttonClass}
+        className={iconOnly ? iconButtonClass : buttonClass}
         aria-label={`Call ${contact.name}`}
+        title={iconOnly ? `Call ${contact.name}` : undefined}
         onClick={() => {
           start.reset();
           setIsOpen(true);
         }}
       >
-        <PhoneCall size={14} aria-hidden="true" />
-        Call
+        <PhoneCall size={iconOnly ? 20 : 14} aria-hidden="true" />
+        {!iconOnly && 'Call'}
       </button>
       <Dialog
         open={isOpen}
