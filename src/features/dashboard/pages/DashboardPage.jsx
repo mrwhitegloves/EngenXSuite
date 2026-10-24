@@ -5,7 +5,7 @@ import { FormError } from '../../../components/shared/form.jsx';
 import { useAuth } from '../../../hooks/useAuth.js';
 import { apiRequest } from '../../../lib/apiClient.js';
 import { TaskList } from '../../activities/components/Tasks.jsx';
-import { formatDay } from '../../pipeline/leadDisplay.js';
+import { formatDay, formatMoment } from '../../pipeline/leadDisplay.js';
 import { rupees } from '../../pipeline/leadForm.js';
 
 /**
@@ -162,7 +162,7 @@ export default function DashboardPage() {
                         Next: {lead.nextAction?.text ?? 'not written down'}
                         <span className="text-text-muted">
                           {' '}
-                          (by {formatDay(lead.nextAction?.dueAt)})
+                          (by {formatMoment(lead.nextAction?.dueAt)})
                         </span>
                       </>
                     )}

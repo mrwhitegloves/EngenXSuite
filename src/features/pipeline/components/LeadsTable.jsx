@@ -6,7 +6,7 @@ import DataTable from '../../../components/shared/DataTable.jsx';
 import { TagChips } from '../../../components/shared/Tags.jsx';
 import { FormError, compactInputClass } from '../../../components/shared/form.jsx';
 import { useChangeStage, useDeleteLead } from '../api.js';
-import { daysInStage, formatDay } from '../leadDisplay.js';
+import { daysInStage, formatDay, formatMoment } from '../leadDisplay.js';
 import { rupees } from '../leadForm.js';
 import CloseDialog from './CloseDialog.jsx';
 import LeadEditModal from './LeadEditModal.jsx';
@@ -146,7 +146,7 @@ export default function LeadsTable({
           <>
             {row.nextAction.text}
             {row.nextAction.dueAt && (
-              <p className="text-xs text-text-muted">by {formatDay(row.nextAction.dueAt)}</p>
+              <p className="text-xs text-text-muted">by {formatMoment(row.nextAction.dueAt)}</p>
             )}
           </>
         ) : (

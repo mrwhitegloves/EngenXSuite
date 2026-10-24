@@ -26,7 +26,8 @@ import {
 } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { useAllFolders, useDocumentActions, useDocuments } from '../api.js';
-import { formatDay, formatSize } from '../format.js';
+import { formatSize } from '../format.js';
+import { formatDateTime } from '../../../lib/dates.js';
 
 const rowButton =
   'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-brand';
@@ -291,7 +292,7 @@ export default function DocumentsPage() {
               <span className="min-w-0">
                 <span className="block truncate font-medium">{document.name}</span>
                 <span className="block truncate text-xs text-text-muted">
-                  {formatSize(document.size)} · added {formatDay(document.createdAt)}
+                  {formatSize(document.size)} · added {formatDateTime(document.createdAt)}
                   {document.uploadedBy && ` by ${document.uploadedBy}`}
                 </span>
               </span>
