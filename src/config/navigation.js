@@ -52,7 +52,7 @@ export const NAV_ITEMS = [
     features: ['ai_insights'],
     phase: '09',
   },
-  { to: '/website', label: 'Website', icon: Globe, features: ['website'], phase: 'W1' },
+  { to: '/website', label: 'Website', icon: Globe, features: ['website'] },
   { to: '/chat', label: 'Chat', icon: MessagesSquare, features: ['chat'], phase: '12' },
   // Login accounts of the team (decision 0009). Not to be confused with Accounts = customer companies.
   { to: '/users', label: 'Users', icon: Users, features: ['users'] },

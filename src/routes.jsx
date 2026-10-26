@@ -15,6 +15,7 @@ import NotificationsPage from './features/notifications/pages/NotificationsPage.
 import PipelineRoutes from './features/pipeline/PipelineRoutes.jsx';
 import SettingsPage from './features/settings/pages/SettingsPage.jsx';
 import UsersPage from './features/users/pages/UsersPage.jsx';
+import WebsitePage from './features/website/pages/WebsitePage.jsx';
 import WhatsAppRoutes from './features/whatsapp/WhatsAppRoutes.jsx';
 import { useCan } from './hooks/useCan.js';
 
@@ -30,6 +31,7 @@ const PAGES = {
   '/documents': DocumentsPage,
   '/bulk': BulkPage,
   '/users': UsersPage,
+  '/website': WebsitePage,
   '/settings': SettingsPage,
 };
 
