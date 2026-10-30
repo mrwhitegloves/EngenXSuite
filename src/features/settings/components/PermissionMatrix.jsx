@@ -20,6 +20,7 @@ const FEATURE_LABELS = {
   campaigns: 'Campaigns',
   imports: 'CSV import',
   website: 'Website',
+  links: 'Links',
   chat: 'Team chat',
   users: 'Users',
   settings: 'Settings',
