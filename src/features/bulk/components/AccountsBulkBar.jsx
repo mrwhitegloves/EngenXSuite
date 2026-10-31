@@ -120,7 +120,8 @@ function AssignDialog({ accountIds, users, onClose }) {
             <strong>{result.assigned}</strong> assigned.{' '}
             {result.skipped > 0 && (
               <>
-                <strong>{result.skipped}</strong> skipped, because they have an owner already.
+                <strong>{result.skipped}</strong> skipped, because they belong to that person
+                already.
               </>
             )}
           </p>
@@ -133,7 +134,7 @@ function AssignDialog({ accountIds, users, onClose }) {
           </ul>
           {result.skippedNames.length > 0 && (
             <p className="text-text-muted">
-              Skipped: {result.skippedNames.join(', ')}
+              Already theirs: {result.skippedNames.join(', ')}
               {result.skipped > result.skippedNames.length && ' and more'}
             </p>
           )}
@@ -152,7 +153,7 @@ function AssignDialog({ accountIds, users, onClose }) {
         <div className="space-y-4 text-sm">
           <p className="text-text-muted">
             Choose one person, and all go to them. Choose several, and they take turns (round
-            robin). A company that has an owner already is left with that person.
+            robin). A company that has an owner gets the new one, and its leads go with it.
           </p>
           <div className="flex gap-2">
             <button

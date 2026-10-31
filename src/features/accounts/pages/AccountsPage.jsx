@@ -298,6 +298,19 @@ export default function AccountsPage() {
             tags.map((tag) => [tag.id, tag.name]),
           )}
         <DateRangeFilter label="Created" value={dates} onChange={list.setFilters} />
+        {/* The same sort as the Created column header, as a plain choice (founder, 2026-10-31). */}
+        <select
+          aria-label="Sort by created date"
+          value={list.sort || '-createdAt'}
+          onChange={(event) => list.setSort(event.target.value)}
+          className={compactInputClass}
+        >
+          <option value="-createdAt">Created: newest first</option>
+          <option value="createdAt">Created: oldest first</option>
+          {list.sort && !['createdAt', '-createdAt'].includes(list.sort) && (
+            <option value={list.sort}>Sorted by a column</option>
+          )}
+        </select>
       </FilterBar>
 
       <FormError
