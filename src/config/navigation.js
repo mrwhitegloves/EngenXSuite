@@ -2,6 +2,7 @@ import {
   BarChart3,
   Building2,
   CalendarDays,
+  FilePen,
   FolderOpen,
   Globe,
   Inbox,
@@ -44,6 +45,13 @@ export const NAV_ITEMS = [
   { to: '/calls', label: 'Call log', icon: PhoneCall, features: ['calls'] },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays, features: ['meetings'], phase: '06' },
   { to: '/documents', label: 'Documents', icon: FolderOpen, features: ['documents'], phase: '08' },
+  // Proposals, letter heads and invoices from templates (founder, 2026-11-12).
+  {
+    to: '/generator',
+    label: 'Doc generator',
+    icon: FilePen,
+    features: ['proposals', 'documents', 'invoices'],
+  },
   { to: '/bulk', label: 'Bulk send', icon: Send, features: ['campaigns'], phase: '11' },
   { to: '/reports', label: 'Reports', icon: BarChart3, features: ['reports'], phase: '09' },
   {

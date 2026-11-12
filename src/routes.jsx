@@ -17,6 +17,7 @@ import SettingsPage from './features/settings/pages/SettingsPage.jsx';
 import UsersPage from './features/users/pages/UsersPage.jsx';
 import WebsitePage from './features/website/pages/WebsitePage.jsx';
 import LinksPage from './features/links/pages/LinksPage.jsx';
+import GeneratorRoutes from './features/generator/GeneratorRoutes.jsx';
 import WhatsAppRoutes from './features/whatsapp/WhatsAppRoutes.jsx';
 import { useCan } from './hooks/useCan.js';
 
@@ -30,6 +31,7 @@ const PAGES = {
   '/calls': CallsRoutes,
   '/calendar': CalendarPage,
   '/documents': DocumentsPage,
+  '/generator': GeneratorRoutes,
   '/bulk': BulkPage,
   '/users': UsersPage,
   '/website': WebsitePage,

@@ -28,6 +28,16 @@
   --color-chat-out: var(--chat-out);
   --color-chat-in: var(--chat-in);
   --color-chat-read: var(--chat-read);
+  --color-doc-paper: var(--doc-paper);
+  --color-doc-ink: var(--doc-ink);
+  --color-doc-muted: var(--doc-muted);
+  --color-doc-soft: var(--doc-soft);
+  --color-doc-line: var(--doc-line);
+  --color-doc-accent: var(--doc-accent);
+  --color-doc-accent-soft: var(--doc-accent-soft);
+  --color-doc-on-dark: var(--doc-on-dark);
+  --color-doc-ok: var(--doc-ok);
+  --color-doc-placeholder: var(--doc-placeholder);
 
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
