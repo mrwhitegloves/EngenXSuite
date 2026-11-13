@@ -1,5 +1,7 @@
 import Logo from '../../../../components/shared/Logo.jsx';
 import Filled from '../../engine/Filled.jsx';
+import PagedFlow from '../../engine/PagedFlow.jsx';
+import { PAGE_BODY_MM, PAGE_MARGIN_MM } from './proposalPage.js';
 
 // Parts shared by the proposal templates (founder, 2026-11-12 / 2026-11-13): the A4 sheet, the
 // dark cover page, numbered section headings, the acceptance with seal and signatures, and the
@@ -11,10 +13,11 @@ export const sheetClass =
   'mx-auto mb-6 w-[210mm] bg-doc-paper text-doc-ink shadow-md ' +
   'print:mb-0 print:w-auto print:shadow-none';
 
-export function SectionHeading({ number, title, vars }) {
+/** A section heading; without a `number` only the title. */
+export function SectionHeading({ number = '', title, vars }) {
   return (
     <h2 className="mb-[4mm] mt-[2mm] flex items-baseline [break-after:avoid] gap-[3mm] border-b-2 border-doc-ink pb-[2mm] text-[15pt] font-bold tracking-tight">
-      <span className="text-doc-accent">{String(number).padStart(2, '0')}</span>
+      {number !== '' && <span className="text-doc-accent">{String(number).padStart(2, '0')}</span>}
       <Filled text={title} vars={vars} />
     </h2>
   );
@@ -166,5 +169,59 @@ export function ClosingFooter({ data, vars }) {
         <Filled text={data.footer?.confidentiality} vars={vars} />
       </p>
     </div>
+  );
+}
+
+/**
+ * The content sheets as the pages of the PDF (preview only): every page with the running
+ * header and footer in its margins, as printed. Page numbers start at `firstPage` (the cover is
+ * page 1). `onPageCount` hears how many content pages there are.
+ */
+export function PagedSheets({ data, vars, firstPage = 2, onPageCount, children }) {
+  const margin = PAGE_MARGIN_MM;
+  return (
+    <PagedFlow
+      widthMm={PAGE_BODY_MM.width}
+      heightMm={PAGE_BODY_MM.height}
+      onPageCount={onPageCount}
+      renderPage={({ index, body }) => (
+        <section
+          key={index}
+          data-preview-page={firstPage + index}
+          className={`${sheetClass} relative h-[297mm] text-[10pt]`}
+          style={{ paddingTop: `${margin.top}mm`, paddingLeft: `${margin.left}mm` }}
+        >
+          <header
+            className="absolute inset-x-0 top-0 flex items-end justify-between pb-[3mm] text-[7.5pt] text-doc-muted"
+            style={{
+              height: `${margin.top}mm`,
+              paddingLeft: `${margin.left}mm`,
+              paddingRight: `${margin.right}mm`,
+            }}
+          >
+            <span>
+              <Filled text={data.meta?.runningTitle} vars={vars} />
+            </span>
+            <span>
+              Confidential — <Filled text="{client}" vars={vars} />
+            </span>
+          </header>
+          {body}
+          <footer
+            className="absolute inset-x-0 bottom-0 flex items-start justify-between pt-[3mm] text-[7.5pt] text-doc-muted"
+            style={{
+              height: `${margin.bottom}mm`,
+              paddingLeft: `${margin.left}mm`,
+              paddingRight: `${margin.right}mm`,
+            }}
+          >
+            <span>{data.meta?.docRef}</span>
+            <span>Page {firstPage + index}</span>
+          </footer>
+        </section>
+      )}
+    >
+      {children}
+    </PagedFlow>
   );
 }

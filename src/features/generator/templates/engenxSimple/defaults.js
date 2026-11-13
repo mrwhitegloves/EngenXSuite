@@ -1,11 +1,12 @@
 // The starting values of the simple EngenX proposal (founder, 2026-11-13): the same cover page
 // and the same acceptance, signatures and footer as before; everything between them is one
 // piece of laid-out content, usually written in ChatGPT and pasted with its layout.
-// Text may use {tokens} (vars.js), e.g. {client}, {fee}; they fill in automatically.
+// Text may use {tokens} (vars.js), e.g. {client}, {date}; they fill in automatically.
 
 export const SIMPLE_DEFAULTS = {
   meta: {
-    docRef: 'ENGENX-XXX-2026-001',
+    // Filled with the next free number (ENGENX-DMA-2026-101 …) when a new proposal opens.
+    docRef: '',
     date: '',
     runningTitle: 'Industrial Digital Maturity Assessment',
   },
@@ -24,9 +25,7 @@ export const SIMPLE_DEFAULTS = {
   },
   facts: {
     duration: '8 working days',
-    deliverables: '4',
   },
-  fee: { amount: 75000, gstText: '+ GST' },
   cover: {
     eyebrow: 'INDUSTRIAL AI & DIGITAL TRANSFORMATION',
     kicker: 'PROPOSAL · ASSESSMENT & TECHNICAL DIAGNOSTIC',
@@ -37,7 +36,6 @@ export const SIMPLE_DEFAULTS = {
   // The proposal itself, as laid-out HTML (cleaned by lib/richText.js).
   content: { html: '' },
   acceptance: {
-    number: '10',
     title: 'Acceptance',
     text: 'By signing, {client} confirms the scope, deliverables, fee and terms in this proposal.',
     providerName: 'Kunal Divyanshu',

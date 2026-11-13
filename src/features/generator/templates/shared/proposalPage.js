@@ -6,12 +6,20 @@ import { cssString } from '../../engine/printDocument.js';
 
 const marginBox = 'font: 7.5pt Inter, sans-serif; color: dimgray;';
 
+// The A4 page margins in mm, and the printed body they leave (the paged preview uses the same).
+export const PAGE_MARGIN_MM = { top: 18, right: 16, bottom: 16, left: 16 };
+export const PAGE_BODY_MM = {
+  width: 210 - PAGE_MARGIN_MM.left - PAGE_MARGIN_MM.right,
+  height: 297 - PAGE_MARGIN_MM.top - PAGE_MARGIN_MM.bottom,
+};
+const { top, right, bottom, left } = PAGE_MARGIN_MM;
+
 /** @param {{ runningTitle: string, client: string, reference: string }} texts */
 export function proposalPageCss({ runningTitle, client, reference }) {
   return `
     @page {
       size: A4;
-      margin: 18mm 16mm 16mm 16mm;
+      margin: ${top}mm ${right}mm ${bottom}mm ${left}mm;
       @top-left { content: ${cssString(runningTitle)}; ${marginBox} vertical-align: bottom; padding-bottom: 3mm; }
       @top-right { content: ${cssString(`Confidential — ${client}`)}; ${marginBox} vertical-align: bottom; padding-bottom: 3mm; }
       @bottom-left { content: ${cssString(reference)}; ${marginBox} vertical-align: top; padding-top: 3mm; }

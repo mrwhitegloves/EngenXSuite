@@ -3,15 +3,16 @@ import {
   AcceptanceBody,
   ClosingFooter,
   Cover,
+  PagedSheets,
   SectionHeading,
   Sheet,
 } from '../shared/proposalParts.jsx';
 import { simpleVars } from './vars.js';
 
 // The simple EngenX proposal (founder, 2026-11-13) as A4 paper: the dark cover page, then the
-// pasted content exactly in its layout (headings, bold, lists, tables …), then the numbered
-// Acceptance with the seal and signatures and the closing footer. The content is cleaned
-// (lib/richText.js: only layout tags, no scripts, no styles) before it is shown or printed.
+// pasted content exactly in its layout (headings, bold, lists, tables …), then the Acceptance
+// (no section number) with the seal and signatures and the closing footer. The content is
+// cleaned (lib/richText.js: only layout tags, no scripts, no styles) before it is shown.
 
 // The look of the pasted content on paper (headings, lists, tables, quotes, lines, code).
 const contentClass = [
@@ -39,12 +40,34 @@ const contentClass = [
 ].join(' ');
 
 /**
- * @param {{ data: object, assets: { seal?: string|null } }} props
+ * `paged`: the screen preview, split into the pages the PDF will have (`onPages` hears the total,
+ * cover included). Without it: one flowing sheet, which is what is printed into the PDF.
+ * @param {{ data: object, assets: { seal?: string|null }, paged?: boolean,
+ *   onPages?: (total: number) => void }} props
  */
-export default function SimpleDocument({ data, assets = {} }) {
+export default function SimpleDocument({ data, assets = {}, paged = false, onPages }) {
   const vars = simpleVars(data);
   const html = cleanMailHtml(data.content?.html ?? '');
   const acceptance = data.acceptance ?? {};
+  const body = (
+    <>
+      {html ? (
+        // Cleaned above: layout tags only, no scripts or styles.
+        <div className={contentClass} dangerouslySetInnerHTML={{ __html: html }} />
+      ) : (
+        <p className="mb-[6mm]">
+          <mark className="rounded-sm bg-doc-placeholder px-1 text-doc-ink">
+            Paste the proposal content in the form (Proposal content).
+          </mark>
+        </p>
+      )}
+      <article className="mb-[7mm] mt-[7mm] [break-inside:avoid]">
+        <SectionHeading title={acceptance.title || 'Acceptance'} vars={vars} />
+        <AcceptanceBody section={acceptance} vars={vars} assets={assets} />
+      </article>
+      <ClosingFooter data={data} vars={vars} />
+    </>
+  );
   return (
     <div data-doc-root className="font-sans text-doc-ink">
       <Cover
@@ -55,31 +78,22 @@ export default function SimpleDocument({ data, assets = {} }) {
           ['Prepared by', data.provider?.name, data.provider?.location],
           ['Document ref.', data.meta?.docRef, vars.date],
           ['Duration', data.facts?.duration],
-          ['Deliverables', vars.deliverables],
-          ['Fee', `${vars.fee} ${data.fee?.gstText ?? ''}`.trim()],
         ]}
       />
-      <Sheet data={data} vars={vars} pageNumber={2}>
-        {html ? (
-          // Cleaned above: layout tags only, no scripts or styles.
-          <div className={contentClass} dangerouslySetInnerHTML={{ __html: html }} />
-        ) : (
-          <p className="mb-[6mm]">
-            <mark className="rounded-sm bg-doc-placeholder px-1 text-doc-ink">
-              Paste the proposal content in the form (Proposal content).
-            </mark>
-          </p>
-        )}
-        <article className="mb-[7mm] mt-[7mm] [break-inside:avoid]">
-          <SectionHeading
-            number={acceptance.number || ''}
-            title={acceptance.title || 'Acceptance'}
-            vars={vars}
-          />
-          <AcceptanceBody section={acceptance} vars={vars} assets={assets} />
-        </article>
-        <ClosingFooter data={data} vars={vars} />
-      </Sheet>
+      {paged ? (
+        <PagedSheets
+          data={data}
+          vars={vars}
+          firstPage={2}
+          onPageCount={onPages ? (count) => onPages(count + 1) : undefined}
+        >
+          {body}
+        </PagedSheets>
+      ) : (
+        <Sheet data={data} vars={vars} pageNumber={2}>
+          {body}
+        </Sheet>
+      )}
     </div>
   );
 }
