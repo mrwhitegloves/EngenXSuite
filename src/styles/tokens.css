@@ -80,3 +80,21 @@
 
   color-scheme: dark;
 }
+
+/*
+ * Printed documents of the Document generator (proposals, letter heads, invoices). A document is
+ * paper: the same colours in light and dark mode, so they are not redefined above. Taken from
+ * the EngenX proposal (2026-11-12).
+ */
+:root {
+  --doc-paper: #ffffff;
+  --doc-ink: #16181c;
+  --doc-muted: #5b606b;
+  --doc-soft: #f2f4f6;
+  --doc-line: #c8cdd4;
+  --doc-accent: #e8213f;
+  --doc-accent-soft: #ffe2e6;
+  --doc-on-dark: #ffffff;
+  --doc-ok: #1f794d;
+  --doc-placeholder: #fff4c2;
+}
