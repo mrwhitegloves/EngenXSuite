@@ -10,9 +10,9 @@ import { useCan } from '../../../hooks/useCan.js';
 import DocumentPicker from '../../documents/components/DocumentPicker.jsx';
 import { useAccountFiles, useMailActions, useSignature } from '../api.js';
 import { addressesOf, formatMoment, formatSize, smallButton } from '../mailFormat.js';
-import { mailHtmlForSending } from '../richText.js';
+import { mailHtmlForSending } from '../../../lib/richText.js';
 import AiMailWriter from './AiMailWriter.jsx';
-import RichTextEditor from './RichTextEditor.jsx';
+import RichTextEditor from '../../../components/shared/RichTextEditor.jsx';
 
 const MAX_FILES = 10;
 
