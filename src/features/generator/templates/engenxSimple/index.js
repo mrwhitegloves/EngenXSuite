@@ -36,6 +36,9 @@ export default {
     };
   },
   Document: SimpleDocument,
+  // The preview shows the PDF's pages (Document `paged`); the number gets the next free one.
+  pagedPreview: true,
+  autoRef: { path: 'meta.docRef' },
   pageCss(data) {
     const vars = simpleVars(data);
     return proposalPageCss({

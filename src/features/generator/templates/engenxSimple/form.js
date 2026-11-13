@@ -34,25 +34,11 @@ export const SIMPLE_FORM = [
         path: 'meta.docRef',
         label: 'Document reference',
         type: 'text',
-        placeholder: 'ENGENX-XXX-DMA-2026-001',
+        placeholder: 'ENGENX-DMA-2026-101',
+        hint: 'Filled in with the next free number; you can change it.',
       },
       { path: 'meta.date', label: 'Proposal date (optional)', type: 'date' },
       { path: 'meta.runningTitle', label: 'Title in the page header', type: 'text' },
-    ],
-  },
-  {
-    id: 'commercial',
-    title: 'Fee, time and deliverables (cover page)',
-    fields: [
-      { path: 'fee.amount', label: 'Professional fee (₹, without GST)', type: 'money' },
-      { path: 'fee.gstText', label: 'Text after the fee on the cover', type: 'text' },
-      {
-        path: 'facts.duration',
-        label: 'Duration',
-        type: 'text',
-        placeholder: 'e.g. 8 working days',
-      },
-      { path: 'facts.deliverables', label: 'Number of deliverables', type: 'text' },
     ],
   },
   {
@@ -63,6 +49,12 @@ export const SIMPLE_FORM = [
       { path: 'cover.kicker', label: 'Second line', type: 'text' },
       { path: 'cover.title', label: 'Title', type: 'text' },
       { path: 'cover.summary', label: 'Summary', type: 'textarea' },
+      {
+        path: 'facts.duration',
+        label: 'Duration',
+        type: 'text',
+        placeholder: 'e.g. 8 working days',
+      },
       { path: 'provider.name', label: 'Prepared by', type: 'text' },
       { path: 'provider.location', label: 'Prepared by: location', type: 'text' },
     ],
@@ -85,12 +77,6 @@ export const SIMPLE_FORM = [
     id: 'acceptance',
     title: 'Acceptance and signatures',
     fields: [
-      {
-        path: 'acceptance.number',
-        label: 'Section number',
-        type: 'text',
-        hint: 'The number after the last section of the pasted content, e.g. 10.',
-      },
       { path: 'acceptance.title', label: 'Heading', type: 'text' },
       { path: 'acceptance.text', label: 'Text', type: 'textarea', rows: 2 },
       { path: 'acceptance.providerName', label: 'Signs for EngenX', type: 'text' },

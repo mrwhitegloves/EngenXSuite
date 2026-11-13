@@ -1,19 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Download, Eye, PencilLine, Save } from 'lucide-react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Download, Eye, FileText, PencilLine, Save } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog.jsx';
 import { primaryButtonClass, secondaryButtonClass } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
-import { useGenerated, useGeneratedActions, useSeal } from '../api.js';
+import { useGenerated, useGeneratedActions, useNextRef, useSeal } from '../api.js';
 import FieldEditor from '../engine/FieldEditor.jsx';
 import { downloadPdf } from '../engine/printDocument.js';
-import { withDefaults } from '../engine/values.js';
+import { setIn, withDefaults } from '../engine/values.js';
 import { findTemplate, kindByPath } from '../kinds.js';
 
 const A4_WIDTH_PX = 794; // 210 mm at 96 dpi
 
-/** The A4 preview, zoomed to fit the width of its column. */
-function Preview({ children, previewRef }) {
+/** The A4 preview, zoomed to fit the width of its column. `pages`: the PDF's page count. */
+function Preview({ children, previewRef, pages }) {
   const boxRef = useRef(null);
   const [zoom, setZoom] = useState(1);
   useEffect(() => {
@@ -27,6 +27,15 @@ function Preview({ children, previewRef }) {
   }, []);
   return (
     <div ref={boxRef} className="h-full overflow-auto rounded-lg bg-page p-3">
+      {pages > 0 && (
+        <p
+          className="sticky top-0 z-10 mx-auto mb-3 flex w-fit items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium shadow-sm"
+          aria-live="polite"
+        >
+          <FileText size={13} className="text-brand" />
+          The PDF will have {pages} {pages === 1 ? 'page' : 'pages'} (cover page included)
+        </p>
+      )}
       <div ref={previewRef} style={{ zoom }}>
         {children}
       </div>
@@ -56,14 +65,17 @@ function TokenHelp({ tokens }) {
 }
 
 /** The editor: values on the left, the live document on the right. */
-function Editor({ kind, template, id, saved }) {
+function Editor({ kind, template, id, saved, nextRef }) {
   const navigate = useNavigate();
   const can = useCan();
   const seal = useSeal();
   const { create, update } = useGeneratedActions(kind.path);
-  const [data, setData] = useState(() =>
-    saved ? withDefaults(template.defaults, saved.data) : template.createData(),
-  );
+  const [data, setData] = useState(() => {
+    if (saved) return withDefaults(template.defaults, saved.data);
+    const fresh = template.createData();
+    // A new document gets the next free reference number; the person may still change it.
+    return template.autoRef && nextRef ? setIn(fresh, template.autoRef.path, nextRef) : fresh;
+  });
   const [savedJson, setSavedJson] = useState(() => (saved ? JSON.stringify(data) : ''));
   const [updatedAt, setUpdatedAt] = useState(saved?.updatedAt ?? null);
   const [savedAt, setSavedAt] = useState(saved ? new Date(saved.updatedAt) : null);
@@ -72,6 +84,10 @@ function Editor({ kind, template, id, saved }) {
   const [confirm, setConfirm] = useState(null); // 'leave' | 'missing'
   const [downloading, setDownloading] = useState(false);
   const previewRef = useRef(null);
+  const [pages, setPages] = useState(0);
+  // The preview follows the typing a moment later, so long content stays smooth to edit.
+  const shown = useDeferredValue(data);
+  const paged = Boolean(template.pagedPreview);
 
   const dirty = JSON.stringify(data) !== savedJson;
   const summary = useMemo(() => template.summary(data), [template, data]);
@@ -105,6 +121,12 @@ function Editor({ kind, template, id, saved }) {
       if (!id) navigate(`/generator/${kind.path}/${result.data.id}`, { replace: true });
     } catch (error) {
       setMessage(error.message);
+      // The number was taken by a colleague meanwhile: put in the next free one.
+      const free = error.details?.nextRefNo;
+      if (error.code === 'REF_TAKEN' && free && template.autoRef) {
+        setData((current) => setIn(current, template.autoRef.path, free));
+        setMessage(`${error.message} It is filled in now; save again.`);
+      }
     }
   };
 
@@ -209,9 +231,20 @@ function Editor({ kind, template, id, saved }) {
           </fieldset>
         </div>
         <div className={`min-h-0 ${view === 'preview' ? '' : 'hidden lg:block'}`}>
-          <Preview previewRef={previewRef}>
-            <Document data={data} assets={{ seal }} />
+          <Preview previewRef={paged ? null : previewRef} pages={paged ? pages : 0}>
+            <Document data={shown} assets={{ seal }} paged={paged} onPages={setPages} />
           </Preview>
+          {paged && (
+            // What the PDF is made from: the same document as one flowing sheet, out of sight.
+            <div
+              aria-hidden="true"
+              className="pointer-events-none invisible fixed left-[-10000px] top-0"
+            >
+              <div ref={previewRef}>
+                <Document data={shown} assets={{ seal }} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -250,7 +283,10 @@ export default function GeneratorEditorPage() {
     isNew ? (params.get('template') ?? kind?.templates[0]?.key) : saved?.templateKey,
   );
 
+  const nextRef = useNextRef(kindPath, Boolean(isNew && template?.autoRef));
+
   if (!kind) return <p className="text-danger">This kind of document does not exist.</p>;
+  if (nextRef.isLoading) return <p className="text-text-muted">Opening…</p>;
   if (!isNew && isLoading) return <p className="text-text-muted">Opening…</p>;
   if (error) return <p className="text-danger">{error.message}</p>;
   if (!template)
@@ -263,6 +299,7 @@ export default function GeneratorEditorPage() {
       template={template}
       id={isNew ? null : id}
       saved={saved}
+      nextRef={nextRef.refNo}
     />
   );
 }

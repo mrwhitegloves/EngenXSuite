@@ -25,6 +25,23 @@ export function useGenerated(kindPath, id) {
   });
 }
 
+/**
+ * The reference number a new document of the kind gets suggested. `refNo` is null when it could
+ * not be had (the person then types one).
+ */
+export function useNextRef(kindPath, enabled) {
+  const { data, isLoading } = useQuery({
+    queryKey: [...KEY, kindPath, 'next-ref'],
+    queryFn: ({ signal }) => apiRequest(`/generator/${kindPath}/next-ref`, { signal }),
+    enabled,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+  return { refNo: data?.data?.refNo || null, isLoading };
+}
+
 export function useGeneratedActions(kindPath) {
   const queryClient = useQueryClient();
   const refreshList = () => queryClient.invalidateQueries({ queryKey: [...KEY, kindPath, 'list'] });
