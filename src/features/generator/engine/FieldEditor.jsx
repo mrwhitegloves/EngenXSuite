@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import AccountPicker from '../../../components/shared/AccountPicker.jsx';
 import { Field, inputClass } from '../../../components/shared/form.jsx';
+import { useCan } from '../../../hooks/useCan.js';
+import { apiRequest } from '../../../lib/apiClient.js';
 import { getIn, setIn } from './values.js';
 
 // The left side of the generator: a form drawn from a template's list of fields, so a new
@@ -8,6 +11,8 @@ import { getIn, setIn } from './values.js';
 //   text, textarea, number, money, date, toggle            one value at `path`
 //   strings                                                a list of lines (add, move, remove)
 //   rows   (columns: [{ key, label, type, placeholder }])  a list of small records, e.g. table rows
+//   account (apply(data, company) → data, selectedName(data))  a company picked from Accounts:
+//          its id is kept at `path`, and the template copies what it needs (name, address …)
 // A group with `section` gets "Show this section" and "Start on a new page" switches.
 
 const smallButton =
@@ -178,9 +183,41 @@ function RowsEditor({ field, value = [], onChange }) {
   );
 }
 
+/** A company from Accounts; the whole company is loaded and handed to the template. */
+function AccountField({ field, data, onChange }) {
+  const can = useCan();
+  const [state, setState] = useState({ busy: false, error: '' });
+  if (!can('accounts')) return null;
+  const pick = async (item) => {
+    setState({ busy: true, error: '' });
+    try {
+      const { data: company } = await apiRequest(`/accounts/${item.id}`);
+      onChange(field.apply(setIn(data, field.path, company.id), company));
+      setState({ busy: false, error: '' });
+    } catch (error) {
+      setState({ busy: false, error: error.message });
+    }
+  };
+  return (
+    <div>
+      <AccountPicker
+        label={field.label}
+        hint={state.busy ? 'Filling in…' : field.hint}
+        selectedName={getIn(data, field.path) ? field.selectedName(data) : ''}
+        onSelect={pick}
+        onClear={() => onChange(setIn(data, field.path, ''))}
+      />
+      {state.error && <p className="mt-1 text-sm text-danger">{state.error}</p>}
+    </div>
+  );
+}
+
 function OneField({ field, data, onChange }) {
   const value = getIn(data, field.path);
   const set = (next) => onChange(setIn(data, field.path, next));
+  if (field.type === 'account') {
+    return <AccountField field={field} data={data} onChange={onChange} />;
+  }
   if (field.type === 'toggle') {
     return (
       <label className="flex items-start gap-2 text-sm">

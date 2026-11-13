@@ -497,7 +497,11 @@ export default function AssessmentDocument({ data, assets = {} }) {
             const Body = SECTIONS[key];
             const section = data.sections[key];
             return (
-              <article key={key} className="mb-[7mm]">
+              <article
+                key={key}
+                // The signatures never start a page without their heading and text.
+                className={`mb-[7mm] ${key === 'acceptance' ? '[break-inside:avoid]' : ''}`}
+              >
                 <SectionHeading number={numbers[key]} title={section.title} vars={vars} />
                 <Body section={section} vars={vars} data={data} assets={assets} />
               </article>

@@ -9,6 +9,8 @@ export const ASSESSMENT_DEFAULTS = {
     runningTitle: 'Industrial Digital Maturity Assessment',
   },
   client: {
+    // The company in Accounts it was filled from ('' = typed by hand).
+    accountId: '',
     name: 'Sripathi Paper and Boards Pvt. Ltd.',
     shortName: 'Sripathi Paper and Boards',
     location: 'Tamil Nadu, India',

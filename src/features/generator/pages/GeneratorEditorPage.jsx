@@ -6,7 +6,7 @@ import { primaryButtonClass, secondaryButtonClass } from '../../../components/sh
 import { useCan } from '../../../hooks/useCan.js';
 import { useGenerated, useGeneratedActions, useSeal } from '../api.js';
 import FieldEditor from '../engine/FieldEditor.jsx';
-import { printDocument } from '../engine/printDocument.js';
+import { downloadPdf } from '../engine/printDocument.js';
 import { withDefaults } from '../engine/values.js';
 import { findTemplate, kindByPath } from '../kinds.js';
 
@@ -70,6 +70,7 @@ function Editor({ kind, template, id, saved }) {
   const [message, setMessage] = useState('');
   const [view, setView] = useState('form'); // phones: form or preview
   const [confirm, setConfirm] = useState(null); // 'leave' | 'missing'
+  const [downloading, setDownloading] = useState(false);
   const previewRef = useRef(null);
 
   const dirty = JSON.stringify(data) !== savedJson;
@@ -115,7 +116,15 @@ function Editor({ kind, template, id, saved }) {
       return;
     }
     setConfirm(null);
-    await printDocument({ element, fileName: summary.fileName, pageCss: template.pageCss(data) });
+    setMessage('');
+    setDownloading(true);
+    try {
+      await downloadPdf({ element, fileName: summary.fileName, pageCss: template.pageCss(data) });
+    } catch (error) {
+      setMessage(`The PDF could not be made: ${error.message}`);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const back = () => (dirty ? setConfirm('leave') : navigate(`/generator/${kind.path}`));
@@ -145,8 +154,13 @@ function Editor({ kind, template, id, saved }) {
             )}
           </p>
         </div>
-        <button type="button" className={secondaryButtonClass} onClick={() => download()}>
-          <Download size={16} /> Download PDF
+        <button
+          type="button"
+          className={secondaryButtonClass}
+          onClick={() => download()}
+          disabled={downloading}
+        >
+          <Download size={16} /> {downloading ? 'Making PDF…' : 'Download PDF'}
         </button>
         {mayEdit && (
           <button

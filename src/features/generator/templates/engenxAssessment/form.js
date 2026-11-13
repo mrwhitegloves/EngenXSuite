@@ -2,6 +2,28 @@
 // explained in engine/FieldEditor.jsx.
 
 const S = (key, field) => ({ ...field, path: `sections.${key}.${field.path}` });
+
+/** "Tata Steel Pvt. Ltd." → "Tata Steel": the name used inside sentences. */
+const shortName = (name) =>
+  name
+    .replace(/[\s,]+(private|pvt\.?)\s+(limited|ltd\.?)\s*$/i, '')
+    .replace(/[\s,]+(limited|ltd\.?)\s*$/i, '')
+    .trim();
+
+/** A company picked from Accounts fills the client's name and location. */
+function applyAccount(data, company) {
+  const address = company.hq ?? company.billingAddress ?? {};
+  return {
+    ...data,
+    client: {
+      ...data.client,
+      name: company.name,
+      shortName: shortName(company.name),
+      location: [address.city, address.state, address.country].filter(Boolean).join(', '),
+      plantLocation: address.state || address.city || '',
+    },
+  };
+}
 const titleField = (key) => S(key, { path: 'title', label: 'Heading', type: 'text' });
 
 export const ASSESSMENT_FORM = [
@@ -9,6 +31,14 @@ export const ASSESSMENT_FORM = [
     id: 'client',
     title: 'Client and document',
     fields: [
+      {
+        path: 'client.accountId',
+        label: 'Pick the client from Accounts',
+        type: 'account',
+        hint: 'Fills the name and location below; you can still change them.',
+        apply: applyAccount,
+        selectedName: (data) => data.client?.name ?? '',
+      },
       {
         path: 'client.name',
         label: 'Client company (full legal name)',
