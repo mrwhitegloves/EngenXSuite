@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import AccountPicker from '../../../components/shared/AccountPicker.jsx';
+import RichTextEditor from '../../../components/shared/RichTextEditor.jsx';
 import { Field, inputClass } from '../../../components/shared/form.jsx';
 import { useCan } from '../../../hooks/useCan.js';
 import { apiRequest } from '../../../lib/apiClient.js';
@@ -11,6 +12,8 @@ import { getIn, setIn } from './values.js';
 //   text, textarea, number, money, date, toggle            one value at `path`
 //   strings                                                a list of lines (add, move, remove)
 //   rows   (columns: [{ key, label, type, placeholder }])  a list of small records, e.g. table rows
+//   richtext                                               laid-out text (HTML): pasted content keeps
+//          its headings, bold, lists and tables (components/shared/RichTextEditor.jsx)
 //   account (apply(data, company) → data, selectedName(data))  a company picked from Accounts:
 //          its id is kept at `path`, and the template copies what it needs (name, address …)
 // A group with `section` gets "Show this section" and "Start on a new page" switches.
@@ -217,6 +220,22 @@ function OneField({ field, data, onChange }) {
   const set = (next) => onChange(setIn(data, field.path, next));
   if (field.type === 'account') {
     return <AccountField field={field} data={data} onChange={onChange} />;
+  }
+  if (field.type === 'richtext') {
+    return (
+      <div>
+        <p className="mb-1 text-sm font-medium">{field.label}</p>
+        <RichTextEditor
+          label={field.label}
+          variant="document"
+          placeholder={field.placeholder}
+          initialHtml={value ?? ''}
+          rows={18}
+          maxHeight="70vh"
+          onChange={({ html }) => set(html)}
+        />
+      </div>
+    );
   }
   if (field.type === 'toggle') {
     return (

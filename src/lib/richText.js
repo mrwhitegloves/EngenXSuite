@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify';
 
-// The laid-out (HTML) form of a mail written in the CRM. What is pasted keeps its structure
+// The laid-out (HTML) form of text written in the CRM: a mail (Inbox) or the content of a
+// document (Document generator). What is pasted keeps its structure
 // (bold, italic, underline, headings, lists, links, tables) but not its colours and fonts, so it
 // reads the same in light and dark mode and in every mail program. The server cleans it once
 // more before the mail goes out (server/lib/mailHtml.js).

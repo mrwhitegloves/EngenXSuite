@@ -1,4 +1,5 @@
 import engenxAssessment from './templates/engenxAssessment/index.js';
+import engenxSimple from './templates/engenxSimple/index.js';
 
 // The kinds of the Document generator and their templates (founder, 2026-11-12). A new template
 // is one folder under templates/ (see templates/engenxAssessment/index.js) added to its kind
@@ -12,7 +13,10 @@ export const DOC_KINDS = [
     label: 'Proposals',
     one: 'proposal',
     feature: 'proposals',
-    templates: [engenxAssessment],
+    templates: [engenxSimple],
+    // The long assessment template (2026-11-12) is no longer offered (founder, 2026-11-13); it
+    // stays so that proposals saved with it still open.
+    retiredTemplates: [engenxAssessment],
   },
   {
     key: 'letterhead',
@@ -34,5 +38,8 @@ export const DOC_KINDS = [
 
 export const kindByPath = (path) => DOC_KINDS.find((kind) => kind.path === path) ?? null;
 
+/** A template of the kind by key; a retired one is found too (to open old documents). */
 export const findTemplate = (kind, key) =>
-  kind?.templates.find((template) => template.key === key) ?? null;
+  [...(kind?.templates ?? []), ...(kind?.retiredTemplates ?? [])].find(
+    (template) => template.key === key,
+  ) ?? null;
