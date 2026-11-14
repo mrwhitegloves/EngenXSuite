@@ -64,6 +64,12 @@ export default function ProfileDialog({ onClose }) {
           Mail and calendar: connect your Gmail and Google Calendar
         </Link>
       </p>
+      {/* The Chrome extension that writes down Google Meet calls. */}
+      <p className="mt-2 text-sm">
+        <Link to="/meeting-recorder" onClick={onClose} className="text-brand-text hover:underline">
+          Meeting recorder: connect the Chrome extension on your laptop
+        </Link>
+      </p>
     </Dialog>
   );
 }

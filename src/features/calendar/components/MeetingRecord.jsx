@@ -1,8 +1,14 @@
-import { useRef } from 'react';
-import { Check, Mic, Paperclip, Sparkles, Upload, X } from 'lucide-react';
-import { FormError, secondaryButtonClass } from '../../../components/shared/form.jsx';
-import { useMeetingRecord, useMeetingRecordActions } from '../api.js';
+import { useRef, useState } from 'react';
+import { Check, ClipboardPaste, Mic, Paperclip, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import {
+  FormError,
+  inputClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from '../../../components/shared/form.jsx';
+import { useMeetingRecord, useMeetingRecordActions, useMeetingTranscript } from '../api.js';
 import { formatMoment } from '../dates.js';
+import MeetingTranscript from './MeetingTranscript.jsx';
 
 const smallButton =
   'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-text-muted disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand';
@@ -22,20 +28,124 @@ const formatSize = (bytes) =>
     ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
     : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
+const SOURCE_WORDS = {
+  transcript: 'the transcript',
+  notes: 'the notes',
+  voice_note: 'the notes (with a voice note)',
+};
+
+/** Analyses of the meeting made outside the CRM (ChatGPT, a colleague), pasted by a person. */
+function ExternalAnalyses({ items, addAnalysis, removeAnalysis }) {
+  const [draft, setDraft] = useState(null); // null: the form is closed
+  return (
+    <section aria-label="Analyses from elsewhere" className="space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-medium">Analyses from elsewhere</h3>
+        {draft === null && (
+          <button
+            type="button"
+            className={smallButton}
+            onClick={() => setDraft({ label: 'ChatGPT', text: '' })}
+          >
+            <ClipboardPaste size={12} aria-hidden="true" />
+            Paste an analysis
+          </button>
+        )}
+      </div>
+      {draft !== null && (
+        <div className="space-y-2 rounded-md border border-border p-2">
+          <input
+            className={`${inputClass} text-sm`}
+            aria-label="Where it comes from"
+            placeholder="Where it comes from (ChatGPT, a colleague…)"
+            maxLength={100}
+            value={draft.label}
+            onChange={(event) => setDraft({ ...draft, label: event.target.value })}
+          />
+          <textarea
+            rows={6}
+            className={`${inputClass} text-sm`}
+            aria-label="The analysis"
+            placeholder="Paste the analysis here"
+            maxLength={30000}
+            value={draft.text}
+            onChange={(event) => setDraft({ ...draft, text: event.target.value })}
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={primaryButtonClass}
+              disabled={
+                addAnalysis.isPending || draft.text.trim().length < 20 || !draft.label.trim()
+              }
+              onClick={() => addAnalysis.mutate(draft, { onSuccess: () => setDraft(null) })}
+            >
+              {addAnalysis.isPending ? 'Saving…' : 'Save'}
+            </button>
+            <button type="button" className={smallButton} onClick={() => setDraft(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      <FormError message={addAnalysis.error?.message ?? removeAnalysis.error?.message} />
+      {items.length === 0 && draft === null && (
+        <p className="text-xs text-text-muted">
+          An analysis made with another tool can be kept here, next to the CRM’s own summary.
+        </p>
+      )}
+      {items.map((item) => (
+        <article key={item.id} className="space-y-1 rounded-md border border-border bg-page p-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-text-muted">
+            <span>
+              <span className="font-semibold text-text">{item.label}</span> · added by{' '}
+              {item.addedBy.name}, {formatMoment(item.addedAt)}
+            </span>
+            {item.canDelete && (
+              <button
+                type="button"
+                className={smallButton}
+                aria-label={`Remove the analysis from ${item.label}`}
+                disabled={removeAnalysis.isPending}
+                onClick={() => removeAnalysis.mutate(item.id)}
+              >
+                <Trash2 size={11} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+          {/* Shown as it was pasted: plain text, never HTML. */}
+          <p className="whitespace-pre-wrap wrap-break-word text-sm">{item.text}</p>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 /**
- * What is kept after a meeting: pictures, documents and voice notes; the AI's summary of the
- * notes; and the tasks it proposes (a task exists only once a person accepts it).
+ * What is kept after a meeting: the recorder's transcript, pictures, documents and voice
+ * notes; the AI's summary (of the transcript or the notes); analyses pasted from elsewhere;
+ * and the tasks the AI proposes (a task exists only once a person accepts it).
  * @param {{ meetingId: string, canEdit: boolean, hasNotes: boolean }} props
  */
 export default function MeetingRecord({ meetingId, canEdit, hasNotes }) {
   const record = useMeetingRecord(meetingId);
-  const { upload, transcribe, summarize, decide } = useMeetingRecordActions(meetingId);
+  const transcript = useMeetingTranscript(meetingId);
+  const { upload, transcribe, summarize, decide, addAnalysis, removeAnalysis } =
+    useMeetingRecordActions(meetingId);
   const picker = useRef(null);
   const files = record.data?.files ?? [];
   const summary = record.data?.summary;
+  const hasTranscript = (transcript.data?.lines ?? []).some(
+    (line) => !line.isEcho && line.status === 'done',
+  );
+  const isRecording = Boolean(transcript.data?.isRecording);
+  const canSummarize = hasTranscript || hasNotes;
+  const source = hasTranscript ? 'transcript' : 'notes';
 
   return (
     <div className="space-y-3 border-t border-border pt-3">
+      <MeetingTranscript meetingId={meetingId} />
+
       <section aria-label="Files of the meeting" className="space-y-1.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-medium">Pictures, documents, voice notes</h3>
@@ -119,24 +229,30 @@ export default function MeetingRecord({ meetingId, canEdit, hasNotes }) {
             <button
               type="button"
               className={secondaryButtonClass}
-              disabled={summarize.isPending || !hasNotes}
-              title={hasNotes ? undefined : 'Write and save the notes first'}
-              onClick={() => summarize.mutate()}
+              disabled={summarize.isPending || !canSummarize || isRecording}
+              title={
+                isRecording
+                  ? 'Wait until the recording is stopped'
+                  : canSummarize
+                    ? undefined
+                    : 'Write and save the notes first'
+              }
+              onClick={() => summarize.mutate({ source })}
             >
               <Sparkles size={16} aria-hidden="true" />
               {summarize.isPending
                 ? 'Summarizing…'
-                : summary
-                  ? 'Make it again from the notes'
-                  : 'Summarize the notes'}
+                : `${summary ? 'Make it again from' : 'Summarize'} ${SOURCE_WORDS[source]}`}
             </button>
           )}
         </div>
         {!summary && record.isSuccess && (
           <p className="text-xs text-text-muted">
-            {hasNotes
-              ? 'Not made yet. The AI works only from the saved notes, and proposes tasks.'
-              : 'Save the notes of the meeting first; then the AI can summarize them.'}
+            {hasTranscript
+              ? 'Not made yet. The AI reads the transcript (and the notes, if any), and proposes tasks.'
+              : hasNotes
+                ? 'Not made yet. The AI works only from the saved notes, and proposes tasks.'
+                : 'Record the meeting with the meeting recorder, or save its notes; then the AI can summarize it.'}
           </p>
         )}
         <FormError message={summarize.error?.message ?? decide.error?.message} />
@@ -211,12 +327,20 @@ export default function MeetingRecord({ meetingId, canEdit, hasNotes }) {
               </div>
             )}
             <p className="text-xs text-text-muted">
-              Written by AI from the notes, {formatMoment(summary.madeAt)}. Check it against what
-              was really said.
+              Written by AI from {SOURCE_WORDS[summary.sourceType] ?? 'the notes'},{' '}
+              {formatMoment(summary.madeAt)}. Check it against what was really said.
             </p>
           </div>
         )}
       </section>
+
+      {record.data && (
+        <ExternalAnalyses
+          items={record.data.externalAnalyses ?? []}
+          addAnalysis={addAnalysis}
+          removeAnalysis={removeAnalysis}
+        />
+      )}
     </div>
   );
 }
