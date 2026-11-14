@@ -18,6 +18,7 @@ export default {
   createData: () => {
     const data = cloneData(SIMPLE_DEFAULTS);
     data.meta.date = todayInIndia();
+    data.acceptance.date = todayInIndia();
     return data;
   },
   defaults: SIMPLE_DEFAULTS,

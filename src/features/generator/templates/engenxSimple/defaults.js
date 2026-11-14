@@ -40,6 +40,8 @@ export const SIMPLE_DEFAULTS = {
     text: 'By signing, {client} confirms the scope, deliverables, fee and terms in this proposal.',
     providerName: 'Kunal Divyanshu',
     providerTitle: 'Founder & CEO, EngenX',
+    // The date beside the EngenX signature: today when a proposal is made (index.js), editable.
+    date: '',
     showSeal: true,
   },
   footer: {
