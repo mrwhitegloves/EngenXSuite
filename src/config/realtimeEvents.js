@@ -32,6 +32,8 @@ export const REALTIME_REFETCH = {
   'whatsapp.changed': [['whatsapp'], ['timeline']],
   // A meeting was planned, changed, closed, or taken over from Google Calendar.
   'meetings.changed': [['meetings'], ['timeline']],
+  // A part of a meeting transcript was read or corrected, or a recording started or stopped.
+  'meeting-transcripts.changed': [['meetings', 'transcript']],
   // A bulk sending was made, started, stopped, or handled its next person.
   'campaigns.changed': [['campaigns'], ['bundles']],
   // An inbound lead arrived or was processed, or a lead form or the assignment rule changed.

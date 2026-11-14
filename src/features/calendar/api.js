@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '../../lib/apiClient.js';
+import { apiDownload, apiRequest } from '../../lib/apiClient.js';
 
 // Meetings. Cached answers live under 'meetings', which the live "meetings.changed" event
 // makes stale. A meeting also shows on the timeline of its lead and company.
@@ -115,7 +115,15 @@ export function useMeetingRecordActions(id) {
     }),
     // A voice note becomes text, added to the notes.
     transcribe: useMutation({ mutationFn: post('/files/transcribe'), onSuccess }),
-    summarize: useMutation({ mutationFn: () => post('/summary')(), onSuccess }),
+    // From the transcript of the recorder, or from the notes ({ source }).
+    summarize: useMutation({ mutationFn: (body = {}) => post('/summary')(body), onSuccess }),
+    // An analysis made outside the CRM (ChatGPT, a colleague), pasted by a person.
+    addAnalysis: useMutation({ mutationFn: post('/analyses'), onSuccess }),
+    removeAnalysis: useMutation({
+      mutationFn: (analysisId) =>
+        apiRequest(`/meetings/${id}/analyses/${analysisId}`, { method: 'DELETE' }),
+      onSuccess,
+    }),
     // Accept (it becomes a real task) or reject a task the AI proposed.
     decide: useMutation({ mutationFn: post('/summary/tasks'), onSuccess }),
   };
@@ -171,4 +179,42 @@ export function useUpdateBookingPage() {
     mutationFn: (body) => apiRequest('/booking-page', { method: 'PATCH', body }),
     onSuccess: (payload) => queryClient.setQueryData(['booking-page'], payload),
   });
+}
+
+// ── The transcript of the meeting recorder (Chrome extension)
+// Under ['meetings', 'transcript', id]: the live "meeting-transcripts.changed" event makes it
+// stale while a meeting is recorded, so the screen follows within seconds.
+
+export function useMeetingTranscript(id) {
+  return useQuery({
+    queryKey: [...KEY, 'transcript', id],
+    queryFn: ({ signal }) => apiRequest(`/meetings/${id}/transcript`, { signal }),
+    select: (payload) => payload.data,
+    enabled: Boolean(id),
+  });
+}
+
+export function useTranscriptActions(id) {
+  const queryClient = useQueryClient();
+  return {
+    // Correct the words of one part.
+    edit: useMutation({
+      mutationFn: ({ segmentId, text }) =>
+        apiRequest(`/meetings/${id}/transcript/segments/${segmentId}`, {
+          method: 'PATCH',
+          body: { text },
+        }),
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: [...KEY, 'transcript', id] }),
+    }),
+    // A link (one hour) to listen to one part.
+    audio: useMutation({
+      mutationFn: (segmentId) =>
+        apiRequest(`/meetings/${id}/transcript/segments/${segmentId}/audio`).then(
+          (payload) => payload.data.link,
+        ),
+    }),
+    download: useMutation({
+      mutationFn: () => apiDownload(`/meetings/${id}/transcript/download`, 'transcript.txt'),
+    }),
+  };
 }

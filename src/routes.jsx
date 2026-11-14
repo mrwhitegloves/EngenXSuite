@@ -4,6 +4,7 @@ import SectionNotBuilt from './components/shared/states/SectionNotBuilt.jsx';
 import { NAV_ITEMS, SETTINGS_ITEM, visibleItems } from './config/navigation.js';
 import AccountsRoutes from './features/accounts/AccountsRoutes.jsx';
 import ConnectionsPage from './features/connections/pages/ConnectionsPage.jsx';
+import MeetingRecorderPage from './features/connections/pages/MeetingRecorderPage.jsx';
 import ActivitiesPage from './features/activities/pages/ActivitiesPage.jsx';
 import BulkPage from './features/bulk/pages/BulkPage.jsx';
 import CalendarPage from './features/calendar/pages/CalendarPage.jsx';
@@ -55,6 +56,8 @@ export default function AppRoutes({ productName }) {
         <Route path="/notifications" element={<NotificationsPage />} />
         {/* Every person's own Gmail and Calendar connection; opened from My profile. */}
         <Route path="/connections" element={<ConnectionsPage />} />
+        {/* Every person's own meeting recorder (Chrome extension); opened from My profile. */}
+        <Route path="/meeting-recorder" element={<MeetingRecorderPage />} />
         {sections.map((item) => {
           const Page = PAGES[item.to];
           return (
