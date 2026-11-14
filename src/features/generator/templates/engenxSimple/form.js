@@ -82,6 +82,12 @@ export const SIMPLE_FORM = [
       { path: 'acceptance.providerName', label: 'Signs for EngenX', type: 'text' },
       { path: 'acceptance.providerTitle', label: 'Designation', type: 'text' },
       {
+        path: 'acceptance.date',
+        label: 'Date (EngenX side)',
+        type: 'date',
+        hint: 'Today by default. The location beside it is "Prepared by: location" in Cover page.',
+      },
+      {
         path: 'acceptance.showSeal',
         label: 'Put the company seal and signature',
         type: 'toggle',

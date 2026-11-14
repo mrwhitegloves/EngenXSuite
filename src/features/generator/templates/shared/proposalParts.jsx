@@ -23,20 +23,26 @@ export function SectionHeading({ number = '', title, vars }) {
   );
 }
 
-function SignLines({ labels }) {
+/** Lines to sign on. `values` (optional): what is already written on a line, by its label. */
+function SignLines({ labels, values = {} }) {
   return (
     <div className="mt-[3mm] space-y-[4mm] text-[8.5pt] text-doc-muted">
       {labels.map((label) => (
-        <p key={label} className="border-b border-doc-line pb-[1mm]">
-          {label}
+        <p key={label} className="flex gap-[2mm] border-b border-doc-line pb-[1mm]">
+          <span>{label}</span>
+          {values[label] && <span className="text-doc-ink">{values[label]}</span>}
         </p>
       ))}
     </div>
   );
 }
 
-/** The acceptance text, the EngenX seal and signature, and the client's lines to sign. */
-export function AcceptanceBody({ section, vars, assets }) {
+/**
+ * The acceptance text, the EngenX seal and signature, and the client's lines to sign.
+ * `providerLines`: the lines under the EngenX signature with their values, e.g.
+ * { Location: 'Jamshedpur', Date: '14 November 2026' }; without it, empty Signature and Date.
+ */
+export function AcceptanceBody({ section, vars, assets, providerLines }) {
   return (
     <>
       {section.text && (
@@ -69,7 +75,11 @@ export function AcceptanceBody({ section, vars, assets }) {
           <p className="text-[9pt] text-doc-muted">
             <Filled text={section.providerTitle} vars={vars} />
           </p>
-          <SignLines labels={['Signature', 'Date']} />
+          {providerLines ? (
+            <SignLines labels={Object.keys(providerLines)} values={providerLines} />
+          ) : (
+            <SignLines labels={['Signature', 'Date']} />
+          )}
         </div>
         <div>
           <p className="mb-[2mm] text-[8pt] font-bold uppercase tracking-[0.15em] text-doc-accent">

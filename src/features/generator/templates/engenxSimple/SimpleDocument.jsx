@@ -7,6 +7,7 @@ import {
   SectionHeading,
   Sheet,
 } from '../shared/proposalParts.jsx';
+import { formatLongDate } from '../../engine/values.js';
 import { simpleVars } from './vars.js';
 
 // The simple EngenX proposal (founder, 2026-11-13) as A4 paper: the dark cover page, then the
@@ -63,7 +64,15 @@ export default function SimpleDocument({ data, assets = {}, paged = false, onPag
       )}
       <article className="mb-[7mm] mt-[7mm] [break-inside:avoid]">
         <SectionHeading title={acceptance.title || 'Acceptance'} vars={vars} />
-        <AcceptanceBody section={acceptance} vars={vars} assets={assets} />
+        <AcceptanceBody
+          section={acceptance}
+          vars={vars}
+          assets={assets}
+          providerLines={{
+            Location: data.provider?.location ?? '',
+            Date: formatLongDate(acceptance.date),
+          }}
+        />
       </article>
       <ClosingFooter data={data} vars={vars} />
     </>
